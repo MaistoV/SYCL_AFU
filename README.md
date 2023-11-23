@@ -1,5 +1,5 @@
 # intel-ofs-2022.2-ubuntu-hitek
-Installation steps for Intel OFS on Ubuntu 22.04.
+Installation steps for Intel OFS for Hitek NC100 card on Ubuntu 22.04.
 
 > NOTE: the scripts provided in `install/`:
 > * require sudo access;
@@ -8,7 +8,7 @@ Installation steps for Intel OFS on Ubuntu 22.04.
 
 ## References:
 * OTCshare (private repo, snapshot at `otcshare_dumps/`)
-    * Original user guide for RHEL is at `otcshare_dumps/intel-ofs-docs-main/n6000/user_guides/ofs_getting_started/ug_qs_ofs_n6000.md` .
+    * Original $USER guide for RHEL is at `otcshare_dumps/intel-ofs-docs-main/n6000/$USER_guides/ofs_getting_started/ug_qs_ofs_n6000.md` .
 
 * OFS github 
     * Oldest public release is 2023.1 and has significantly changed since 2022.1.
@@ -48,3 +48,6 @@ Install QuestaSim or VCS.
 ### Bringup Hitek NC100 PAC
 Download BSP for NC100 from Hitek SFTP.  **TBD**
 > *Requires access to SFTP*
+
+### Host Excercisor Modules
+TODO: script for complete platform benchmarking
