@@ -26,10 +26,6 @@ Run:
 ``` console 
 $ source install/ubuntu_linux_dfl_build.sh  
 ```
-Reboot (warm) the system, then:
-``` console 
-$ source install/ubuntu_linux_dfl_post_reboot.sh
-```
 
 ### opae-sdk
 Build and install opae-sdk v2.1.1-1
@@ -46,8 +42,33 @@ Install QuestaSim or VCS.
 >*Requires license*.
 
 ### Bringup Hitek NC100 PAC
-Download BSP for NC100 from Hitek SFTP.  **TBD**
-> *Requires access to SFTP*
+Update PAC firmware. Download BSP for NC100 from Hitek SFTP.  **TBD**
+
+Update BMC FW and RTL
+> *Required BMC firmware version for 2022 release is:*
+> 	* AC_BMC_RSU_user_retail_3.2.0_unsigned.rsu
+>    * BMC RTL 	3.2.0
+>    * BMC NIOS FW 	3.2.0
+``` console 
+sudo fpgasupdate AC_BMC_RSU_user_retail_3.2.0_unsigned.rsu
+```
+
+Update FIM:
+> *Requires access to SFTP for ofs_top_page1_unsigned_user1.bin*
+``` console 
+sudo fpgasupdate ofs_top_page1_unsigned_user1.bin <PCI ADDRESS>
+```
 
 ### Host Excercisor Modules
+#### Plaftorm benchmark
 TODO: script for complete platform benchmarking
+
+#### Multithreading testing
+TDB: Using HEMs
+
+## Reboot
+After every reboot (also warm), run:
+``` console 
+$ source settings/settings_dfl.sh
+$ source settings/settings_opae.sh
+```
