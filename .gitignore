@@ -1,0 +1,6 @@
+# Auxiliary tmp files
+tmp*
+
+# Results
+*.csv
+*.log
