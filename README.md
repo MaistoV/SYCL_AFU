@@ -35,6 +35,7 @@ $ source install/ubuntu_opae_build.sh
 
 ### Quartus Prime Pro
 Install Quartus Prime Pro with **Agilex** support. 
+See install/ubuntu_quartus.sh
 >*Requires license*.
 
 ### Simulator
@@ -44,31 +45,70 @@ Install QuestaSim or VCS.
 ### Bringup Hitek NC100 PAC
 Update PAC firmware. Download BSP for NC100 from Hitek SFTP.  **TBD**
 
-Update BMC FW and RTL
-> *Required BMC firmware version for 2022 release is:*
-> 	* AC_BMC_RSU_user_retail_3.2.0_unsigned.rsu
->    * BMC RTL 	3.2.0
->    * BMC NIOS FW 	3.2.0
+Update BMC FW and RTL:
 ``` console 
 sudo fpgasupdate AC_BMC_RSU_user_retail_3.2.0_unsigned.rsu
 ```
+> *Required BMC firmware version for 2022 release is:*
+> 	* `AC_BMC_RSU_user_retail_3.2.0_unsigned.rsu`
+>       * BMC RTL 	3.2.0
+>       * BMC NIOS FW 	3.2.0
+
+> Among OFS releases' artifacts, only 3.11 and 3.15 are available
 
 Update FIM:
-> *Requires access to SFTP for ofs_top_page1_unsigned_user1.bin*
 ``` console 
 sudo fpgasupdate ofs_top_page1_unsigned_user1.bin <PCI ADDRESS>
 ```
+> *Requires access to SFTP for `ofs_top_page1_unsigned_user1.bin`, refere to 2022-beta releases*
 
-### Host Excercisor Modules
-#### Plaftorm benchmark
-TODO: script for complete platform benchmarking
-
-#### Multithreading testing
-TDB: Using HEMs
+> Probably not compatible with on-PAC BMC available version, i.e, 2.0
 
 ## Reboot
-After every reboot (also warm), run:
+Once installation is complete, after every reboot (also warm), run:
 ``` console 
 $ source settings/settings_dfl.sh
 $ source settings/settings_opae.sh
 ```
+or 
+``` console 
+$ source settings.sh
+```
+
+### Host Excercisor Modules
+Platform testing using Host Excercisor Modules (HEMs)
+#### Plaftorm benchmark
+In the `tests/` directory, the following sub-directories are available:
+ * `freq/` assess user input --clock-mhz impact 
+ * `lpbk/` evaluate 2 available AFUs with same GUID
+ * `mem/` ?
+ * `mem_tg/` ?
+ * `test_all/` run with `--testall` flag
+ * `trput/` measure max platform bandwidth per cache line reads and interleave patterns
+
+Test results are available in `tests/results/` with file names composed as `<test_name>_<hostname>.csv`.
+
+#### Multithreading testing
+Functional verification of thread-safety:
+1. ✅ Same user, different VFs, **explicit VF**
+2. ❌ Same user, different VFs, implicit VF
+3. ❌ Same user, same AFU, multiple available VFs
+4. ❌ Same user, same VF
+5. ✅ (Parallel) Same user, different VFs, **explicit VF**, in loop
+
+
+### Hello AFU
+<a name="hello_afu"></a>
+TBD: from `example-afus`
+> *Requires quartus license?*
+> *Is license included in OFS release from github*
+
+### `fpgabist`
+Platform benchmark with `fpgabist`:
+> requires custom afu `.gbs` to be built, i.e., [Hello AFU](#hello_afu)
+
+#### Native Loop-Back
+TBD
+#### DMA
+TBD
+
