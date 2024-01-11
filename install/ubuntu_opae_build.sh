@@ -15,16 +15,29 @@ sudo pip3 uninstall setuptools
 sudo pip3 install Pybind11==2.10.0
 sudo pip3 install setuptools==59.6.0 --prefix=/usr
 
-# Clone
-mkdir -p $WORK_DIR/Intel_OFS/
-cd $WORK_DIR/Intel_OFS/
-git init
-git clone https://github.com/OPAE/opae-sdk.git
+# Clone 2.1.1-1
+# mkdir -p $WORK_DIR/Intel_OFS/
+# cd $WORK_DIR/Intel_OFS/
+# git init
+# git clone https://github.com/OPAE/opae-sdk.git
+# cd $WORK_DIR/Intel_OFS/opae-sdk
+# git checkout tags/2.1.1-1 -b release/2.1.1
+# git describe --tags
+# echo "Expected 2.1.1-1"
+# git branch
+
+# Download 2.2.0-1
 cd $WORK_DIR/Intel_OFS/opae-sdk
-git checkout tags/2.1.1-1 -b release/2.1.1
-git describe --tags
-echo "Expected 2.1.1-1"
-git branch
+wget https://github.com/OFS/opae-sdk/releases/download/2.2.0-1/opae-2.2.0-1.tar.gz
+cd opae-2.2.0-1/
+mkdir build
+cd build/
+cmake ..
+# cmake .. -DCPACK_GENERATOR=DEB -DOPAE_BUILD_FPGABIST=ON -DOPAE_BUILD_PYTHON_DIST=ON -DCMAKE_BUILD_PREFIX=/usr
+make -j `nproc`
+# NOTE: Install through dpkg so that you can control the installation more easily
+make -j `nproc` package_deb
+sudo dpkg -i opae*.deb
 
 # Install by script
 cd $WORK_DIR/Intel_OFS/opae-sdk/packaging/opae/deb
