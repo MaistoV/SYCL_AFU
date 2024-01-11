@@ -1,0 +1,62 @@
+//****** PORT ******//
+Object Id                        : 0xEC00000
+PCIe s:b:d.f                     : 0000:01:00.0
+Vendor Id                        : 0x8086
+Device Id                        : 0xBCCE
+SubVendor Id                     : 0x8086
+SubDevice Id                     : 0x0000
+Socket Id                        : 0x00
+//****** PORT ******//
+Object Id                        : 0xE001000000000000
+PCIe s:b:d.f                     : 0000:01:00.7
+Vendor Id                        : 0x8086
+Device Id                        : 0xBCCF
+SubVendor Id                     : 0x8086
+SubDevice Id                     : 0x0000
+Socket Id                        : 0xFF
+Accelerator GUID                 : 4dadea34-2c78-48cb-a3dc-5b831f5cecbb
+//****** PORT ******//
+Object Id                        : 0xC001000000000000
+PCIe s:b:d.f                     : 0000:01:00.6
+Vendor Id                        : 0x8086
+Device Id                        : 0xBCCF
+SubVendor Id                     : 0x8086
+SubDevice Id                     : 0x0000
+Socket Id                        : 0xFF
+Accelerator GUID                 : 56e203e9-864f-49a7-b94b-12284c31e02b
+//****** PORT ******//
+Object Id                        : 0xA001000000000000
+PCIe s:b:d.f                     : 0000:01:00.5
+Vendor Id                        : 0x8086
+Device Id                        : 0xBCCF
+SubVendor Id                     : 0x8086
+SubDevice Id                     : 0x0000
+Socket Id                        : 0xFF
+Accelerator GUID                 : 8568ab4e-6ba5-4616-bb65-2a578330a8eb
+//****** PORT ******//
+Object Id                        : 0x8001000000000000
+PCIe s:b:d.f                     : 0000:01:00.4
+Vendor Id                        : 0x8086
+Device Id                        : 0xBCCE
+SubVendor Id                     : 0x8086
+SubDevice Id                     : 0x0000
+Socket Id                        : 0xFF
+Accelerator GUID                 : 44bfc10d-b42a-44e5-bd42-57dc93ea7f91
+//****** PORT ******//
+Object Id                        : 0x4001000000000000
+PCIe s:b:d.f                     : 0000:01:00.2
+Vendor Id                        : 0x8086
+Device Id                        : 0xBCCE
+SubVendor Id                     : 0x8086
+SubDevice Id                     : 0x0000
+Socket Id                        : 0xFF
+Accelerator GUID                 : 56e203e9-864f-49a7-b94b-12284c31e02b
+//****** PORT ******//
+Object Id                        : 0x2001000000000000
+PCIe s:b:d.f                     : 0000:01:00.1
+Vendor Id                        : 0x8086
+Device Id                        : 0xBCCE
+SubVendor Id                     : 0x8086
+SubDevice Id                     : 0x0000
+Socket Id                        : 0xFF
+Accelerator GUID                 : 1aae155c-acc5-4210-b9ab-efbd90b970c4
