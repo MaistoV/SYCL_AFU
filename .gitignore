@@ -9,3 +9,5 @@ tmp*
 otcshare_dumps/*
 !otcshare_dumps/*.zip*
 
+# FIM and AFU builds
+afu_flow/build/
