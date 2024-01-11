@@ -4,3 +4,8 @@ tmp*
 # Results
 *.csv
 *.log
+
+# Extracted otcshare dumps
+otcshare_dumps/*
+!otcshare_dumps/*.zip*
+
