@@ -1,68 +1,61 @@
-# intel-ofs-2022.2-ubuntu-hitek
-Installation steps for Intel OFS for Hitek NC100 card on Ubuntu 22.04.
+# intel-ofs-2023.2-ubuntu-hitek
+Installation steps for Intel OFS for Hitek C220 card on Ubuntu 22.04.
 
 > NOTE: the scripts provided in `install/`:
-> * require sudo access;
+> * may require sudo access;
 > * may not run automously due to underlying assumptions, hence, you should keep an eye on the single commands;
-> * perform the builds from `/home/intelFPGA`, where you need r/w access; if you want to change this: `export WORK_DIR=<your dir>`
+> * perform the builds in this directory, where you need r/w access; if you want to change this: `export WORK_DIR=<your dir>
 
 ## References:
-* OTCshare (private repo, snapshot at `otcshare_dumps/`)
-    * Original $USER guide for RHEL is at `otcshare_dumps/intel-ofs-docs-main/n6000/$USER_guides/ofs_getting_started/ug_qs_ofs_n6000.md` .
-
-* OFS github 
-    * Oldest public release is 2023.1 and has significantly changed since 2022.1.
+* OFS github https://github.com/OFS/ofs-agx7-pcie-attach/releases/tag/ofs-2023.2-1
 * Hitek SFTP
-    * Device support for HiPrAcc™ NC100 card, a.k.a. Agilex Low Profile PCIe Card.
+    * Device support for NC220/C220 card.
 
 ## Installation steps
+
+### Hitek release
+Extract Hitek FIM release in `hitek_release` folder.
+
 ### BIOS
 * Enable IO-MMU
 * Enable VT-d
 
 ### linux-dfl
-Install linux kernel 5.15 with dfl config.
+Install Linux DFL kernel 6.1-1.
 Run:
 ``` console 
 $ source install/ubuntu_linux_dfl_build.sh  
 ```
 
 ### opae-sdk
-Build and install opae-sdk v2.1.1-1
+Build and install opae-sdk v2.8.0-1
 ``` console 
 $ source install/ubuntu_opae_build.sh  
 ```
 
 ### Quartus Prime Pro
-Install Quartus Prime Pro with **Agilex** support. 
-See install/ubuntu_quartus.sh
 >*Requires license*.
+Install Quartus Prime Pro with **Agilex** support. 
+``` console 
+$ source install/ubuntu_quartus.sh
+``` 
 
 ### Simulator
-Install QuestaSim or VCS. 
 >*Requires license*.
+Install QuestaSim or VCS. 
 
-### Bringup Hitek NC100 PAC
+### Bringup Hitek C220 PAC
 Update PAC firmware. Download BSP for NC100 from Hitek SFTP.  **TBD**
 
 Update BMC FW and RTL:
 ``` console 
 sudo fpgasupdate AC_BMC_RSU_user_retail_3.2.0_unsigned.rsu
 ```
-> *Required BMC firmware version for 2022 release is:*
-> 	* `AC_BMC_RSU_user_retail_3.2.0_unsigned.rsu`
->       * BMC RTL 	3.2.0
->       * BMC NIOS FW 	3.2.0
-
-> Among OFS releases' artifacts, only 3.11 and 3.15 are available
 
 Update FIM:
 ``` console 
 sudo fpgasupdate ofs_top_page1_unsigned_user1.bin <PCI ADDRESS>
 ```
-> *Requires access to SFTP for `ofs_top_page1_unsigned_user1.bin`, refere to 2022-beta releases*
-
-> Probably not compatible with on-PAC BMC available version, i.e, 2.0
 
 ## Reboot
 Once installation is complete, after every reboot (also warm), run:
@@ -100,8 +93,6 @@ Functional verification of thread-safety:
 ### Hello AFU
 <a name="hello_afu"></a>
 TBD: from `example-afus`
-> *Requires quartus license?*
-> *Is license included in OFS release from github*
 
 ### `fpgabist`
 Platform benchmark with `fpgabist`:
@@ -109,6 +100,7 @@ Platform benchmark with `fpgabist`:
 
 #### Native Loop-Back
 TBD
+
 #### DMA
 TBD
 

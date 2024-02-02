@@ -99,7 +99,7 @@ if [ ! -d opae-sim ]; then
     mkdir build
     cd build
     # point to opae-config.cmake
-    export opae_DIR=/home/intelFPGA/Intel_OFS/opae-sdk-2.1.1/packaging/opae/deb/opae-2.1.1/debian/tmp/usr/lib/opae-2.1.1/
+    export opae_DIR=~//Intel_OFS/opae-sdk-2.1.1/packaging/opae/deb/opae-2.1.1/debian/tmp/usr/lib/opae-2.1.1/
     cmake -DCMAKE_INSTALL_PREFIX=/usr ..
     make
     sudo make install  

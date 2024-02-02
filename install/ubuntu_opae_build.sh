@@ -1,58 +1,44 @@
-# Set working directory if not already set
-: ${WORK_DIR=/home/intelFPGA}
+source ubuntu_install_settings.sh
 
-# Prerequisites
-sudo apt-get install -y python3 python3-pip python3-dev git gcc g++ make cmake uuid-dev libjson-c-dev libhwloc-dev libtbb-dev libedit-dev libudev-dev linuxptp pandoc devscripts debhelper doxygen
+# Prerequisites (same as Linux DFL?)
+sudo apt-get install -y python3 python3-pip python3-jsonschema  python3-dev git gcc g++ make cmake uuid-dev \
+    libjson-c-dev libhwloc-dev libtbb-dev libedit-dev libudev-dev linuxptp pandoc \
+    devscripts debhelper doxygen libcli11-dev libspdlog-dev libsystemd-dev libcap-dev python3-pyyaml-env-tag
+# librpm-dev python3-sphinx  python3-virtualenv  podman
+
 pip3 install jsonschema virtualenv pyyaml pybind11
+# pip3 install --upgrade --prefix=/usr pip setuptools pybind11
+# sudo pip3 install Pybind11==2.10.0
+# sudo pip3 install setuptools==59.6.0 --prefix=/usr
 
-# sudo apt install autoconf automake bison boost boost-dev cmake doxygen dwarves elfutils-libelf-dev \
-# flex gcc gcc-c++ git hwloc-dev json-c-dev libarchive libedit libedit-dev libpcap libpng12 libuuid libuuid-dev libxml2 libxml2-dev make ncurses spdlog cli11-dev python3-yaml python3-pybind11  \
-# ncurses-dev ncurses-libs openssl-dev python3-pip python3-dev python3-jsonschema rsync tbb-dev libudev-dev
+# Clone
+mkdir -p $WORK_DIR/Intel_OFS/
+cd $WORK_DIR/Intel_OFS/
+git clone https://github.com/OFS/opae-sdk.git
+cd opae-sdk
+git checkout tags/2.8.0-1 -b nc220 
+git describe --tags
+echo "Expected 2.8.0-1"
+git apply $HTS_PATCHES_DIR/opae-sdk-nc220.patch
 
-python3 -m pip install --user jsonschema virtualenv pudb pyyaml
-
-sudo pip3 uninstall setuptools
-sudo pip3 install Pybind11==2.10.0
-sudo pip3 install setuptools==59.6.0 --prefix=/usr
-
-# Clone 2.1.1-1
-# mkdir -p $WORK_DIR/Intel_OFS/
-# cd $WORK_DIR/Intel_OFS/
-# git init
-# git clone https://github.com/OPAE/opae-sdk.git
-# cd $WORK_DIR/Intel_OFS/opae-sdk
-# git checkout tags/2.1.1-1 -b release/2.1.1
-# git describe --tags
-# echo "Expected 2.1.1-1"
-# git branch
-
-# Download 2.2.0-1
-cd $WORK_DIR/Intel_OFS/opae-sdk
-wget https://github.com/OFS/opae-sdk/releases/download/2.2.0-1/opae-2.2.0-1.tar.gz
-cd opae-2.2.0-1/
-mkdir build
-cd build/
-cmake ..
-# cmake .. -DCPACK_GENERATOR=DEB -DOPAE_BUILD_FPGABIST=ON -DOPAE_BUILD_PYTHON_DIST=ON -DCMAKE_BUILD_PREFIX=/usr
-make -j `nproc`
-# NOTE: Install through dpkg so that you can control the installation more easily
-make -j `nproc` package_deb
-sudo dpkg -i opae*.deb
-
-# Install by script
-cd $WORK_DIR/Intel_OFS/opae-sdk/packaging/opae/deb
-./create
-sudo dpkg -i opae*.deb
-
-# Install from sources
-# # NOTE: UNTESTED
+# Build with Cmake
 # cd $WORK_DIR/Intel_OFS/opae-sdk
 # mkdir build
-# cd $WORK_DIR/Intel_OFS/opae-sdk/build
-# cmake .. -DCPACK_GENERATOR=DEB -DOPAE_BUILD_FPGABIST=ON -DOPAE_BUILD_PYTHON_DIST=ON -DCMAKE_BUILD_PREFIX=/usr
+# cd build/
+# cmake ..
+# # cmake .. -DCPACK_GENERATOR=DEB -DOPAE_BUILD_FPGABIST=ON -DOPAE_BUILD_PYTHON_DIST=ON
 # make -j `nproc`
+# # NOTE: Install through dpkg so that you can control the installation more easily
 # make -j `nproc` package_deb
 # sudo dpkg -i opae*.deb
+
+# Build by script
+cd $WORK_DIR/Intel_OFS/opae-sdk/packaging/opae/deb
+./create
+
+# Install with dpkg
+# NOTE: Install through dpkg so that you can control the installation more easily
+sudo dpkg -i opae*.deb
 
 # Check installed
 apt list opae*

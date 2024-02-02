@@ -1,3 +1,12 @@
+# Download and build directory
+downloads/
+install/build/
+# FIM and AFU builds
+afu_flow/build/
+
+# Release folder
+hitek_release/*
+
 # Auxiliary tmp files
 tmp*
 
@@ -5,9 +14,3 @@ tmp*
 *.csv
 *.log
 
-# Extracted otcshare dumps
-otcshare_dumps/*
-!otcshare_dumps/*.zip*
-
-# FIM and AFU builds
-afu_flow/build/
