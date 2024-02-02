@@ -6,7 +6,7 @@
 #########################################
   export IOFS_BUILD_ROOT=$PWD/../build
 #   cd $IOFS_BUILD_ROOT/intel-ofs-fim
-  export OFS_ROOTDIR=$PWD
+  export OFS_ROOTDIR=$IOFS_BUILD_ROOT/intel-ofs-fim
 #   export WORKDIR=$OFS_ROOTDIR
   export VERDIR=$OFS_ROOTDIR/verification
 #   export PATH=$PATH:/tools/altera/v21.4pro/quartus/bin/
@@ -23,7 +23,7 @@
 # Quartus Tools
 # Note, QUARTUS_HOME is your Quartus installation directory, e.g. $QUARTUS_HOME/bin contains Quartus executable.
 
-export WORKDIR=$OFS_ROOTDIR	
+export WORKDIR=$OFS_ROOTDIR
 export QUARTUS_HOME=/home/vincenzo/intelFPGA_pro/22.1/quartus
 export QUARTUS_ROOTDIR=$QUARTUS_HOME
 export QUARTUS_INSTALL_DIR=$QUARTUS_ROOTDIR
@@ -46,18 +46,18 @@ export PATH=$QUARTUS_HOME/bin:$QUARTUS_HOME/qsys/bin:$QUARTUS_HOME/sopc_builder/
 # OPAE-SDK release
 export OPAE_SDK_REPO_BRANCH=release/2.1.1
 
-# The following environment variables are required for compiling the AFU examples. 
+# The following environment variables are required for compiling the AFU examples.
 
 # Location to clone the ofs-platform-afu-bbb repository which contains PIM files and AFU examples.
 export OFS_PLATFORM_AFU_BBB=$IOFS_BUILD_ROOT/ofs-platform-afu-bbb
 
 # Location to clone the intel-fpga-bbb repository which contain infrastructure shims, AFU samples and tutorials.
-export FPGA_BBB_CCI_SRC=$IOFS_BUILD_ROOT/intel-fpga-bbb  
+export FPGA_BBB_CCI_SRC=$IOFS_BUILD_ROOT/intel-fpga-bbb
 
-# OPAE_PLATFORM_ROOT points to a release tree configured with the Platform Interface Manager (PIM).  
-export OPAE_PLATFORM_ROOT=$OFS_ROOTDIR/work/pr_build_template
+# OPAE_PLATFORM_ROOT points to a release tree configured with the Platform Interface Manager (PIM).
+export OPAE_PLATFORM_ROOT=$OFS_ROOTDIR/work_x16_htk_lp_pcie/pr_build_template
 
-# OPAE and MPF libraries must either be on the default linker search paths or on both LIBRARY_PATH and LD_LIBRARY_PATH.  
+# OPAE and MPF libraries must either be on the default linker search paths or on both LIBRARY_PATH and LD_LIBRARY_PATH.
 export OPAE_LOC=/usr
 export LIBRARY_PATH=$OPAE_LOC/lib:$LIBRARY_PATH
 export LD_LIBRARY_PATH=$OPAE_LOC/lib64:$LD_LIBRARY_PATH
