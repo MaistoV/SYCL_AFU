@@ -74,8 +74,8 @@ cd ..
 #############
 # Build FIM #
 #############
-cd $IOFS_BUILD_ROOT
-source ../afu_synth/fim_synth.sh
+# cd $IOFS_BUILD_ROOT../afu_synth/
+# source fim_synth.sh
 
 # Download FIM to FPGA
 # sudo fpgasupdate ofs_top_page1_unsigned_user1.bin <N6001 SKU2 PCIe b:d.f>

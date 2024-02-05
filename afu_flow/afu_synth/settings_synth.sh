@@ -24,7 +24,7 @@
 # Note, QUARTUS_HOME is your Quartus installation directory, e.g. $QUARTUS_HOME/bin contains Quartus executable.
 
 export WORKDIR=$OFS_ROOTDIR
-export QUARTUS_HOME=/home/vincenzo/intelFPGA_pro/22.1/quartus
+export QUARTUS_HOME=/home/vincenzo/intelFPGA_pro/21.4/quartus
 export QUARTUS_ROOTDIR=$QUARTUS_HOME
 export QUARTUS_INSTALL_DIR=$QUARTUS_ROOTDIR
 export QUARTUS_ROOTDIR_OVERRIDE=$QUARTUS_ROOTDIR

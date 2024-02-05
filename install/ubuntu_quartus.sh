@@ -19,52 +19,48 @@ sudo ln -s /usr/bin/python3 /usr/bin/python
 # TBD: wget is not going to work due to necessary prompt interaction
 mkdir downloads
 cd downloads
-# wget Quartus-pro-22.1.0.174-linux.tar
-# wget Quartus-pro-22.1.0.174-devices-4.tar
+# wget Quartus-pro-21.4.0.174-linux.tar
+# wget Quartus-pro-21.4.0.174-devices-4.tar
 # Untar and install
 mkdir quartus
 cd quartus
-tar xvf ../Quartus-pro-22.1.0.174-linux.tar
+tar xvf ../Quartus-pro-21.4.0.174-linux.tar
 ./
 mkdir agilex
 cd agilex
-tar xvf ../Quartus-pro-22.1.0.174-devices-4.tar
+tar xvf ../Quartus-pro-21.4.0.174-devices-4.tar
 ./dev4_setup_pro.sh 
-
-# Export Quartus binaries
-export PATH=$PATH:/home/vincenzo/intelFPGA_pro/22.1/quartus/bin
-export PATH=$PATH:/home/vincenzo/intelFPGA_pro/22.1/qsys/bin
 
 # Apply patches
 OTCSHARE_INTEL_OFS_DOCS_MAIN=otcshare_dumps/otcshare_22_Nov_2023/intel-ofs-docs-main
-cd $OTCSHARE_INTEL_OFS_DOCS_MAIN/n6000/dev_guides/fim_dev/patch_v22_1
-chmod +x quartus-22.1-0.04-linux.run 
-chmod +x quartus-22.1-0.23-linux.run
-chmod +x quartus-22.1-0.26-linux.run
-chmod +x quartus-22.1-0.27-linux.run
+cd $OTCSHARE_INTEL_OFS_DOCS_MAIN/n6000/dev_guides/fim_dev/patch_v21_4
+chmod +x quartus-21.4-0.04-linux.run 
+chmod +x quartus-21.4-0.23-linux.run
+chmod +x quartus-21.4-0.26-linux.run
+chmod +x quartus-21.4-0.27-linux.run
 
-sudo ./quartus-22.1-0.04-linux.run   
-sudo ./quartus-22.1-0.23-linux.run
-sudo ./quartus-22.1-0.26-linux.run
-sudo ./quartus-22.1-0.27-linux.run
+sudo ./quartus-21.4-0.04-linux.run   
+sudo ./quartus-21.4-0.23-linux.run
+sudo ./quartus-21.4-0.26-linux.run
+sudo ./quartus-21.4-0.27-linux.run
 
 # Remove files
-QUARTUS_22_1_BASE="/home/vincenzo/intelFPGA_pro/22.1"   
-rm $QUARTUS_22_1_BASE/ip/altera/subsystems/pcie_ss/rtl/aldec/data_mover/pciess_dm_h2c_cpl_reordering.sv 
-rm $QUARTUS_22_1_BASE/ip/altera/subsystems/pcie_ss/rtl/aldec/pciess_hip_if_adaptor.v
-rm $QUARTUS_22_1_BASE/ip/altera/subsystems/pcie_ss/rtl/aldec/ptile_pciess_top.sv
-rm $QUARTUS_22_1_BASE/ip/altera/subsystems/pcie_ss/rtl/cadence/data_mover/pciess_dm_h2c_cpl_reordering.sv
-rm $QUARTUS_22_1_BASE/ip/altera/subsystems/pcie_ss/rtl/cadence/pciess_hip_if_adaptor.v
-rm $QUARTUS_22_1_BASE/ip/altera/subsystems/pcie_ss/rtl/cadence/ptile_pciess_top.sv
-rm $QUARTUS_22_1_BASE/ip/altera/subsystems/pcie_ss/rtl/intelfpga/data_mover/pciess_dm_h2c_cpl_reordering.sv
-rm $QUARTUS_22_1_BASE/ip/altera/subsystems/pcie_ss/rtl/intelfpga/pciess_hip_if_adaptor.v
-rm $QUARTUS_22_1_BASE/ip/altera/subsystems/pcie_ss/rtl/intelfpga/ptile_pciess_top.sv
-rm $QUARTUS_22_1_BASE/ip/altera/subsystems/pcie_ss/rtl/mentor/data_mover/pciess_dm_h2c_cpl_reordering.sv
-rm $QUARTUS_22_1_BASE/ip/altera/subsystems/pcie_ss/rtl/mentor/ptile_pciess_top.sv
-rm $QUARTUS_22_1_BASE/ip/altera/subsystems/pcie_ss/rtl/mentor/pciess_hip_if_adaptor.v
-rm $QUARTUS_22_1_BASE/ip/altera/subsystems/pcie_ss/rtl/data_mover/pciess_dm_h2c_cpl_reordering.sv
-rm $QUARTUS_22_1_BASE/ip/altera/subsystems/pcie_ss/rtl/pciess_hip_if_adaptor.v
-rm $QUARTUS_22_1_BASE/ip/altera/subsystems/pcie_ss/rtl/ptile_pciess_top.sv
-rm $QUARTUS_22_1_BASE/ip/altera/subsystems/pcie_ss/rtl/synopsys/data_mover/pciess_dm_h2c_cpl_reordering.sv
-rm $QUARTUS_22_1_BASE/ip/altera/subsystems/pcie_ss/rtl/synopsys/pciess_hip_if_adaptor.v
-rm $QUARTUS_22_1_BASE/ip/altera/subsystems/pcie_ss/rtl/synopsys/ptile_pciess_top.sv
+QUARTUS_21_4_BASE="/home/vincenzo/intelFPGA_pro/21.4"   
+rm $QUARTUS_21_4_BASE/ip/altera/subsystems/pcie_ss/rtl/aldec/data_mover/pciess_dm_h2c_cpl_reordering.sv 
+rm $QUARTUS_21_4_BASE/ip/altera/subsystems/pcie_ss/rtl/aldec/pciess_hip_if_adaptor.v
+rm $QUARTUS_21_4_BASE/ip/altera/subsystems/pcie_ss/rtl/aldec/ptile_pciess_top.sv
+rm $QUARTUS_21_4_BASE/ip/altera/subsystems/pcie_ss/rtl/cadence/data_mover/pciess_dm_h2c_cpl_reordering.sv
+rm $QUARTUS_21_4_BASE/ip/altera/subsystems/pcie_ss/rtl/cadence/pciess_hip_if_adaptor.v
+rm $QUARTUS_21_4_BASE/ip/altera/subsystems/pcie_ss/rtl/cadence/ptile_pciess_top.sv
+rm $QUARTUS_21_4_BASE/ip/altera/subsystems/pcie_ss/rtl/intelfpga/data_mover/pciess_dm_h2c_cpl_reordering.sv
+rm $QUARTUS_21_4_BASE/ip/altera/subsystems/pcie_ss/rtl/intelfpga/pciess_hip_if_adaptor.v
+rm $QUARTUS_21_4_BASE/ip/altera/subsystems/pcie_ss/rtl/intelfpga/ptile_pciess_top.sv
+rm $QUARTUS_21_4_BASE/ip/altera/subsystems/pcie_ss/rtl/mentor/data_mover/pciess_dm_h2c_cpl_reordering.sv
+rm $QUARTUS_21_4_BASE/ip/altera/subsystems/pcie_ss/rtl/mentor/ptile_pciess_top.sv
+rm $QUARTUS_21_4_BASE/ip/altera/subsystems/pcie_ss/rtl/mentor/pciess_hip_if_adaptor.v
+rm $QUARTUS_21_4_BASE/ip/altera/subsystems/pcie_ss/rtl/data_mover/pciess_dm_h2c_cpl_reordering.sv
+rm $QUARTUS_21_4_BASE/ip/altera/subsystems/pcie_ss/rtl/pciess_hip_if_adaptor.v
+rm $QUARTUS_21_4_BASE/ip/altera/subsystems/pcie_ss/rtl/ptile_pciess_top.sv
+rm $QUARTUS_21_4_BASE/ip/altera/subsystems/pcie_ss/rtl/synopsys/data_mover/pciess_dm_h2c_cpl_reordering.sv
+rm $QUARTUS_21_4_BASE/ip/altera/subsystems/pcie_ss/rtl/synopsys/pciess_hip_if_adaptor.v
+rm $QUARTUS_21_4_BASE/ip/altera/subsystems/pcie_ss/rtl/synopsys/ptile_pciess_top.sv
