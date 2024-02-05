@@ -4,6 +4,7 @@ tmp*
 # Results
 *.csv
 *.log
+!afu_flow/backup/build_fim/*log
 
 # Extracted otcshare dumps
 otcshare_dumps/*
