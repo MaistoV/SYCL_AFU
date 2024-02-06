@@ -1,0 +1,105 @@
+#!/bin/bash
+# This scripts downloads the necessary components for AFU developement flow
+#   1. FIM sources <https://github.com/OFS/ofs-agx7-pcie-attach.git>
+#       * Hitek's release points 489c64187887fc7a58c5d04c3be968bef2bde8c6 [HEAD -> release/ofs-2023.2, tag: ofs-2023.2-1]
+#   2. OPAE-SDK <https://github.com/OFS/ofs-platform-afu-bbb.git> tag: ofs-2023.2-1
+#   3. Basic Building Blocks <https://github.com/OPAE/ofs-platform-afu-bbb.git>
+#   4. Example AFUs <https://github.com/OPAE/intel-fpga-bbb.git>
+#       * New release points to <https://github.com/OFS/examples-afu>
+#   5. ASE sources <https://github.com/OFS/opae-sim>
+
+source settings_afu.sh
+
+# OFS working dir
+export IOFS_BUILD_ROOT=$HTS_FIM_RELEASE
+export EXTERNAL_CLONE_DIR=$IOFS_BUILD_ROOT/ofs-agx7-pcie-attach/external
+mkdir -p build
+echo "[INFO] IOFS_BUILD_ROOT in $IOFS_BUILD_ROOT"
+
+#########################
+# 1. Download/Clone FIM #
+#########################
+# rm -rf $OFS_ROOTDIR
+# # Copy from SFTP
+# export OTCSHARE_INTEL_OFS_FIM=$IOFS_BUILD_ROOT/../../otcshare_dumps/otcshare_22_Nov_2023/newer_intel-ofs-fim_2.2.0-beta_AGFB014R24AE2V_20230127
+# echo "[INFO] Getting FIM from $OTCSHARE_INTEL_OFS_FIM"
+# cp -r $OTCSHARE_INTEL_OFS_FIM $OFS_ROOTDIR
+
+## Clone from GitHub
+# # git clone https://github.com/otcshare/ofs-agx7-pcie-attach.git
+# # cd /ofs-agx7-pcie-attach
+# # git checkout ofs-2023.2-1
+
+###############
+# 2. OPAE-SDK #
+###############
+cd $UTILS_BUILD_DIR
+
+echo "[INFO] Getting intel-fpga-bbb from OPAE's GitHub"
+if [ ! -d opae-sdk ]; then
+    source install/ubuntu_opae_build.sh
+fi
+
+###########################################
+# 3. Download Basic Building Blocks (BBB) #
+###########################################
+# Inlcuded in Hitek FIM release under $HTS_FIM_RELEASE/ofs-agx7-pcie-attach/external/ofs-platform-afu-bbb/
+
+# cd $EXTERNAL_CLONE_DIR
+# echo "[INFO] Getting BBB from OPAE's GitHub"
+# cd $EXTERNAL_CLONE_DIR
+# if [ ! -d ofs-platform-afu-bbb ]; then
+#     git clone https://github.com/OPAE/ofs-platform-afu-bbb.git
+# fi
+# cd ofs-platform-afu-bbb
+# git checkout $AFU_BBB_CHECKOUT
+
+##########################################
+# 4. Clone the intel-fpga-bbb repository #
+##########################################
+cd $EXTERNAL_CLONE_DIR
+
+INTE_FPGA_BBB_CHECKOUT=ofs-2023.3-2
+
+echo "[INFO] Getting intel-fpga-bbb from OPAE's GitHub"
+if [ ! -d intel-fpga-bbb ]; then
+    git clone https://github.com/OPAE/intel-fpga-bbb.git
+fi
+cd intel-fpga-bbb
+git checkout $INTE_FPGA_BBB_CHECKOUT
+
+#############
+# Build FIM #
+#############
+echo "Build FIM sourcing afu_synth/fim_synth.sh"
+
+# Load FIM to FPGA
+echo "Load FIM on FPGA with fpgasupdate"
+# sudo fpgasupdate ofs_top_page1_unsigned_user1.bin <N6001 SKU2 PCIe b:d.f>
+# sudo fpgasupdate ofs_top_page2_unsigned_user2.bin <N6001 SKU2 PCIe b:d.f>
+# sudo rsu fpga --page=user1 <N6001 SKU2 PCIe b:d.f>
+
+##########################
+# 5. Clone and build ASE #
+##########################
+cd $UTILS_BUILD_DIR
+
+# Clone and build ASE
+echo "[INFO] Getting ASE"
+if [ ! -d opae-sim ]; then
+    git clone https://github.com/OPAE/opae-sim.git
+    cd opae-sim  
+    # Releases compatible with C220(?)
+    git checkout tags/2.5.0-2 -b release/2.5.0
+    # for mock/opae_std.h 
+    # export C_INCLUDE_PATH="/usr/src/debug/opae-2.1.1-1.el8.x86_64/tests/framework"
+    mkdir build
+    cd build
+    # Default
+    # export C_INCLUDE_PATH=/usr/src/debug/opae-2.5.0-3.el8.x86_64/tests/framework
+    # point to opae-config.cmake
+    export opae_DIR=$UTILS_BUILD_DIR/opae-sdk/packaging/opae/deb/opae-2.8.0/debian/tmp/usr/lib/opae-2.8.0/
+    cmake -DCMAKE_INSTALL_PREFIX=/usr ..
+    make -j `nproc`
+    sudo make install  
+fi

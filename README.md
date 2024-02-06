@@ -10,6 +10,7 @@ Installation steps for Intel OFS for Hitek C220 card on Ubuntu 22.04.
 * OFS github https://github.com/OFS/ofs-agx7-pcie-attach/releases/tag/ofs-2023.2-1
 * Hitek SFTP
     * Device support for NC220/C220 card.
+> NOTE: target device density for the demo cluster is `014`
 
 ## Installation steps
 
@@ -33,9 +34,9 @@ Build and install opae-sdk v2.8.0-1
 $ source install/ubuntu_opae_build.sh  
 ```
 
-### Quartus Prime Pro
+### Quartus Prime Pro 23.2
 >*Requires license*.
-Install Quartus Prime Pro with **Agilex** support. 
+Install Quartus Prime Pro with **Agilex** support. Including patches (0.02, 0.11, 0.19).
 ``` console 
 $ source install/ubuntu_quartus.sh
 ``` 
@@ -45,16 +46,16 @@ $ source install/ubuntu_quartus.sh
 Install QuestaSim or VCS. 
 
 ### Bringup Hitek C220 PAC
-Update PAC firmware. Download BSP for NC100 from Hitek SFTP.  **TBD**
+Update PAC firmware. **TBD**
 
 Update BMC FW and RTL:
 ``` console 
-sudo fpgasupdate AC_BMC_RSU_user_retail_3.2.0_unsigned.rsu
+sudo fpgasupdate TBD.rsu
 ```
 
 Update FIM:
 ``` console 
-sudo fpgasupdate ofs_top_page1_unsigned_user1.bin <PCI ADDRESS>
+sudo fpgasupdate TBD.bin <PCI ADDRESS>
 ```
 
 ## Reboot
@@ -91,6 +92,10 @@ Functional verification of thread-safety:
 
 
 ### Hello AFU
+``` console 
+$ source install/initial_afu_setup.sh  
+```
+
 <a name="hello_afu"></a>
 TBD: from `example-afus`
 

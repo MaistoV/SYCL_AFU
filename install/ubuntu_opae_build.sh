@@ -12,8 +12,8 @@ pip3 install jsonschema virtualenv pyyaml pybind11
 # sudo pip3 install setuptools==59.6.0 --prefix=/usr
 
 # Clone
-mkdir -p $WORK_DIR/Intel_OFS/
-cd $WORK_DIR/Intel_OFS/
+mkdir -p $UTILS_BUILD_DIR
+cd $UTILS_BUILD_DIR
 git clone https://github.com/OFS/opae-sdk.git
 cd opae-sdk
 git checkout tags/2.8.0-1 -b nc220 
@@ -22,18 +22,17 @@ echo "Expected 2.8.0-1"
 git apply $HTS_PATCHES_DIR/opae-sdk-nc220.patch
 
 # Build with Cmake
-# cd $WORK_DIR/Intel_OFS/opae-sdk
+# cd $UTILS_BUILD_DIR/opae-sdk
 # mkdir build
 # cd build/
-# cmake ..
-# # cmake .. -DCPACK_GENERATOR=DEB -DOPAE_BUILD_FPGABIST=ON -DOPAE_BUILD_PYTHON_DIST=ON
+# # cmake .. -DCPACK_GENERATOR=DEB -DOPAE_BUILD_FPGABIST=ON
 # make -j `nproc`
 # # NOTE: Install through dpkg so that you can control the installation more easily
 # make -j `nproc` package_deb
 # sudo dpkg -i opae*.deb
 
 # Build by script
-cd $WORK_DIR/Intel_OFS/opae-sdk/packaging/opae/deb
+cd $UTILS_BUILD_DIR/opae-sdk/packaging/opae/deb
 ./create
 
 # Install with dpkg

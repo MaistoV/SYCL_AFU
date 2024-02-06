@@ -2,21 +2,7 @@
 # For synthesis #
 #################
 
-# From Hitek SFTP
-#########################################
-  export IOFS_BUILD_ROOT=$PWD/../build
-#   cd $IOFS_BUILD_ROOT/intel-ofs-fim
-  export OFS_ROOTDIR=$IOFS_BUILD_ROOT/intel-ofs-fim
-#   export WORKDIR=$OFS_ROOTDIR
-  export VERDIR=$OFS_ROOTDIR/verification
-#   export PATH=$PATH:/tools/altera/v21.4pro/quartus/bin/
-#   export QUARTUS_ROOTDIR=/tools/altera/v21.4pro/quartus/
-#   export QUARTUS_INSTALL_DIR=$QUARTUS_ROOTDIR
-#   export IMPORT_IP_ROOTDIR=$QUARTUS_ROOTDIR/../ip
-#   export IP_ROOTDIR=$QUARTUS_ROOTDIR/../ip
-#   export OPAE_SDK_REPO_BRANCH=release/2.0.11
-#   cd $IOFS_BUILD_ROOT/intel-ofs-fim
-###############################################
+TODO: UPDATE
 
 # Note, OFS_ROOTDIR is the directory where you cloned the repo, e.g. /home/MyProject/intel-ofs-fim *
 

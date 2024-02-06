@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Set working directory if not already set
-DOWNLOADS_DIR=$(pwd)/downloads
+DOWNLOADS_DIR=$ROOT_DIR=install/downloads
 
 ###########
 # Quartus #
