@@ -3,10 +3,12 @@
 #   1. FIM sources <https://github.com/OFS/ofs-agx7-pcie-attach.git>
 #       * Hitek's release points 489c64187887fc7a58c5d04c3be968bef2bde8c6 [HEAD -> release/ofs-2023.2, tag: ofs-2023.2-1]
 #   2. OPAE-SDK <https://github.com/OFS/ofs-platform-afu-bbb.git> tag: ofs-2023.2-1
-#   3. Basic Building Blocks <https://github.com/OPAE/ofs-platform-afu-bbb.git>
-#   4. Example AFUs <https://github.com/OPAE/intel-fpga-bbb.git>
-#       * New release points to <https://github.com/OFS/examples-afu>
-#   5. ASE sources <https://github.com/OFS/opae-sim>
+#   3. External repositories
+#       * <https://github.com/OPAE/ofs-platform-afu-bbb.git>
+#       * <https://github.com/OPAE/intel-fpga-bbb.git>
+#       * <https://github.com/OFS/examples-afu>
+#   4. ASE sources <https://github.com/OFS/opae-sim>
+#   5. Buid FIM
 
 source settings_afu.sh
 
@@ -40,12 +42,11 @@ if [ ! -d opae-sdk ]; then
     source install/ubuntu_opae_build.sh
 fi
 
-###########################################
-# 3. Download Basic Building Blocks (BBB) #
-###########################################
+#####################
+# 3. External repos # 
+#####################
+# Basic Building Blocks (BBB)
 # Inlcuded in Hitek FIM release under $HTS_FIM_RELEASE/ofs-agx7-pcie-attach/external/ofs-platform-afu-bbb/
-
-# cd $EXTERNAL_CLONE_DIR
 # echo "[INFO] Getting BBB from OPAE's GitHub"
 # cd $EXTERNAL_CLONE_DIR
 # if [ ! -d ofs-platform-afu-bbb ]; then
@@ -54,13 +55,9 @@ fi
 # cd ofs-platform-afu-bbb
 # git checkout $AFU_BBB_CHECKOUT
 
-##########################################
-# 4. Clone the intel-fpga-bbb repository #
-##########################################
+# intel-fpga-bbb
 cd $EXTERNAL_CLONE_DIR
-
-INTE_FPGA_BBB_CHECKOUT=ofs-2023.3-2
-
+INTE_FPGA_BBB_CHECKOUT=ofs-2023.2-1
 echo "[INFO] Getting intel-fpga-bbb from OPAE's GitHub"
 if [ ! -d intel-fpga-bbb ]; then
     git clone https://github.com/OPAE/intel-fpga-bbb.git
@@ -68,19 +65,18 @@ fi
 cd intel-fpga-bbb
 git checkout $INTE_FPGA_BBB_CHECKOUT
 
-#############
-# Build FIM #
-#############
-echo "Build FIM sourcing afu_synth/fim_synth.sh"
-
-# Load FIM to FPGA
-echo "Load FIM on FPGA with fpgasupdate"
-# sudo fpgasupdate ofs_top_page1_unsigned_user1.bin <N6001 SKU2 PCIe b:d.f>
-# sudo fpgasupdate ofs_top_page2_unsigned_user2.bin <N6001 SKU2 PCIe b:d.f>
-# sudo rsu fpga --page=user1 <N6001 SKU2 PCIe b:d.f>
+# example-afu
+cd $EXTERNAL_CLONE_DIR
+EXAMPLE_AFU_CHECKOUT=ofs-2023.2-1
+echo "[INFO] Getting intel-fpga-bbb from OPAE's GitHub"
+if [ ! -d example-afu ]; then
+    git clone https://github.com/OPAE/example-afu.git
+fi
+cd example-afu
+git checkout $EXAMPLE_AFU_CHECKOUT
 
 ##########################
-# 5. Clone and build ASE #
+# 4. Clone and build ASE #
 ##########################
 cd $UTILS_BUILD_DIR
 
@@ -103,3 +99,15 @@ if [ ! -d opae-sim ]; then
     make -j `nproc`
     sudo make install  
 fi
+
+
+#############
+# Build FIM #
+#############
+echo "Build FIM sourcing afu_synth/fim_synth.sh"
+
+# Load FIM to FPGA
+echo "Load FIM on FPGA with fpgasupdate"
+# sudo fpgasupdate ofs_top_page1_unsigned_user1.bin <N6001 SKU2 PCIe b:d.f>
+# sudo fpgasupdate ofs_top_page2_unsigned_user2.bin <N6001 SKU2 PCIe b:d.f>
+# sudo rsu fpga --page=user1 <N6001 SKU2 PCIe b:d.f>

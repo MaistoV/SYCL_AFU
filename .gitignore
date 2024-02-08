@@ -14,3 +14,10 @@ tmp*
 *.csv
 *.log
 
+# Simulation files
+transcript
+
+# AFU simualtion and build
+afu_flow/*_synth
+afu_flow/*_ase
+
