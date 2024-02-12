@@ -67,13 +67,13 @@ git checkout $INTE_FPGA_BBB_CHECKOUT
 
 # example-afu
 cd $EXTERNAL_CLONE_DIR
-EXAMPLE_AFU_CHECKOUT=ofs-2023.2-1
+EXAMPLES_AFU_CHECKOUT=ofs-2023.2-1
 echo "[INFO] Getting intel-fpga-bbb from OPAE's GitHub"
-if [ ! -d example-afu ]; then
-    git clone https://github.com/OPAE/example-afu.git
+if [ ! -d examples-afu ]; then
+    git clone https://github.com/OPAE/examples-afu.git
 fi
-cd example-afu
-git checkout $EXAMPLE_AFU_CHECKOUT
+cd examples-afu
+git checkout $EXAMPLES_AFU_CHECKOUT
 
 ##########################
 # 4. Clone and build ASE #
@@ -86,7 +86,7 @@ if [ ! -d opae-sim ]; then
     git clone https://github.com/OPAE/opae-sim.git
     cd opae-sim  
     # Releases compatible with C220(?)
-    git checkout tags/2.5.0-2 -b release/2.5.0
+    git checkout tags/2.8.0-1 -b release/2.8.0
     # for mock/opae_std.h 
     # export C_INCLUDE_PATH="/usr/src/debug/opae-2.1.1-1.el8.x86_64/tests/framework"
     mkdir build
