@@ -38,7 +38,9 @@ export OPAE_PLATFORM_ROOT=$HTS_FIM_RELEASE/ofs-agx7-pcie-attach/work_htk_nc220_$
 # export OPAE_PLATFORM_ROOT=$HTS_FIM_RELEASE/prebuild_images/agf014/release_v1.1/pr_build_template
 
 # OPAE SDK release
-export OPAE_SDK_REPO_BRANCH=rel
+export OPAE_SDK_VERSION=2.8.0-1
+export OPAE_SDK_REPO_BRANCH=$OPAE_SDK_VERSION
+
 # The following environment variables are required for compiling the AFU examples. 
 
 # Location to clone the ofs-platform-afu-bbb repository which contains PIM files and AFU examples.
@@ -55,8 +57,8 @@ export LD_LIBRARY_PATH=$OPAE_LOC/lib64:$LD_LIBRARY_PATH
 ############D####
 # For ASE only # 
 ################
-# Add -debugDB to vsim builds
-export DEBUG_VSIM=1
+# Add -debugdb to vsim builds
+# export DEBUG_VSIM=1 # Currently not working  
 
 # Setup continuous mode
 export ASE_MODE=3

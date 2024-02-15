@@ -14,10 +14,13 @@ export AFU_WORK_DIR=${ROOT_DIR}/afu_flow
 
 
 # host_chan_mmio
-source ${AFU_WORK_DIR}/afus/afu_host_chan_mmio.sh
+# source ${AFU_WORK_DIR}/afus/afu_host_chan_mmio.sh
 
 # hello_world
-# source ${AFU_WORK_DIR}/afus/afu_hello_world.sh
+source ${AFU_WORK_DIR}/afus/afu_hello_world.sh
+
+# dma
+source ${AFU_WORK_DIR}/afus/dma.sh
 
 ####################################
 # AFU-specific working directories # 
