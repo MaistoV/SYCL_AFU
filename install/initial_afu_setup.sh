@@ -39,13 +39,13 @@ cd $UTILS_BUILD_DIR
 
 echo "[INFO] Getting intel-fpga-bbb from OPAE's GitHub"
 if [ ! -d opae-sdk ]; then
-    source install/ubuntu_opae_build.sh
+    source install/ubuntu_opae-sdk_build.sh
 fi
 
 #####################
 # 3. External repos # 
 #####################
-# Basic Building Blocks (BBB)
+# Basic Building Blocks (PIM for AFU)
 # Inlcuded in Hitek FIM release under $HTS_FIM_RELEASE/ofs-agx7-pcie-attach/external/ofs-platform-afu-bbb/
 # echo "[INFO] Getting BBB from OPAE's GitHub"
 # cd $EXTERNAL_CLONE_DIR
@@ -82,6 +82,7 @@ cd $UTILS_BUILD_DIR
 
 # Clone and build ASE
 echo "[INFO] Getting ASE"
+# NOTE: OPAE-SDK must be already installed and accessible!
 if [ ! -d opae-sim ]; then
     git clone https://github.com/OPAE/opae-sim.git
     cd opae-sim  
