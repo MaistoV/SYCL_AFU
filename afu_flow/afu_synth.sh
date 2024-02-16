@@ -3,10 +3,11 @@
 #############
 # Build AFU #
 #############
-cd ${AFU_WORK_DIR}
 
 # Removing old directory, if any
 rm -rf ${AFU_SYNTH_DIR} 
+
+cd ${AFU_WORK_DIR}
 
 # Launch script
 afu_synth_setup                     \

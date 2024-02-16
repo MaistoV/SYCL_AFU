@@ -4,18 +4,19 @@ Installation steps for Intel OFS for Hitek C220 card on Ubuntu 22.04.
 > NOTE: the scripts provided in `install/`:
 > * may require sudo access;
 > * may not run automously due to underlying assumptions, hence, you should keep an eye on the single commands;
-> * perform the builds in this directory, where you need r/w access; if you want to change this: `export WORK_DIR=<your dir>
+> * perform the builds in this directory, where you need r/w access; if you want to change this: `export INSTALL_BUILD_DIR=<your dir>`
 
 ## References:
 * OFS github https://github.com/OFS/ofs-agx7-pcie-attach/releases/tag/ofs-2023.2-1
 * Hitek SFTP
     * Device support for NC220/C220 card.
-> NOTE: target device density for the demo cluster is `014`
+> NOTE: For the demo cluster, target device is C220 (no network) with device density is `014`
 
 ## Installation steps
 
 ### Hitek release
 Extract Hitek FIM release in `hitek_release` folder.
+> Set `HTS_FIM_RELEASE=<your dir>` to the parent directory of your `ofs-agx7-pcie-attach` clone.
 
 ### BIOS
 * Enable IO-MMU
@@ -39,11 +40,13 @@ $ source install/ubuntu_opae_build.sh
 Install Quartus Prime Pro with **Agilex** support. Including patches (0.02, 0.11, 0.19).
 ``` console 
 $ source install/ubuntu_quartus.sh
-``` 
+```
+> Set `QUARTUS_HOME=<your dir>`.
 
 ### Simulator
 >*Requires license*.
 Install QuestaSim or VCS. 
+> For QuestaSim, set `MTI_HOME=<questasim home>`
 
 ### Bringup Hitek C220 PAC
 Update PAC firmware. **TBD**
@@ -54,58 +57,50 @@ sudo fpgasupdate TBD.rsu
 ```
 
 Update FIM:
+Set the card PCIe address `PAC_PCIE_SBD` according to your bus. 
+> You can find it with `$ lspci | grep bcce | head -n1 | awk '{print $1}'`
 ``` console 
-sudo fpgasupdate TBD.bin <PCI ADDRESS>
+make fim_update PAC_PCIE_SBD=<ssss:bb:dd.f>
 ```
 
-## Reboot
-Once installation is complete, after every reboot (also warm), run:
-``` console 
-$ source settings/settings_dfl.sh
-$ source settings/settings_opae.sh
-```
-or 
-``` console 
-$ source settings.sh
-```
-
-### Host Excercisor Modules
-Platform testing using Host Excercisor Modules (HEMs)
-#### Plaftorm benchmark
-In the `tests/` directory, the following sub-directories are available:
- * `freq/` assess user input --clock-mhz impact 
- * `lpbk/` evaluate 2 available AFUs with same GUID
- * `mem/` ?
- * `mem_tg/` ?
- * `test_all/` run with `--testall` flag
- * `trput/` measure max platform bandwidth per cache line reads and interleave patterns
-
-Test results are available in `tests/results/` with file names composed as `<test_name>_<hostname>.csv`.
-
-#### Multithreading testing
-Functional verification of thread-safety:
-1. ✅ Same user, different VFs, **explicit VF**
-2. ❌ Same user, different VFs, implicit VF
-3. ❌ Same user, same AFU, multiple available VFs
-4. ❌ Same user, same VF
-5. ✅ (Parallel) Same user, different VFs, **explicit VF**, in loop
-
-
-### Hello AFU
+### AFU flow
+Run the following script for cloning the necessary external repos and building the FIM and PR-tree.
+> Building the FIM requires multiple hours.
 ``` console 
 $ source install/initial_afu_setup.sh  
+$ make fim_pr 
 ```
 
-<a name="hello_afu"></a>
-TBD: from `example-afus`
+#### Run an AFU
+Set `AFU_NAME=<...>`, and add a script `afu_flow/afus/afu_${AFU_NAME}.sh`, which sets the following variables:
+1. `AFU_ELF_NAME`   : for host executable
+2. `AFU_SOURCE_LIST`: e.g. location of sources.txt
+3. `AFU_SW_DIR`     : location of sofware sources and Makefile
 
-### `fpgabist`
-Platform benchmark with `fpgabist`:
-> requires custom afu `.gbs` to be built, i.e., [Hello AFU](#hello_afu)
+Provided examples for `AFU_NAME`:
+* host_chan_mmio
+* hello_world
+* dma
 
-#### Native Loop-Back
-TBD
+Then, for each terminal session below:
+``` console 
+$ source ${ROOT_DIR}/afu_flow/settings_afu.sh
+```
 
-#### DMA
-TBD
+Simulate, in one terminal:
+``` console 
+$ make ase_setup
+```
+> To launch the simulation again, without rebuilding all sources, just `make ase_launch`.
+
+In another:
+``` console 
+$ make test_ase
+```
+
+Build and test GBS:
+``` console 
+$ make gbs # Multiple hours build
+$ make test_gbs
+```
 

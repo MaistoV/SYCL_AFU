@@ -3,20 +3,20 @@
 #############
 # Setup ASE #
 #############
-cd ${AFU_WORK_DIR}
-
 # Removing old directory, if any
 rm -rf ${AFU_ASE_DIR} 
 
+cd ${AFU_WORK_DIR}
+
 # Setup optional flags
 # Verbosity
-# if [ "$VERBOSE" = "1" ]; then
-#     OPT_FLAGS="--ase-verbose"
-# fi
-# # Simuation mode
-# if [ "$ASE_MODE" != "" ]; then
-#     OPT_FLAGS="${OPT_FLAGS} --ase-mode ${ASE_MODE}"
-# fi
+if [ "$VERBOSE" = "1" ]; then
+    OPT_FLAGS="--ase-verbose"
+fi
+# Simuation mode
+if [ "$ASE_MODE" != "" ]; then
+    OPT_FLAGS="${OPT_FLAGS} --ase-mode ${ASE_MODE}"
+fi
 
 # Launch script
 afu_sim_setup                       \

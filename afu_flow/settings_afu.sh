@@ -6,21 +6,13 @@ export AFU_WORK_DIR=${ROOT_DIR}/afu_flow
 #######################################################################
 # AFU aspecifics
 # Must set the following variables:
-# 1. AFU_NAME       : for artifacts
-# 2. AFU_ELF_NAME   : for host executable
-# 3. AFU_SOURCE_LIST: e.g. location of sources.txt
-# 4. AFU_SW_DIR     : location of sofware sources and Makefile
+# 1. AFU_ELF_NAME   : for host executable
+# 2. AFU_SOURCE_LIST: e.g. location of sources.txt
+# 3. AFU_SW_DIR     : location of sofware sources and Makefile
 #######################################################################
 
-
-# host_chan_mmio
-# source ${AFU_WORK_DIR}/afus/afu_host_chan_mmio.sh
-
-# hello_world
-source ${AFU_WORK_DIR}/afus/afu_hello_world.sh
-
-# dma
-source ${AFU_WORK_DIR}/afus/dma.sh
+# AFU-dependent script
+source ${AFU_WORK_DIR}/afus/afu_${AFU_NAME}.sh
 
 ####################################
 # AFU-specific working directories # 

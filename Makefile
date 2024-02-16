@@ -9,8 +9,11 @@ all: help
 
 help: # TBD
 	@echo "${MAKE} targets:"
-	@echo "	fim_pr				build FIM and PR-tree (takes around 1h45m)"
-	@echo "	fim_flat			build FIM (takes around ?)"
+	@echo "	fim_build_pr		build FIM and PR-tree (takes around 1h45m)"
+	@echo "	fim_build_flat		build flat FIM (takes around ?)"
+	@echo "	fim_update			Update flash images and powercycle the board"
+	@echo "	pac_powercycle_<user1|user2|factory>: Power cycle from page <user1|user2|factory>, necessary after FIM udpate (fim_update)"
+	@echo "	fim_setup_opae.io	Bind all VFs to VFIO driver"
 	@echo "	oneapi_ip			build oneapi design in oneapi_afu/...."
 	@echo "	afu_host			build host application"
 	@echo "	ase_setup			setup and launch ASE simulation environment {locks a terminal}"
@@ -33,12 +36,32 @@ help: # TBD
 #######
 # FIM #
 #######
-fim_pr:
-fim_flat:
-fim_%:
+fim_build_pr:
+fim_build_flat:
+fim_build_%:
 	cd ${HTS_FIM_RELEASE}; \
 	./setup_env.sh; \
 	./build_fim.sh --$*
+
+fim_update: 
+#	Update flash images 
+	sudo fpgasupdate --log-level debug ${FIM_IMAGE_USER1} ${PAC_PCIE_SBD}.0
+#	No need to update also pase user2, for now
+# sudo fpgasupdate --log-level debug ${FIM_IMAGE_USER2} ${PAC_PCIE_SBD}.0
+	@echo "To configure the new FIM, run ${MAKE} pac_powercycle_user1"
+
+pac_powercycle_user1:
+pac_powercycle_user2:
+pac_powercycle_factory:
+pac_powercycle_%:
+# 	Power cycle on page user1
+	sudo rsu  --debug fpga --page=$* ${PAC_PCIE_SBD}.0
+
+fim_factory_reset:
+	sudo rsu --debug fpga --page=factory ${PAC_PCIE_SBD}.0
+
+fim_setup_opae.io:
+	${ROOT_DIR}/scripts/setup_opae.io.sh
 
 #############################
 # ONE API IP Authoring Flow #
@@ -56,9 +79,10 @@ afu_host:
 	${MAKE} -C ${AFU_SW_DIR} clean all;
 
 # Build and launch simulation
-ase_setup:
+ase_setup: clean_ase
 #	Setup and launch simulator
 	${AFU_WORK_DIR}/afu_ase.sh
+
 
 # Launch simulation without rebuilding it
 ase_launch: ${AFU_ASE_DIR}
@@ -69,7 +93,7 @@ ase_launch: ${AFU_ASE_DIR}
 
 # Open Wafeform Log File
 ase_waves: ${AFU_ASE_DIR}/work/vsim.wlf
-	# ${MAKE} -C ${AFU_ASE_DIR} wave
+# ${MAKE} -C ${AFU_ASE_DIR} wave
 	vsim $<										\
 		-do scripts/add_waves.do 				\
 		-debugdb # ${AFU_ASE_DIR}/work/vsim.dbg
@@ -79,42 +103,27 @@ ase_waves: ${AFU_ASE_DIR}/work/vsim.wlf
 #########################
 # This takes around 40 minutes...
 gbs: ${AFU_SYNTH_DIR}
-${AFU_SYNTH_DIR}: ${OPAE_PLATFORM_ROOT}	
-# ${AFU_WORK_DIR}/afu_synth.h;
-#	Removing old directory, if any
-	rm -rf ${AFU_SYNTH_DIR}
-# 	Launch setup script
-	cd ${AFU_WORK_DIR}; 				\
-	afu_synth_setup                 	\
-    	--sources ${AFU_SOURCE_LIST}    \
-    	${AFU_SYNTH_DIR}
-# 	Launch build script
-	cd ${AFU_SYNTH_DIR}; \
-	${OPAE_PLATFORM_ROOT}/bin/afu_synth
+${AFU_SYNTH_DIR}: ${OPAE_PLATFORM_ROOT}	clean_gbs
+	${AFU_WORK_DIR}/afu_synth.h;
 
 # {Empty-}Sign bitstreaam
-sign_gbs: gbs
-	mkdir -p ${BACKUP_DIR}
-	PACSign PR -t UPDATE -H openssl_manager -i ${AFU_SYNTH_DIR}/${AFU_NAME}.gbs -o ${BACKUP_DIR}/${GBS_NAME}.gbs && \
-	${COLOR_GREEN}; echo "INFO: Signed bitstream is at ${BACKUP_DIR}/${GBS_NAME}.gbs"; \
-	${COLOR_NORMAL}
+# sign_gbs: gbs
+# 	mkdir -p ${BACKUP_DIR}
+# 	PACSign PR -t UPDATE -H openssl_manager -i ${AFU_SYNTH_DIR}/${AFU_NAME}.gbs -o {AFU_SYNTH_DIR}/${AFU_NAME}.gbs && \
+# 	${COLOR_GREEN}; echo "INFO: Signed bitstream is at {AFU_SYNTH_DIR}/${AFU_NAME}.gbs"; \
+# 	${COLOR_NORMAL}
 
-configure_gbs: sign_gbs
+# fpgaconf: gbs_configure
+gbs_configure:
 #	Configure PR with GBS
-# sudo fpgaconf {AFU_SYNTH_DIR}/${AFU_NAME}.gbs
-	sudo fpgasupdate ${AFU_SYNTH_DIR}/${AFU_NAME}.gbs <N6001 SKU2 PCIe b:d.f>
-#	Create the Virtual Functions {VFs}:
-	sudo pci_device b1:00.0 vf 3
-#	Bind VFs to VFIO driver
-	sudo opae.io init -d 0000:b1:00.3
+# sudo fpgaconf ${AFU_SYNTH_DIR}/${AFU_NAME}.gbs
+	sudo fpgasupdate ${AFU_SYNTH_DIR}/${AFU_NAME}.gbs ${PAC_PCIE_SBD}.0
 
 ###############
 # System Test #
 ###############
 
-test_gbs: afu_host configure_gbs ${BACKUP_DIR}/${GBS_NAME}.gbs
-#	Configure FPGA
-# fpgaconf ${BACKUP_DIR}/${GBS_NAME}.gbs
+test_gbs: afu_host gbs_configure ${AFU_SYNTH_DIR}/${AFU_NAME}.gbs
 #	Run host application
 	cd ${AFU_SW_DIR}; ./${AFU_ELF_NAME} ${TEST_ARGS}
 
