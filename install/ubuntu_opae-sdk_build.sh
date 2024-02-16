@@ -12,8 +12,8 @@ pip3 install jsonschema virtualenv pyyaml pybind11
 # sudo pip3 install setuptools==59.6.0 --prefix=/usr
 
 # Clone
-mkdir -p $UTILS_BUILD_DIR
-cd $UTILS_BUILD_DIR
+mkdir -p $INSTALL_BUILD_DIR
+cd $INSTALL_BUILD_DIR
 git clone https://github.com/OFS/opae-sdk.git
 cd opae-sdk
 git checkout tags/2.8.0-1 -b nc220 
@@ -22,7 +22,7 @@ echo "Expected 2.8.0-1"
 git apply $HTS_PATCHES_DIR/opae-sdk-nc220.patch
 
 # Build with Cmake
-# cd $UTILS_BUILD_DIR/opae-sdk
+# cd $INSTALL_BUILD_DIR/opae-sdk
 # mkdir build
 # cd build/
 # # cmake .. -DCPACK_GENERATOR=DEB -DOPAE_BUILD_FPGABIST=ON
@@ -32,7 +32,7 @@ git apply $HTS_PATCHES_DIR/opae-sdk-nc220.patch
 # sudo dpkg -i opae*.deb
 
 # Build by script
-cd $UTILS_BUILD_DIR/opae-sdk/packaging/opae/deb
+cd $INSTALL_BUILD_DIR/opae-sdk/packaging/opae/deb
 ./create
 
 # Install with dpkg

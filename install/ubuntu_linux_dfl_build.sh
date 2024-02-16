@@ -22,8 +22,8 @@ sudo pip3 install Pybind11==2.10.0
 sudo pip3 install setuptools==59.6.0 --prefix=/usr
 
 # Clone kernel
-mkdir -p $UTILS_BUILD_DIR
-cd $UTILS_BUILD_DIR
+mkdir -p $INSTALL_BUILD_DIR
+cd $INSTALL_BUILD_DIR
 # clone Linux DFL repo from github
 git clone https://github.com/OFS/linux-dfl.git
 cd linux-dfl

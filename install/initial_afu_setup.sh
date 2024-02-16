@@ -35,7 +35,7 @@ echo "[INFO] IOFS_BUILD_ROOT in $IOFS_BUILD_ROOT"
 ###############
 # 2. OPAE-SDK #
 ###############
-cd $UTILS_BUILD_DIR
+cd $INSTALL_BUILD_DIR
 
 echo "[INFO] Getting intel-fpga-bbb from OPAE's GitHub"
 if [ ! -d opae-sdk ]; then
@@ -78,7 +78,7 @@ git checkout $EXAMPLES_AFU_CHECKOUT
 ##########################
 # 4. Clone and build ASE #
 ##########################
-cd $UTILS_BUILD_DIR
+cd $INSTALL_BUILD_DIR
 
 # Clone and build ASE
 echo "[INFO] Getting ASE"
@@ -95,7 +95,7 @@ if [ ! -d opae-sim ]; then
     # Default
     # export C_INCLUDE_PATH=/usr/src/debug/opae-2.5.0-3.el8.x86_64/tests/framework
     # point to opae-config.cmake
-    export opae_DIR=$UTILS_BUILD_DIR/opae-sdk/packaging/opae/deb/opae-2.8.0/debian/tmp/usr/lib/opae-2.8.0/
+    export opae_DIR=$INSTALL_BUILD_DIR/opae-sdk/packaging/opae/deb/opae-2.8.0/debian/tmp/usr/lib/opae-2.8.0/
     cmake -DCMAKE_INSTALL_PREFIX=/usr ..
     make -j `nproc`
     sudo make install  
@@ -105,10 +105,7 @@ fi
 #############
 # Build FIM #
 #############
-echo "Build FIM sourcing afu_synth/fim_synth.sh"
+make fim_pr
 
 # Load FIM to FPGA
-echo "Load FIM on FPGA with fpgasupdate"
-# sudo fpgasupdate ofs_top_page1_unsigned_user1.bin <N6001 SKU2 PCIe b:d.f>
-# sudo fpgasupdate ofs_top_page2_unsigned_user2.bin <N6001 SKU2 PCIe b:d.f>
-# sudo rsu fpga --page=user1 <N6001 SKU2 PCIe b:d.f>
+make fim_udpate
