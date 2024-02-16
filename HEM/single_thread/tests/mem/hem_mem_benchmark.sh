@@ -1,6 +1,6 @@
 #!/bin/bash
-: ${OUT_DIR=../../../results}
-OUT_FILE=$OUT_DIR/mem_$(hostname).csv
+: ${HEM_OUT_DIR=../../../results}
+OUT_FILE=$HEM_OUT_DIR/mem_$(hostname).csv
 touch $OUT_FILE
 echo "Writing results to $OUT_FILE"
 
@@ -11,7 +11,7 @@ for i in {1..10}
 do
     # Run test
     echo "[INFO] Running $i"
-    host_exerciser mem
+    host_exerciser mem > host_exerciser_mem.log
 
     # Save and format results
     printf $(grep GB/s   host_exerciser_mem.log | awk '{print $2}') >> $OUT_FILE

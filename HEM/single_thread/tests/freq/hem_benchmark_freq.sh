@@ -1,6 +1,6 @@
 #!/bin/bash
-: ${OUT_DIR=../../../results}
-OUT_FILE=$OUT_DIR/freq_$(hostname).csv
+: ${HEM_OUT_DIR=../../../results}
+OUT_FILE=$HEM_OUT_DIR/freq_$(hostname).csv
 touch $OUT_FILE
 echo "Writing results to $OUT_FILE"
 
@@ -19,7 +19,7 @@ do
     do  
       i=$(($i+1))
       echo "Running test $i/$((${#experiment_list[@]} * ${#afu_list[@]}))"
-      host_exerciser --clock-mhz $freq $afu | grep TEST
+      host_exerciser --clock-mhz $freq $afu > host_exerciser_$afu.log
     
       # Save and format results
       printf "$afu, $freq, " >> $OUT_FILE

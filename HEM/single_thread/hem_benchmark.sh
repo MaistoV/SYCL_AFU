@@ -1,11 +1,11 @@
 # #!/bin/bash
 ROOT_HEM=$PWD
 
-mkdir -p $OUT_DIR
+mkdir -p $HEM_OUT_DIR
 
 # TBD: source the other scripts
 # source tests/mem_tg/hem_mem_tg_benchmark.sh #TBD
-source tests/trput/hem_trput_benchmark.sh #TBD
+# source tests/trput/hem_trput_benchmark.sh #TBD
 
 cd $ROOT_HEM/tests/lpbk/
 source hem_benchmark_lpbk.sh

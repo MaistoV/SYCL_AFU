@@ -1,7 +1,7 @@
 #!/bin/bash
-: ${OUT_DIR=$PWD/../../../results}
-mkdir -p $OUT_DIR
-OUT_FILE=$OUT_DIR/multithreading_trput_$(hostname).csv
+: ${HEM_OUT_DIR=$PWD/../../../results}
+mkdir -p $HEM_OUT_DIR
+OUT_FILE=$HEM_OUT_DIR/multithreading_trput_$(hostname).csv
 touch $OUT_FILE
 echo "Writing results to $OUT_FILE"
 

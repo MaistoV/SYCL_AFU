@@ -4,3 +4,5 @@ mem_tg tg_test    &
 host_exerciser lpbk    &
 host_exerciser mem    &
 
+# Wait for children
+wait

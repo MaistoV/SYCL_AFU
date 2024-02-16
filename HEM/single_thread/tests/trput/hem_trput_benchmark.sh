@@ -1,6 +1,6 @@
 #!/bin/bash: 
-${OUT_DIR=../../../results}
-OUT_FILE=$OUT_DIR/trput_$(hostname).csv
+${HEM_OUT_DIR=../../../results}
+OUT_FILE=$HEM_OUT_DIR/trput_$(hostname).csv
 touch $OUT_FILE
 echo "Writing results to $OUT_FILE"
 
