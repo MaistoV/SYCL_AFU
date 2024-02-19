@@ -1,0 +1,6 @@
+my_custom_afu_array.json
+ofs_plat_afu.sv
+my_custom_afu_axi.sv
+
+# Pointer to software:
+# sw:../../sw/my_custom_afu_array

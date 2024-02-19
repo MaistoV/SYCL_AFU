@@ -6,7 +6,7 @@
 # Removing old directory, if any
 rm -rf ${AFU_ASE_DIR} 
 
-cd ${AFU_WORK_DIR}
+cd ${AFU_FLOW_DIR}
 
 # Setup optional flags
 # Verbosity

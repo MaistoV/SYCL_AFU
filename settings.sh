@@ -86,8 +86,7 @@ export PATH=$MTI_HOME/linux_x86_64/:$MTI_HOME/bin/:$PATH
 ############
 # AFU flow # 
 ############
-export AFU_NAME=host_chan_mmio
-# export AFU_NAME=hello_world
+export AFU_NAME=my_custom_afu_array
 source ${ROOT_DIR}/afu_flow/settings_afu.sh
 
 export FIM_IMAGE_USER1=${OPAE_PLATFORM_ROOT}/hw/blue_bits/ofs_top_page1_unsigned_user1.bin

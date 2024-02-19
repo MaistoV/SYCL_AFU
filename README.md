@@ -68,39 +68,45 @@ Run the following script for cloning the necessary external repos and building t
 > Building the FIM requires multiple hours.
 ``` console 
 $ source install/initial_afu_setup.sh  
-$ make fim_pr 
+$ make fim_build_pr # Multiple hours build 
 ```
 
-#### Run an AFU
-Set `AFU_NAME=<...>`, and add a script `afu_flow/afus/afu_${AFU_NAME}.sh`, which sets the following variables:
-1. `AFU_ELF_NAME`   : for host executable
-2. `AFU_SOURCE_LIST`: e.g. location of sources.txt
-3. `AFU_SW_DIR`     : location of sofware sources and Makefile
+#### Add your AFU
+Create a directory in `afu_flow/afus/` with the following structure:
+``` console 
+afu_flow/afus/${AFU_NAME}
+    ├── hw/rtl
+    |   ├── ${AFU_NAME}.json
+    |   ├── sources.txt
+    |   ├── [ofs_plat_afu.sv] # Top-level for full-PIM flow (name is mandatory)
+    |   ├── [afu_main.sv] # Top-level for non-full-PIM flow (name is mandatory)
+    |   └── <other rtl soruces>
+    └── sw
+        ├── Makefile # Template file available in afu_flow/afus/common/sw/
+        ├── ${AFU_NAME}.c
+        └── <other software sources>
+```
+> You need either `ofs_plat_afu.sv` or `afu_main.sv`, when choosing between PIM-based flows
 
 Provided examples for `AFU_NAME`:
-* host_chan_mmio
-* hello_world
-* dma
+* my_custom_afu
+* my_custom_afu_array
+* ...
 
-Then, for each terminal session below:
-``` console 
-$ source ${ROOT_DIR}/afu_flow/settings_afu.sh
-```
-
-Simulate, in one terminal:
+Simulate, in one terminal setup the ASE enviornment:
 ``` console 
 $ make ase_setup
 ```
 > To launch the simulation again, without rebuilding all sources, just `make ase_launch`.
 
-In another:
+In another, launch software against the simulation:
 ``` console 
 $ make test_ase
 ```
 
 Build and test GBS:
 ``` console 
-$ make gbs # Multiple hours build
-$ make test_gbs
+$ make gbs # Aroud 40 minutes build
+$ make test_gbs # Launch software against FPGA hardware
 ```
 

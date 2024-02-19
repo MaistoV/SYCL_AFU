@@ -1,5 +1,3 @@
-# AFU_WORK_DIR=${ROOT_DIR}/oneapi_afu/
-
 # change output color
 COLOR_GREEN := tput setaf 2
 COLOR_RED := tput setaf 1
@@ -81,8 +79,7 @@ afu_host:
 # Build and launch simulation
 ase_setup: clean_ase
 #	Setup and launch simulator
-	${AFU_WORK_DIR}/afu_ase.sh
-
+	${AFU_FLOW_DIR}/afu_ase.sh
 
 # Launch simulation without rebuilding it
 ase_launch: ${AFU_ASE_DIR}
@@ -101,34 +98,40 @@ ase_waves: ${AFU_ASE_DIR}/work/vsim.wlf
 #########################
 # Build Green Bitstream #
 #########################
+
+GBS_FILE ?= ${AFU_SYNTH_DIR}/${AFU_NAME}.gbs
+
 # This takes around 40 minutes...
 gbs: ${AFU_SYNTH_DIR}
 ${AFU_SYNTH_DIR}: ${OPAE_PLATFORM_ROOT}	clean_gbs
-	${AFU_WORK_DIR}/afu_synth.h;
+	${AFU_FLOW_DIR}/afu_synth.sh
 
 # {Empty-}Sign bitstreaam
 # sign_gbs: gbs
 # 	mkdir -p ${BACKUP_DIR}
-# 	PACSign PR -t UPDATE -H openssl_manager -i ${AFU_SYNTH_DIR}/${AFU_NAME}.gbs -o {AFU_SYNTH_DIR}/${AFU_NAME}.gbs && \
+# 	PACSign PR -t UPDATE -H openssl_manager -i ${GBS_FILE} -o {AFU_SYNTH_DIR}/${AFU_NAME}.gbs && \
 # 	${COLOR_GREEN}; echo "INFO: Signed bitstream is at {AFU_SYNTH_DIR}/${AFU_NAME}.gbs"; \
 # 	${COLOR_NORMAL}
 
 # fpgaconf: gbs_configure
 gbs_configure:
 #	Configure PR with GBS
-# sudo fpgaconf ${AFU_SYNTH_DIR}/${AFU_NAME}.gbs
-	sudo fpgasupdate ${AFU_SYNTH_DIR}/${AFU_NAME}.gbs ${PAC_PCIE_SBD}.0
+# sudo fpgaconf ${GBS_FILE}
+	sudo fpgasupdate ${GBS_FILE} ${PAC_PCIE_SBD}.0
 
 ###############
 # System Test #
 ###############
 
-test_gbs: afu_host gbs_configure ${AFU_SYNTH_DIR}/${AFU_NAME}.gbs
+AFU_ELF_NAME ?= ${AFU_NAME}
+TEST_ARGS	 ?=
+
+test_gbs: afu_host gbs_configure ${GBS_FILE} 
 #	Run host application
-	cd ${AFU_SW_DIR}; ./${AFU_ELF_NAME} ${TEST_ARGS}
+	cd ${AFU_SW_DIR}/bin; ./${AFU_ELF_NAME} ${TEST_ARGS}
 
 test_ase: afu_host
-	cd ${AFU_SW_DIR}; with_ase ./${AFU_ELF_NAME} ${TEST_ARGS}
+	cd ${AFU_SW_DIR}/bin; with_ase ./${AFU_ELF_NAME} ${TEST_ARGS}
 
 ############
 # Clean up #
@@ -143,7 +146,8 @@ clean_sw:
 	${MAKE} -C ${AFU_SW_DIR} clean
 
 clean_oneapi:
-	${MAKE} -C ${oneapi_WORK_DIR} clean_cosim RS_SCHEMA=${RS_SCHEMA}
-	rm -rf ${oneapi_WORK_DIR}/../qsys/oneapi_outputs
+	${MAKE} -C ${ONEAPI_WORK_DIR} clean_cosim RS_SCHEMA=${RS_SCHEMA}
+	rm -rf ${ONEAPI_WORK_DIR}/../qsys/oneapi_outputs
 
 clean_all: clean_sw clean_gbs clean_ase clean_oneapi
+	# TBD: clean for all afus

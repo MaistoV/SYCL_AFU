@@ -1,0 +1,1 @@
+../../../../hitek_release/AG_C220_NC220_OFS_Release_v1_0_2024-01-22/htk_ofs_nc220/ofs-agx7-pcie-attach/external/examples-afu/tutorial/afu_types/02_hybrid/hello_world/sw/hello_world_all.c

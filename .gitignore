@@ -23,4 +23,5 @@ transcript
 # AFU simualtion and build
 afu_flow/*_synth
 afu_flow/*_ase
-
+obj/
+bin/
