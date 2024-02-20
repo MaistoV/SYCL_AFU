@@ -1,5 +1,16 @@
 # Host Excercisor Modules
 Platform testing using Host Excercisor Modules (HEMs).
+
+The whole flow here relies on the factory FIM image, including default PR AFUs. To program it,:
+``` console
+$ make pac_powercycle_factory 
+```
+
+Before starting, run:
+``` console
+source settings_hems.sh
+```
+
 ## Plaftorm benchmark
 In the `tests/` directory, the following sub-directories are available:
  * `freq/` assess user input --clock-mhz impact 
