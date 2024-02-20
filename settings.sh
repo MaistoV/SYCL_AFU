@@ -37,16 +37,15 @@ export FPGA="$BOARD_VAR"
 # For OFSS FIM flow # 
 #####################
 
-export FIM_NUM_PF0_VFS=10 # Only 10 supported for now, TODO: extend for arbitrary number
-export FIM_SUFFIX=pf0_${FIM_NUM_PF0_VFS}_vf
+export FIM_NUM_PF0_VFS=100
+export OFSS_CONFIG=pf0_${FIM_NUM_PF0_VFS}vf
 # export FIM_STATIC_AFUS=4 # VFs 1..4
 # export FIM_TOT_AFUS=$((${FIM_NUM_PF0_VFS} + ${FIM_STATIC_AFUS}))
 
 #########################
 # For FIM/AFU synthesis #
 #########################
-export FIM_BUILD_DIR=$HTS_FIM_RELEASE/ofs-agx7-pcie-attach/work_htk_nc220_${FPGA}_$FIM_SUFFIX/
-export FIM_SUFFIX=pf0_10vf
+export FIM_BUILD_DIR=$HTS_FIM_RELEASE/ofs-agx7-pcie-attach/work_htk_nc220_${FPGA}_$OFSS_CONFIG/
 
 export OFS_ROOTDIR=$HTS_FIM_RELEASE/ofs-agx7-pcie-attach
 
@@ -55,7 +54,7 @@ export OFS_BUILD_ROOT=$HTS_FIM_RELEASE/ofs-agx7-pcie-attach
 
 # If not already done, export OPAE_PLATFORM_ROOT to the PR build tree directory
 #export OPAE_PLATFORM_ROOT=$HTS_FIM_RELEASE/ofs-agx7-pcie-attach/work_htk_nc220_${FPGA}/pr_build_template
-export OPAE_PLATFORM_ROOT=$HTS_FIM_RELEASE/ofs-agx7-pcie-attach/work_htk_nc220_${FPGA}_$FIM_SUFFIX/pr_build_template
+export OPAE_PLATFORM_ROOT=$HTS_FIM_RELEASE/ofs-agx7-pcie-attach/work_htk_nc220_${FPGA}_$OFSS_CONFIG/pr_build_template
 # export OPAE_PLATFORM_ROOT=$HTS_FIM_RELEASE/prebuild_images/agf014/release_v1.1/pr_build_template
 
 # OPAE SDK release

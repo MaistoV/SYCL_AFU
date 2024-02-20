@@ -29,5 +29,6 @@ make fim_update PAC_PCIE_SBD=<ssss:bb:dd.f>
 
 ## Guides and documentation
 1. [Installation steps](install/README.md)
-2. [AFU flow](afu_flow/README.md)
-3. [Host Excerciser Modules](HEM/README.md)
+2. [Host Excerciser Modules](HEM/README.md)
+3. [AFU flow](afu_flow/README.md)
+4. [FIM OFSS flow](fim_flow/README.md)

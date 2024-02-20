@@ -8,7 +8,7 @@ all: help
 help: # TBD
 	@echo "${MAKE} targets:"
 	@echo "	fim_build_pr          Build FIM and PR-tree (takes around 1h45m)"
-	@echo "	fim_build_flat        Build flat FIM (takes around ?)"
+	@echo "	fim_build_flat        Build flat FIM (takes around 1h10m)"
 	@echo "	fim_update            Update flash images and powercycle the board"
 	@echo "	pac_powercycle_<page> Power cycle from page <user1|user2|factory>, necessary after FIM udpate (fim_update)"
 	@echo "	opae.io_bind          Bind all VFs to VFIO driver"
@@ -30,7 +30,7 @@ help: # TBD
 	@echo "	clean_sw              Clean software build"
 	@echo "	clean_all             TBD"
 	@echo "${MAKE} variables:TBD"
-	@echo "	FIM_SUFFIX             Suffix to identify FIM build and OFSS flow"
+	@echo "	OFSS_CONFIG           Suffix to identify FIM build and OFSS flow"
 # @echo "RS_SCHEMA            Reed-Solomon code schema [RS_3_2, RS_6_3, RS_10_4]"
 # @echo "GBS_NAME             Name of the final signed bitstream"
 # @echo "TEST_ARGS            Arguments to pass to the host exe in test_gbs and test_ase {try with -h}"
@@ -38,12 +38,17 @@ help: # TBD
 #######
 # FIM #
 #######
+OFSS_CONFIG_DIR := ${ROOT_DIR}/fim_flow/ofss_configs/ofss_config_${OFSS_CONFIG}
 fim_build_pr:
 fim_build_flat:
 fim_build_%:
+#	Copy OFSS configuration files
+	if [ -d ${OFSS_CONFIG_DIR} ]; then \
+		cp -vr ${OFSS_CONFIG_DIR}/* ${OFS_BUILD_ROOT}/tools/ofss_config/; \
+	fi
 	cd ${HTS_FIM_RELEASE}; \
 	./setup_env.sh; \
-	./build_fim.sh --$* ${FIM_SUFFIX}
+	${ROOT_DIR}/fim_flow/build_fim.sh --$* ${OFSS_CONFIG}
 
 fim_update: 
 #	Update flash images 
