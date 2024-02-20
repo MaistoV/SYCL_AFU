@@ -11,28 +11,27 @@ echo "Expected 2.8.0-1"
 git apply $HTS_PATCHES_DIR/opae-sdk-nc220.patch
 
 # Pull and launch container
-podman pull registry.access.redhat.com/ubi8:8.6
-podman run -ti -v "$PWD":/src:Z -w /src registry.access.redhat.com/ubi8:8.6
+# podman pull registry.access.redhat.com/ubi8:8.6
+# podman run -ti -v "$PWD":/src:Z -w /src registry.access.redhat.com/ubi8:8.6
 
-# Prerequisites (same as Linux DFL?)
 
-# Build with Cmake
-# cd $INSTALL_BUILD_DIR/opae-sdk
-# mkdir build
-# cd build/
-# # cmake .. -DCPACK_GENERATOR=DEB -DOPAE_BUILD_FPGABIST=ON
-# make -j `nproc`
-# # NOTE: Install through dpkg so that you can control the installation more easily
-# make -j `nproc` package_deb
-# sudo dpkg -i opae*.deb
+sudo dnf install --enablerepo=codeready-builder-for-rhel-9-x86_64-rpms -y python3 \
+    python3-pip python3-devel python3-jsonschema python3-pyyaml git gcc gcc-c++ make \
+    cmake libuuid-devel json-c-devel hwloc-devel tbb-devel cli11-devel spdlog-devel \
+    libedit-devel systemd-devel doxygen python3-sphinx pandoc rpm-build rpmdevtools\
+    python3-virtualenv yaml-cpp-devel libudev-devel libcap-devel
 
-# Build by script
-cd $INSTALL_BUILD_DIR/opae-sdk/packaging/opae/deb
-./create
+# Conflicts with pyhton3.9
+# Install in $USER/.local
+pip3 install --upgrade --user pip setuptools pybind11 
 
-# Install with dpkg
-# NOTE: Install through dpkg so that you can control the installation more easily
-sudo dpkg -i opae*.deb
+# Build
+./packaging/opae/rpm/create unrestricted
+
+# Install
+cd opae-sdk/packaging/opae/rpm
+rm -rf opae-2.8.0-1.el9.src.rpm
+sudo dnf localinstall -y opae*.rpm
 
 # Check installed
-apt list opae*
+rpm -qa | grep opae

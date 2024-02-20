@@ -7,6 +7,10 @@ Extract Hitek FIM release in `hitek_release` folder.
 ## BIOS
 * Enable IO-MMU
 * Enable VT-d
+(NOT WORKING) You can check if they are enabled in the system log:
+``` console 
+$ sudo dmesg | grep -e DMAR -e IOMMU
+```
 
 ## linux-dfl
 Install Linux DFL kernel 6.1-1.

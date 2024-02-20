@@ -25,3 +25,8 @@ afu_flow/*_synth
 afu_flow/*_ase
 obj/
 bin/
+
+# Archives
+*deb
+*rpm
+*rpm.1

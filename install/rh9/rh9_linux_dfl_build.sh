@@ -1,13 +1,20 @@
 source ../patches_install_settings.sh
 
-# Install prerequisitessudo dnf update
-subscription-manager repos --enable codeready-builder-for-rhel-8-x86_64-rpms
-sudo dnf install https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm
+# Install prerequisites
+
+# NOT COMPATIBLE WITH release 9
+# sudo subscription-manager release --set=8.6
+# sudo dnf update
+# sudo subscription-manager repos --enable codeready-builder-for-rhel-8-x86_64-rpms
+
+# Try with 9
+sudo subscription-manager repos --enable codeready-builder-for-rhel-9-x86_64-rpms
+sudo dnf install https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm
 
 sudo dnf install -y python3 python3-pip python3-devel \
-gdb vim git gcc gcc-c++ make cmake libuuid-devel rpm-build systemd-devel nmap \
-python3-jsonschema json-c-devel tbb-devel rpmdevtools libcap-devel \
-python3-pyyaml hwloc-devel libedit-devel git kernel-headers kernel-devel elfutils-libelf-devel ncurses-devel openssl-devel bison flex cli11-devel spdlog-devel
+    gdb vim git gcc gcc-c++ make cmake libuuid-devel rpm-build systemd-devel nmap \
+    python3-jsonschema json-c-devel tbb-devel rpmdevtools libcap-devel \
+    python3-pyyaml hwloc-devel libedit-devel git kernel-headers kernel-devel elfutils-libelf-devel ncurses-devel openssl-devel bison flex cli11-devel spdlog-devel
 
 python3 -m pip install --user jsonschema virtualenv pudb pyyaml
 
@@ -56,25 +63,15 @@ make olddefconfig
 time make -j `nproc`
 time make -j `nproc` modules
 
-# Install modules from sources
-# time sudo make -j `nproc` modules_install
-# time sudo make -j `nproc` install
-
-# Install modules from packages
-# NOTE: UNTESTED
-make INSTALL_MOD_STRIP=1 bindeb-pkg
+# Install RPMs
 cd ~/rpmbuild/RPMS/x86_64
-sudo rpm -i kernel*.rpm
+sudo rpm -Uvh --oldpackage kernel-*.rpm
 
 # Update grub boot config
 # Add following selection string to /etc/default/grub:GRUB_CMDLINE_LINUX
-# NOTE: this assumes GRUB_CMDLINE_LINUX to be empty, hence it may only work only the first time you set up a system
-sudo sed "s/GRUB_CMDLINE_LINUX=\"\"/GRUB_CMDLINE_LINUX=\"intel_iommu=on pcie=realloc hugepagesz=2M hugepages=200\"/g" /etc/default/grub
+sudo sed -i 's/GRUB_CMDLINE_LINUX="[^"]*/& intel_iommu=on pcie=realloc hugepagesz=2M hugepages=200/' /etc/default/grub
+sudo grub2-mkconfig
 
-# Update default grub entry
-# TODO: change with new kernel name
-sudo sed -i "s/GRUB_DEFAULT=.+/GRUB_DEFAULT=\"Advanced options for Ubuntu>Ubuntu, with Linux 6.1.41-dfl-dirty\"/g" /etc/default/grub
-sudo update-grub
-
-# Reboot system and check installed drivers
-sudo reboot
+echo "Reboot system and check:"
+echo "  1. Installed DLF drivers:   lsmod | grep dfl"
+echo "  2. Boot arguments       :   cat /proc/cmdline"

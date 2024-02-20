@@ -74,9 +74,9 @@ time sudo make -j `nproc` install
 sudo sed "s/GRUB_CMDLINE_LINUX=\"\"/GRUB_CMDLINE_LINUX=\"intel_iommu=on pcie=realloc hugepagesz=2M hugepages=200\"/g" /etc/default/grub
 
 # Update default grub entry
-# TODO: change with new kernel name
 sudo sed -i "s/GRUB_DEFAULT=.+/GRUB_DEFAULT=\"Advanced options for Ubuntu>Ubuntu, with Linux 6.1.41-dfl-dirty\"/g" /etc/default/grub
 sudo update-grub
 
-# Reboot system and check installed drivers
-sudo reboot
+echo "Reboot system and check:"
+echo "  1. Installed DLF drivers:   lsmod | grep dfl"
+echo "  2. Boot arguments       :   cat /proc/cmdline"
