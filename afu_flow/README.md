@@ -16,7 +16,7 @@ $ make fim_build_pr # Multiple hours build
 
 ## Add your AFU
 Export `AFU_NAME` and create a directory in `afu_flow/afus/` with the following structure:
-``` console 
+```  
 afu_flow/afus/${AFU_NAME}
     ├── hw/rtl
     |   ├── ${AFU_NAME}.json

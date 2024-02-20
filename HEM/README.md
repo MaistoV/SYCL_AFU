@@ -8,7 +8,7 @@ $ make pac_powercycle_factory
 
 Before starting, run:
 ``` console
-source settings_hems.sh
+$ source settings_hems.sh
 ```
 
 ## Plaftorm benchmark
