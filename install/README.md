@@ -12,20 +12,20 @@ Extract Hitek FIM release in `hitek_release` folder.
 Install Linux DFL kernel 6.1-1.
 Run:
 ``` console 
-$ source install/ubuntu_linux_dfl_build.sh  
+$ source install/ubuntu/ubuntu_linux_dfl_build.sh  
 ```
 
 ## opae-sdk
 Build and install opae-sdk v2.8.0-1
 ``` console 
-$ source install/ubuntu_opae_build.sh  
+$ source install/ubuntu/ubuntu_opae_build.sh  
 ```
 
 ## Quartus Prime Pro 23.2
 >*Requires license*.
 Install Quartus Prime Pro with **Agilex** support. Including patches (0.02, 0.11, 0.19).
 ``` console 
-$ source install/ubuntu_quartus.sh
+$ source install/ubuntu/ubuntu_quartus.sh
 ```
 > Set `QUARTUS_HOME=<your dir>`.
 
