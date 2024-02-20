@@ -105,7 +105,7 @@ fi
 #############
 # Build FIM #
 #############
-make fim_pr
-
-# Load FIM to FPGA
-make fim_udpate
+echo "To build FIM with PR-tree, you must run:"
+echo "    make fim_build_pr"
+echo "To flash on board and reboot it:"
+echo "    make fim_udpate"

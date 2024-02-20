@@ -7,26 +7,30 @@ all: help
 
 help: # TBD
 	@echo "${MAKE} targets:"
-	@echo "	fim_build_pr		build FIM and PR-tree (takes around 1h45m)"
-	@echo "	fim_build_flat		build flat FIM (takes around ?)"
+	@echo "	fim_build_pr		Build FIM and PR-tree (takes around 1h45m)"
+	@echo "	fim_build_flat		Build flat FIM (takes around ?)"
 	@echo "	fim_update			Update flash images and powercycle the board"
 	@echo "	pac_powercycle_<user1|user2|factory>: Power cycle from page <user1|user2|factory>, necessary after FIM udpate (fim_update)"
-	@echo "	fim_setup_opae.io	Bind all VFs to VFIO driver"
-	@echo "	oneapi_ip			build oneapi design in oneapi_afu/...."
-	@echo "	afu_host			build host application"
-	@echo "	ase_setup			setup and launch ASE simulation environment {locks a terminal}"
-	@echo "	ase_launch			subsequent launches of ASE simulator {locks a terminal}"
-	@echo "	ase_waves			open simulated waveforms in ${AFU_ASE_DIR}/work/vsim.wlf"
-	@echo "	gbs				generate green bitstream (takes around 40 minutes)"
-	@echo "	sign_gbs			sign green bitstreaam with empty key"
-	@echo "	test_gbs			run host application on hadware"
-	@echo "	test_ase			run host application against ASE simulator (requires ${MAKE} ase_setup or ${MAKE} ase_launch in another terminal)"
-	@echo "	clean_oneapi			clean oneapi build"
-	@echo "	clean_gbs			clean gbs build"
-	@echo "	clean_ase			clean ASE simulator setup"
-	@echo "	clean_sw			clean software build"
+	@echo "	opae.io_bind		Bind all VFs to VFIO driver"
+	@echo "	opae.io_unbind		Unbind all VFs to VFIO driver"
+	@echo "	oneapi_ip			Build oneapi design in oneapi_afu/...."
+	@echo "	afu_host			Build host application"
+	@echo "	ase_setup			Setup and launch ASE simulation environment {locks a terminal}"
+	@echo "	ase_launch			Subsequent launches of ASE simulator {locks a terminal}"
+	@echo "	ase_waves			Open simulated waveforms in ${AFU_ASE_DIR}/work/vsim.wlf"
+	@echo "	gbs					Build green bitstream (takes around 40 minutes)"
+	@echo "	gbs_configure		Configure GBS in PR-slot. On error, you must first unbind all VFs with opae.io_unbind"
+# @echo "	sign_gbs			sign green bitstreaam with empty key"
+	@echo "	test_gbs			Run host application against hadware"
+	@echo "	test_ase			Run host application against ASE simulator (requires ${MAKE} ase_setup or ${MAKE} ase_launch in another terminal)"
+# @echo "	clean_fim			Clean FIM build"
+	@echo "	clean_oneapi			Clean oneapi build"
+	@echo "	clean_gbs			Clean gbs build"
+	@echo "	clean_ase			Clean ASE simulator setup"
+	@echo "	clean_sw			Clean software build"
 	@echo "	clean_all			TBD"
-# @echo "${MAKE} variables:TBD"
+	@echo "${MAKE} variables:TBD"
+	@echo "FIM_SUFFIX			Suffix to identify FIM build and OFSS flow"
 # @echo "RS_SCHEMA				Reed-Solomon code schema [RS_3_2, RS_6_3, RS_10_4]"
 # @echo "GBS_NAME				Name of the final signed bitstream"
 # @echo "TEST_ARGS				Arguments to pass to the host exe in test_gbs and test_ase {try with -h}"
@@ -39,14 +43,15 @@ fim_build_flat:
 fim_build_%:
 	cd ${HTS_FIM_RELEASE}; \
 	./setup_env.sh; \
-	./build_fim.sh --$*
+	./build_fim.sh --$* ${FIM_SUFFIX}
 
 fim_update: 
 #	Update flash images 
 	sudo fpgasupdate --log-level debug ${FIM_IMAGE_USER1} ${PAC_PCIE_SBD}.0
 #	No need to update also pase user2, for now
 # sudo fpgasupdate --log-level debug ${FIM_IMAGE_USER2} ${PAC_PCIE_SBD}.0
-	@echo "To configure the new FIM, run ${MAKE} pac_powercycle_user1"
+	@echo "To configure the new FIM, powercycle the PAC with:"
+	@echo "    ${MAKE} pac_powercycle_user1"
 
 pac_powercycle_user1:
 pac_powercycle_user2:
@@ -55,11 +60,11 @@ pac_powercycle_%:
 # 	Power cycle on page user1
 	sudo rsu  --debug fpga --page=$* ${PAC_PCIE_SBD}.0
 
-fim_factory_reset:
-	sudo rsu --debug fpga --page=factory ${PAC_PCIE_SBD}.0
+opae.io_bind: #gbs_configure
+	${ROOT_DIR}/scripts/opae.io_bind.sh
 
-fim_setup_opae.io:
-	${ROOT_DIR}/scripts/setup_opae.io.sh
+opae.io_unbind:
+	sudo pci_device ${PAC_PCIE_BD}.0 vf 0
 
 #############################
 # ONE API IP Authoring Flow #
@@ -113,7 +118,6 @@ ${AFU_SYNTH_DIR}: ${OPAE_PLATFORM_ROOT}	clean_gbs
 # 	${COLOR_GREEN}; echo "INFO: Signed bitstream is at {AFU_SYNTH_DIR}/${AFU_NAME}.gbs"; \
 # 	${COLOR_NORMAL}
 
-# fpgaconf: gbs_configure
 gbs_configure:
 #	Configure PR with GBS
 # sudo fpgaconf ${GBS_FILE}
@@ -136,6 +140,9 @@ test_ase: afu_host
 ############
 # Clean up #
 ############
+# clean_fim:
+# 	rm -rf ${FIM_BUILD_DIR}/
+
 clean_ase:
 	rm -rf ${AFU_ASE_DIR}/
 

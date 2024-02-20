@@ -7,6 +7,7 @@ export INSTALL_BUILD_DIR=${INSTALL_BUILD_DIR=${ROOT_DIR}/install/build}
 export HTS_FIM_RELEASE=${HTS_FIM_RELEASE=${ROOT_DIR}/hitek_release/AG_C220_NC220_OFS_Release_v1_0_2024-01-22/htk_ofs_nc220}
 # PCIe address of PAC (find it with lspci)
 export PAC_PCIE_SBD=${PAC_PCIE_SBD:="0000:01:00"}
+export PAC_PCIE_BD=${PAC_PCIE_BD:="01:00"}
 
 # For tests 
 export HEM_OUT_DIR=$(pwd)/HEM/results 
@@ -32,9 +33,20 @@ export BOARD_VAR=agf014
 # export BOARD_VAR=agf027
 export FPGA="$BOARD_VAR"
 
-#################
-# For synthesis #
-#################
+#####################
+# For OFSS FIM flow # 
+#####################
+
+export FIM_NUM_PF0_VFS=10 # Only 10 supported for now, TODO: extend for arbitrary number
+export FIM_SUFFIX=pf0_${FIM_NUM_PF0_VFS}_vf
+# export FIM_STATIC_AFUS=4 # VFs 1..4
+# export FIM_TOT_AFUS=$((${FIM_NUM_PF0_VFS} + ${FIM_STATIC_AFUS}))
+
+#########################
+# For FIM/AFU synthesis #
+#########################
+export FIM_BUILD_DIR=$HTS_FIM_RELEASE/ofs-agx7-pcie-attach/work_htk_nc220_${FPGA}_$FIM_SUFFIX/
+export FIM_SUFFIX=pf0_10vf
 
 export OFS_ROOTDIR=$HTS_FIM_RELEASE/ofs-agx7-pcie-attach
 
@@ -42,7 +54,8 @@ export OFS_ROOTDIR=$HTS_FIM_RELEASE/ofs-agx7-pcie-attach
 export OFS_BUILD_ROOT=$HTS_FIM_RELEASE/ofs-agx7-pcie-attach
 
 # If not already done, export OPAE_PLATFORM_ROOT to the PR build tree directory
-export OPAE_PLATFORM_ROOT=$HTS_FIM_RELEASE/ofs-agx7-pcie-attach/work_htk_nc220_${FPGA}/pr_build_template
+#export OPAE_PLATFORM_ROOT=$HTS_FIM_RELEASE/ofs-agx7-pcie-attach/work_htk_nc220_${FPGA}/pr_build_template
+export OPAE_PLATFORM_ROOT=$HTS_FIM_RELEASE/ofs-agx7-pcie-attach/work_htk_nc220_${FPGA}_$FIM_SUFFIX/pr_build_template
 # export OPAE_PLATFORM_ROOT=$HTS_FIM_RELEASE/prebuild_images/agf014/release_v1.1/pr_build_template
 
 # OPAE SDK release
