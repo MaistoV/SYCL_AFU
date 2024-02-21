@@ -5,9 +5,10 @@ export ROOT_DIR=$( dirname $( realpath ${BASH_SOURCE[0]} ) )
 export INSTALL_BUILD_DIR=${INSTALL_BUILD_DIR=${ROOT_DIR}/install/build}
 # Directory for Hitek release, parent of ofs-agx7-pcie-attach
 export HTS_FIM_RELEASE=${HTS_FIM_RELEASE=${ROOT_DIR}/hitek_release/AG_C220_NC220_OFS_Release_v1_0_2024-01-22/htk_ofs_nc220}
-# PCIe address of PAC (find it with lspci)
-export PAC_PCIE_SBD=${PAC_PCIE_SBD:="0000:01:00"}
-export PAC_PCIE_BD=${PAC_PCIE_BD:="01:00"}
+# PCIe address of PAC (if not set)
+export PAC_PCIE_SBD=${PAC_PCIE_SBD:="0000:8a:00"}
+# Remove segment value
+export PAC_PCIE_BD=$(echo $PAC_PCIE_SBD | awk -F ':' '{print $2 ":" $3}')
 
 # For tests 
 export HEM_OUT_DIR=$(pwd)/HEM/results 

@@ -12,6 +12,12 @@ Installation steps for Intel OFS for Hitek C220 card on Ubuntu 22.04.
     * Device support for NC220/C220 card.
 > NOTE: For the demo cluster, target device is C220 (no network) with device density is `014`
 
+## Find your PAC
+Set variable `PAC_PCIE_SBD` for the card PCIe address according to your bus. Add the following to your environment (e.g. bash):
+``` console
+$ export PAC_PCIE_SBD=$(lspci -D -d 8086:bcce | head -n1 | awk '{print $1}' | sed "s/\.0//g")
+```
+
 ## Bringup Hitek C220 PAC
 Update PAC firmware. **TBD**
 
@@ -21,8 +27,6 @@ sudo fpgasupdate TBD.rsu
 ```
 
 Update FIM:
-Set the card PCIe address `PAC_PCIE_SBD` according to your bus. 
-> You can find it with `$ lspci | grep bcce | head -n1 | awk '{print $1}'`
 ``` console 
 make fim_update PAC_PCIE_SBD=<ssss:bb:dd.f>
 ```
