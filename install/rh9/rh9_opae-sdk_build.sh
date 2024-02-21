@@ -1,4 +1,4 @@
-source ../patches_install_settings.sh
+source $ROOT_DIR/install/install_settings.sh
 
 # Clone
 mkdir -p $INSTALL_BUILD_DIR
@@ -29,9 +29,15 @@ pip3 install --upgrade --user pip setuptools pybind11
 ./packaging/opae/rpm/create unrestricted
 
 # Install
-cd opae-sdk/packaging/opae/rpm
+cd packaging/opae/rpm
 rm -rf opae-2.8.0-1.el9.src.rpm
 sudo dnf localinstall -y opae*.rpm
+
+# Package
+PACKAGE_DIR=$INSTALL_BUILD_DIR/package/rpm/opae-sdk
+mkdir -p $PACKAGE_DIR
+cp opae*.rpm $PACKAGE_DIR
+ 
 
 # Check installed
 rpm -qa | grep opae

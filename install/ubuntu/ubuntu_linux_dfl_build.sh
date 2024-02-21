@@ -1,4 +1,4 @@
-source ../patches_install_settings.sh
+source $ROOT_DIR/install/install_settings.sh
 
 # Install prerequisites (patched for Ubuntu 22.04)
 sudo apt install -y python3 python3-pip python3-dev \

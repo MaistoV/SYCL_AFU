@@ -13,7 +13,7 @@ $ sudo dmesg | grep -e DMAR -e IOMMU
 ```
 
 ## linux-dfl
-Install Linux DFL kernel 6.1-1.
+Install Linux DFL kernel 6.1.41-dfl.
 Run:
 ``` console 
 $ source install/ubuntu/ubuntu_linux_dfl_build.sh  

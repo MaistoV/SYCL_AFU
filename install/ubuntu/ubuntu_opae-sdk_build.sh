@@ -1,4 +1,4 @@
-source ../patches_install_settings.sh
+source $ROOT_DIR/install/install_settings.sh
 
 # Prerequisites (same as Linux DFL?)
 sudo apt-get install -y python3 python3-pip python3-jsonschema  python3-dev git gcc g++ make cmake uuid-dev \
