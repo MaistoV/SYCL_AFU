@@ -1,0 +1,47 @@
+README
+=======
+
+The NC220 is based on **ofs-2023.2** release and it uses following release tags: 
+
+-OPAE SDK(2.8.0-1) 
+-Linux DFL Kernel(ofs-2023.2-6.1-1)
+
+These updates the base releases of OPAE SDK and Linux DFL Kernel for NC220 board. 
+
+Linux DFL Kernel
+----------------
+# clone Linux DFL repo from github
+git clone https://github.com/OFS/linux-dfl.git
+cd linux-dfl
+
+# checkout Linux DFL tag ofs-2023.2-6.1-1
+git checkout tags/ofs-2023.2-6.1-1 -b nc220 
+
+git apply <path-to-patches-dir>/linux-dfl-nc220-flashv1.patch
+
+# follow User Guide to compile Linux DFL kernel  
+
+# Note: 
+# For fpga flash layout V3 or V2, use following commands
+git apply <path-to-patches-dir>/linux-dfl-nc220-flashv3.patch
+-or-
+git apply <path-to-patches-dir>/linux-dfl-nc220-flashv2.patch
+
+
+OPAE SDK 
+--------
+
+# clone OPAE SDK repo from github
+git clone https://github.com/OFS/opae-sdk.git
+cd opae-sdk
+
+# checkout OPAE SDK tag 2.8.0-1  
+git checkout tags/2.8.0-1 -b nc220 
+
+# apply patch
+git apply <path-to-patches-dir>/opae-sdk-nc220.patch
+
+# follow User Guide to compile OPAE SDK 
+
+
+

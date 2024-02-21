@@ -1,0 +1,264 @@
+diff --git a/drivers/hwmon/intel-m10-bmc-hwmon.c b/drivers/hwmon/intel-m10-bmc-hwmon.c
+index f9c668a929b6..78163bbd7fe8 100644
+--- a/drivers/hwmon/intel-m10-bmc-hwmon.c
++++ b/drivers/hwmon/intel-m10-bmc-hwmon.c
+@@ -821,6 +821,170 @@ static const struct m10bmc_hwmon_board_data c6100bmc_hwmon_bdata = {
+ 	.hinfo = c6100bmc_hinfo,
+ };
+ 
++static const struct m10bmc_sdata nc220_bmc_temp_tbl[] = {
++	{ 0x444, 0x448, 0x44c, 0x0, 0x0, 500, "FPGA F-TILE 1 Temperature #1" },
++	{ 0x450, 0x454, 0x458, 0x0, 0x0, 500, "FPGA F-TILE 1 Temperature #2" },
++	{ 0x45c, 0x460, 0x464, 0x0, 0x0, 500, "FPGA F-TILE 1 Temperature #3" },
++	{ 0x468, 0x46c, 0x470, 0x0, 0x0, 500, "FPGA F-TILE 1 Temperature #4" },
++	{ 0x474, 0x478, 0x47c, 0x0, 0x0, 500, "FPGA F-TILE 1 Temperature #5" },
++	{ 0x484, 0x488, 0x48c, 0x0, 0x0, 500, "FPGA F-TILE 2 Temperature #1" },
++	{ 0x490, 0x494, 0x498, 0x0, 0x0, 500, "FPGA F-TILE 2 Temperature #2" },
++	{ 0x49c, 0x4a0, 0x4a4, 0x0, 0x0, 500, "FPGA F-TILE 2 Temperature #3" },
++	{ 0x4a8, 0x4ac, 0x4b0, 0x0, 0x0, 500, "FPGA F-TILE 2 Temperature #4" },
++	{ 0x4b4, 0x4b8, 0x4bc, 0x0, 0x0, 500, "FPGA F-TILE 2 Temperature #5" },
++	{ 0x4c4, 0x4c8, 0x4cc, 0x0, 0x0, 500, "FPGA FABRIC Digital Temperature #1" },
++	{ 0x4d0, 0x4d4, 0x4d8, 0x0, 0x0, 500, "FPGA FABRIC Digital Temperature #2" },
++	{ 0x4dc, 0x4e0, 0x4e4, 0x0, 0x0, 500, "FPGA FABRIC Digital Temperature #3" },
++	{ 0x4e8, 0x4ec, 0x4f0, 0x0, 0x0, 500, "FPGA FABRIC Digital Temperature #4" },
++	{ 0x4f4, 0x4f8, 0x4fc, 0x0, 0x0, 500, "FPGA FABRIC Digital Temperature #5" },
++	{ 0x500, 0x504, 0x508, 0x0, 0x0, 500, "FPGA FABRIC Remote Digital Temperature #1" },
++	{ 0x50c, 0x510, 0x514, 0x0, 0x0, 500, "FPGA FABRIC Remote Digital Temperature #2" },
++	{ 0x518, 0x51c, 0x520, 0x0, 0x0, 500, "FPGA FABRIC Remote Digital Temperature #3" },
++	{ 0x524, 0x528, 0x52c, 0x0, 0x0, 500, "FPGA FABRIC Remote Digital Temperature #4" },
++	{ 0x530, 0x0  , 0x0  , 0x0, 0x0, 500, "QSFP 3V3 Temperature" },
++	{ 0x534, 0x0  , 0x0  , 0x0, 0x0, 500, "VCC 1V8 Temperature" },
++	{ 0x538, 0x0  , 0x0  , 0x0, 0x0, 500, "VCCERT FGT 1V0 Temperature" },
++	{ 0x53c, 0x540, 0x544, 0x5e0, 0x0, 500, "Diode 0C Temperature" },
++	{ 0x548, 0x54c, 0x550, 0x5e0, 0x0, 500, "Diode 0A Temperature" },
++	{ 0x554, 0x558, 0x55c, 0x5e0, 0x0, 500, "Board 1 Temperature" },
++	{ 0x560, 0x564, 0x568, 0x5dc, 0x0, 500, "Diode 03 Temperature" },
++	{ 0x56c, 0x570, 0x574, 0x5dc, 0x0, 500, "Diode 04 Temperature" },
++	{ 0x578, 0x57c, 0x580, 0x5dc, 0x0, 500, "Board 2 Temperature" },
++	{ 0x584, 0x0  , 0x0  , 0x0, 0x0, 500, "FPGA VR Phase-0 Temperature" },
++	{ 0x588, 0x0  , 0x0  , 0x0, 0x0, 500, "FPGA VR Phase-1 Temperature" },
++	{ 0x58c, 0x0  , 0x0  , 0x0, 0x0, 500, "FPGA VR Phase-2 Temperature" },
++	{ 0x5d4, 0x0  , 0x0  , 0x0, 0x0, 500, "FPGA VR Controller Temperature" },
++};
++
++static const struct m10bmc_sdata nc220_bmc_in_tbl[] = {
++	{ 0x590, 0x0, 0x0, 0x0, 0x0, 1, "QSFP 3V3 Voltage" },
++	{ 0x598, 0x0, 0x0, 0x0, 0x0, 1, "VCC 1V8 Voltage" },
++	{ 0x59c, 0x0, 0x0, 0x0, 0x0, 1, "VCCERT FGT 1V0 Voltage" },
++	{ 0x5a4, 0x0, 0x0, 0x0, 0x0, 1, "PCIe 3V3 Power Monitor 2 Voltage" },
++	{ 0x5ac, 0x0, 0x0, 0x0, 0x0, 1, "PCIe 12V Power Monitor 2 Voltage" },
++	{ 0x5b4, 0x0, 0x0, 0x0, 0x0, 1, "ATX 12V Power Monitor 2 Voltage" },
++	{ 0x5b8, 0x0, 0x0, 0x0, 0x0, 1, "FPGA VR Vin Voltage" },
++	{ 0x5bc, 0x0, 0x0, 0x0, 0x0, 1, "FPGA VR VCORE Voltage" },
++	{ 0x5c0, 0x0, 0x0, 0x0, 0x0, 1, "FPGA VR 0V8 Voltage" },
++	{ 0x5c4, 0x0, 0x0, 0x0, 0x0, 1, "FPGA VR 1V2 Voltage" },
++};
++
++static const struct m10bmc_sdata nc220_bmc_curr_tbl[] = {
++	{ 0x594, 0x0, 0x0, 0x0, 0x0, 1, "QSFP 3V3 Current" },
++	{ 0x5a0, 0x0, 0x0, 0x0, 0x0, 1, "PCIe 3V3 Power Monitor 1 Current" },
++	{ 0x5a8, 0x0, 0x0, 0x0, 0x0, 1, "PCIe 12V Power Monitor 1 Current" },
++	{ 0x5b0, 0x0, 0x0, 0x0, 0x0, 1, "ATX 12V Power Monitor 1 Current" },
++	{ 0x5c8, 0x0, 0x0, 0x0, 0x0, 1, "FPGA VR VCORE Current" },
++	{ 0x5cc, 0x0, 0x0, 0x0, 0x0, 1, "FPGA VR 0V8 Current" },
++	{ 0x5d0, 0x0, 0x0, 0x0, 0x0, 1, "FPGA VR 1V2 Current" },
++};
++
++static const struct m10bmc_sdata nc220_bmc_power_tbl[] = {
++	{ 0x724, 0x0, 0x0, 0x0, 0x0, 1, "Board Power" },
++};
++
++static const struct hwmon_channel_info *nc220_bmc_hinfo[] = {
++	HWMON_CHANNEL_INFO(temp,
++			   HWMON_T_INPUT | HWMON_T_MAX | HWMON_T_CRIT |
++			   HWMON_T_LABEL,
++			   HWMON_T_INPUT | HWMON_T_MAX | HWMON_T_CRIT |
++			   HWMON_T_LABEL,
++			   HWMON_T_INPUT | HWMON_T_MAX | HWMON_T_CRIT |
++			   HWMON_T_LABEL,
++			   HWMON_T_INPUT | HWMON_T_MAX | HWMON_T_CRIT |
++			   HWMON_T_LABEL,
++			   HWMON_T_INPUT | HWMON_T_MAX | HWMON_T_CRIT |
++			   HWMON_T_LABEL,
++			   HWMON_T_INPUT | HWMON_T_MAX | HWMON_T_CRIT |
++			   HWMON_T_LABEL,
++			   HWMON_T_INPUT | HWMON_T_MAX | HWMON_T_CRIT |
++			   HWMON_T_LABEL,
++			   HWMON_T_INPUT | HWMON_T_MAX | HWMON_T_CRIT |
++			   HWMON_T_LABEL,
++			   HWMON_T_INPUT | HWMON_T_MAX | HWMON_T_CRIT |
++			   HWMON_T_LABEL,
++			   HWMON_T_INPUT | HWMON_T_MAX | HWMON_T_CRIT |
++			   HWMON_T_LABEL,
++			   HWMON_T_INPUT | HWMON_T_MAX | HWMON_T_CRIT |
++			   HWMON_T_LABEL,
++			   HWMON_T_INPUT | HWMON_T_MAX | HWMON_T_CRIT |
++			   HWMON_T_LABEL,
++			   HWMON_T_INPUT | HWMON_T_MAX | HWMON_T_CRIT |
++			   HWMON_T_LABEL,
++			   HWMON_T_INPUT | HWMON_T_MAX | HWMON_T_CRIT |
++			   HWMON_T_LABEL,
++			   HWMON_T_INPUT | HWMON_T_MAX | HWMON_T_CRIT |
++			   HWMON_T_LABEL,
++			   HWMON_T_INPUT | HWMON_T_MAX | HWMON_T_CRIT |
++			   HWMON_T_LABEL,
++			   HWMON_T_INPUT | HWMON_T_MAX | HWMON_T_CRIT |
++			   HWMON_T_LABEL,
++			   HWMON_T_INPUT | HWMON_T_MAX | HWMON_T_CRIT |
++			   HWMON_T_LABEL,
++			   HWMON_T_INPUT | HWMON_T_MAX | HWMON_T_CRIT |
++			   HWMON_T_LABEL,
++			   HWMON_T_INPUT |
++			   HWMON_T_LABEL,
++			   HWMON_T_INPUT |
++			   HWMON_T_LABEL,
++			   HWMON_T_INPUT |
++			   HWMON_T_LABEL,
++			   HWMON_T_INPUT | HWMON_T_MAX | HWMON_T_CRIT |
++			   HWMON_T_LABEL,
++			   HWMON_T_INPUT | HWMON_T_MAX | HWMON_T_CRIT |
++			   HWMON_T_LABEL,
++			   HWMON_T_INPUT | HWMON_T_MAX | HWMON_T_CRIT |
++			   HWMON_T_LABEL,
++			   HWMON_T_INPUT | HWMON_T_MAX | HWMON_T_CRIT |
++			   HWMON_T_LABEL,
++			   HWMON_T_INPUT | HWMON_T_MAX | HWMON_T_CRIT |
++			   HWMON_T_LABEL,
++			   HWMON_T_INPUT | HWMON_T_MAX | HWMON_T_CRIT |
++			   HWMON_T_LABEL,
++			   HWMON_T_INPUT |
++			   HWMON_T_LABEL,
++			   HWMON_T_INPUT |
++			   HWMON_T_LABEL,
++			   HWMON_T_INPUT |
++			   HWMON_T_LABEL,
++			   HWMON_T_INPUT | HWMON_T_LABEL),
++	HWMON_CHANNEL_INFO(in,
++			   HWMON_I_INPUT | HWMON_I_LABEL,
++			   HWMON_I_INPUT | HWMON_I_LABEL,
++			   HWMON_I_INPUT | HWMON_I_LABEL,
++			   HWMON_I_INPUT | HWMON_I_LABEL,
++			   HWMON_I_INPUT | HWMON_I_LABEL,
++			   HWMON_I_INPUT | HWMON_I_LABEL,
++			   HWMON_I_INPUT | HWMON_I_LABEL,
++			   HWMON_I_INPUT | HWMON_I_LABEL,
++			   HWMON_I_INPUT | HWMON_I_LABEL,
++			   HWMON_I_INPUT | HWMON_I_LABEL),
++	HWMON_CHANNEL_INFO(curr,
++			   HWMON_C_INPUT | HWMON_C_LABEL,
++			   HWMON_C_INPUT | HWMON_C_LABEL,
++			   HWMON_C_INPUT | HWMON_C_LABEL,
++			   HWMON_C_INPUT | HWMON_C_LABEL,
++			   HWMON_C_INPUT | HWMON_C_LABEL,
++			   HWMON_C_INPUT | HWMON_C_LABEL,
++			   HWMON_C_INPUT | HWMON_C_LABEL),
++	HWMON_CHANNEL_INFO(power,
++			   HWMON_P_INPUT | HWMON_P_LABEL),
++	NULL
++};
++
++static const struct m10bmc_hwmon_board_data nc220_bmc_hwmon_bdata = {
++	.tables = {
++		[hwmon_temp] = nc220_bmc_temp_tbl,
++		[hwmon_in] = nc220_bmc_in_tbl,
++		[hwmon_curr] = nc220_bmc_curr_tbl,
++		[hwmon_power] = nc220_bmc_power_tbl,
++	},
++
++	.hinfo = nc220_bmc_hinfo,
++};
++
++
++
+ static umode_t
+ m10bmc_hwmon_is_visible(const void *data, enum hwmon_sensor_types type,
+ 			u32 attr, int channel)
+@@ -1036,7 +1200,9 @@ static const struct platform_device_id intel_m10bmc_hwmon_ids[] = {
+ 	},
+ 	{
+ 		.name = "n6000bmc-hwmon",
+-		.driver_data = (unsigned long)&n6000bmc_hwmon_bdata,
++		//.driver_data = (unsigned long)&n6000bmc_hwmon_bdata,
++		// due to same PCIe IDs
++		.driver_data = (unsigned long)&nc220_bmc_hwmon_bdata,
+ 	},
+ 	{
+ 		.name = "c6100bmc-hwmon",
+diff --git a/include/linux/mfd/intel-m10-bmc.h b/include/linux/mfd/intel-m10-bmc.h
+index bd91b48ef79a..faa124ebe4f0 100644
+--- a/include/linux/mfd/intel-m10-bmc.h
++++ b/include/linux/mfd/intel-m10-bmc.h
+@@ -13,6 +13,10 @@
+ #include <linux/regmap.h>
+ #include <linux/rwsem.h>
+ 
++// uncomment following to enable bigger FPGA images
++//#define NC220_FPGA_FLASH_LAYOUT_V2 // flash layout for bigger fpgas (90MB)
++//#define NC220_FPGA_FLASH_LAYOUT_V3 // flash layout for bigger fpgas (182MB)
++
+ #define M10BMC_N3000_LEGACY_BUILD_VER	0x300468
+ #define M10BMC_N3000_SYS_BASE		0x300800
+ #define M10BMC_N3000_SYS_END		0x300fff
+@@ -20,8 +24,16 @@
+ #define M10BMC_N3000_FLASH_END		0x1fffffff
+ #define M10BMC_N3000_MEM_END		M10BMC_N3000_FLASH_END
+ 
++#ifdef NC220_FPGA_FLASH_LAYOUT_V2
++#define M10BMC_STAGING_BASE		0xa500000
++#define M10BMC_STAGING_SIZE		0x5b00000
++#elif  defined(NC220_FPGA_FLASH_LAYOUT_V3)
++#define M10BMC_STAGING_BASE		0x4900000
++#define M10BMC_STAGING_SIZE		0xb600000
++#else
+ #define M10BMC_STAGING_BASE		0x18000000
+ #define M10BMC_STAGING_SIZE		0x3800000
++#endif
+ 
+ /* Register offset of system registers */
+ #define NIOS2_N3000_FW_VERSION		0x0
+@@ -336,6 +348,45 @@
+ #define M10BMC_FLASH_INT_US			1
+ #define M10BMC_FLASH_TIMEOUT_US			10000
+ 
++
++#if defined (NC220_FPGA_FLASH_LAYOUT_V2) || defined (NC220_FPGA_FLASH_LAYOUT_V3)
++
++#undef M10BMC_N6000_ERROR_LOG_ADDR
++#undef M10BMC_N6000_FPGA_IMAGE_DIR_ADDR
++#undef M10BMC_N6000_BOM_INFO_ADDR
++
++#undef M10BMC_N6000_BMC_REH_ADDR
++#undef M10BMC_N6000_BMC_PROG_ADDR
++
++#undef M10BMC_N6000_SR_REH_ADDR
++#undef M10BMC_N6000_SR_PROG_ADDR
++
++#undef M10BMC_N6000_PR_REH_ADDR
++#undef M10BMC_N6000_PR_PROG_ADDR
++
++#undef M10BMC_N6000_STAGING_FLASH_COUNT
++
++
++/* Addresses for BMC log data in FLASH */
++#define M10BMC_N6000_ERROR_LOG_ADDR		0x47b0000  // FPGA_FLASH_OFF_ERR_LOG_SECTION
++#define M10BMC_N6000_FPGA_IMAGE_DIR_ADDR	0x47f6000 // FPGA_FLASH_OFF_FPGA_IMG_FACT_INFO
++#define M10BMC_N6000_BOM_INFO_ADDR		0x47f0000  // FPGA_FLASH_OFF_BOM_COMPONENTS
++
++/* Addresses for security related data in FLASH */
++#define M10BMC_N6000_BMC_REH_ADDR		0x47fc004
++#define M10BMC_N6000_BMC_PROG_ADDR		0x47fc000 //FPGA_FLASH_OFF_BMC_KEY_MATERIAL
++
++#define M10BMC_N6000_SR_REH_ADDR		0x47fd004
++#define M10BMC_N6000_SR_PROG_ADDR		0x47fd000  // FPGA_FLASH_OFF_SR_KEY_MATERIAL
++
++#define M10BMC_N6000_PR_REH_ADDR		0x47fe004
++#define M10BMC_N6000_PR_PROG_ADDR		0x47fe000  //
++
++#define M10BMC_N6000_STAGING_FLASH_COUNT	0x47f5000 // FPGA_FLASH_OFF_RSU_UPDATE_COUNTER
++
++#endif
++
++
+ /**
+  * struct m10bmc_csr_map - Intel MAX 10 BMC CSR register map
+  */
