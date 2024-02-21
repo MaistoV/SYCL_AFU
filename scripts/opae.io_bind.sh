@@ -7,7 +7,7 @@ if [ $SRIOV_NUMVF == "0" ]; then
     echo "[INFO] Setting up ${FIM_NUM_PF0_VFS} VFs"
     
     # Create new VFs
-    sudo pci_device ${PAC_PCIE_SBD} vf ${FIM_NUM_PF0_VFS}
+    sudo pci_device ${PAC_PCIE_BD}.0 vf ${FIM_NUM_PF0_VFS}
 
     # FIM and PR AFUs VFs
     # Exclude PF0.VF0 (B:00.0)

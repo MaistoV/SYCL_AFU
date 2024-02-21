@@ -1,5 +1,8 @@
 source $ROOT_DIR/install/install_settings.sh
 
+# Clear any old installation
+sudo dnf remove opae* -y
+
 # Clone
 mkdir -p $INSTALL_BUILD_DIR
 cd $INSTALL_BUILD_DIR

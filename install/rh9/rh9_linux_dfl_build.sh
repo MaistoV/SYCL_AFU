@@ -19,8 +19,8 @@ sudo dnf install -y python3 python3-pip python3-devel \
 # Stup python
 python3 -m pip install --user jsonschema virtualenv pudb pyyaml
 sudo pip3 uninstall setuptools
-sudo pip3 install Pybind11==2.10.0 --proxy http://yourproxy:xxx
-sudo pip3 install setuptools==59.6.0 --prefix=/usr --proxy http://yourproxy:xxx
+sudo pip3 install Pybind11==2.10.0 # --proxy http://yourproxy:xxx
+sudo pip3 install setuptools==59.6.0 #--prefix=/usr --proxy http://yourproxy:xxx
 
 # Download packages
 mkdir -p $DOWNLOADS_DIR
@@ -66,7 +66,8 @@ time make -j `nproc` modules
 # Install RPMs
 make INSTALL_MOD_STRIP=1 binrpm-pkg
 cd ~/rpmbuild/RPMS/x86_64
-sudo rpm -Uvh --oldpackage kernel-*.rpm
+# sudo rpm -Uvh --oldpackage kernel-*.rpm
+sudo rpm -Uvh --force kernel-*.rpm
 
 # Package
 PACKAGE_DIR=$INSTALL_BUILD_DIR/package/rpm/linux-dfl
