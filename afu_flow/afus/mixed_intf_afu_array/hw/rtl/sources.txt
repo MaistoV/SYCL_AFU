@@ -1,0 +1,7 @@
+mixed_intf_afu_array.json
+ofs_plat_afu.sv
+hello_wolrd_axi.sv
+hello_wolrd_avalon.sv
+
+# Pointer to software:
+# sw:../../sw/mixed_intf_afu_array
