@@ -37,3 +37,16 @@ $ source install/ubuntu/ubuntu_quartus.sh
 >*Requires license*.
 Install QuestaSim or VCS. 
 > For QuestaSim, set `MTI_HOME=<questasim home>`
+
+## OneAPI
+### Base Toolkit
+Install OneAPI Base Toolkit:
+``` console 
+$ source install/install_oneapi.sh ## TBD
+```
+
+### ASP
+ASP requires Base Toolkit
+
+**TBD**
+ 

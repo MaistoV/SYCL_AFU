@@ -36,3 +36,4 @@ make fim_update PAC_PCIE_SBD=<ssss:bb:dd.f>
 2. [Host Excerciser Modules](HEM/README.md)
 3. [AFU flow](afu_flow/README.md)
 4. [FIM OFSS flow](fim_flow/README.md)
+5. [OneAPI](oneapi/README.md) 

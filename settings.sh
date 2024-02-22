@@ -38,7 +38,7 @@ export FPGA="$BOARD_VAR"
 # For OFSS FIM flow # 
 #####################
 
-export FIM_NUM_PF0_VFS=100
+export FIM_NUM_PF0_VFS=10
 export OFSS_CONFIG=pf0_${FIM_NUM_PF0_VFS}vf
 # export FIM_STATIC_AFUS=4 # VFs 1..4
 # export FIM_TOT_AFUS=$((${FIM_NUM_PF0_VFS} + ${FIM_STATIC_AFUS}))
@@ -60,7 +60,7 @@ export OPAE_PLATFORM_ROOT=$HTS_FIM_RELEASE/ofs-agx7-pcie-attach/work_htk_nc220_$
 
 # OPAE SDK release
 export OPAE_SDK_VERSION=2.8.0-1
-export OPAE_SDK_REPO_BRANCH=$OPAE_SDK_VERSION
+export OPAE_SDK_REPO_BRANCH=release/$OPAE_SDK_VERSION
 
 # The following environment variables are required for compiling the AFU examples. 
 
@@ -74,6 +74,10 @@ export EXAMPLES_AFU=$OFS_BUILD_ROOT/external/examples-afu
 export OPAE_LOC=/usr
 export LIBRARY_PATH=$OPAE_LOC/lib:$LIBRARY_PATH
 export LD_LIBRARY_PATH=$OPAE_LOC/lib64:$LD_LIBRARY_PATH
+
+export FIM_IMAGE_USER1=${OPAE_PLATFORM_ROOT}/hw/blue_bits/ofs_top_page1_unsigned_user1.bin
+# export FIM_IMAGE_USER2=${OPAE_PLATFORM_ROOT}/hw/blue_bits/ofs_top_page2_unsigned_user2.bin
+# export FIM_IMAGE_USER2=${HTS_FIM_RELEASE}/prebuild_images/agf014/release_v1.1/output_files/ofs_top_page2_unsigned_user2.bin
 
 ################
 # For ASE only # 
@@ -102,11 +106,44 @@ export PATH=$MTI_HOME/linux_x86_64/:$MTI_HOME/bin/:$PATH
 export AFU_NAME=my_custom_afu_array
 source ${ROOT_DIR}/afu_flow/settings_afu.sh
 
-export FIM_IMAGE_USER1=${OPAE_PLATFORM_ROOT}/hw/blue_bits/ofs_top_page1_unsigned_user1.bin
-# export FIM_IMAGE_USER2=${OPAE_PLATFORM_ROOT}/hw/blue_bits/ofs_top_page2_unsigned_user2.bin
-# export FIM_IMAGE_USER2=${HTS_FIM_RELEASE}/prebuild_images/agf014/release_v1.1/output_files/ofs_top_page2_unsigned_user2.bin
+##############
+# For OneAPI #  
+##############    
 
-##########
-# OneAPI # 
-##########
-# ONEAPI_WORK_DIR=...TBD....
+export ONEAPI_ROOT=/opt/intel/oneapi
+
+export QUARTUS_ROOTDIR_OVERRIDE=$QUARTUS_ROOTDIR
+# Other OFS environment variables
+export WORKDIR=$OFS_ROOTDIR
+export LIBOPAE_C_ROOT=/usr 
+
+source ${ONEAPI_ROOT}/setvars.sh
+
+# OneAPI ASP
+export OFS_ASP_ROOT="$HTS_FIM_RELEASE/oneapi/oneapi-asp_agf014/nc220"
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$OFS_ASP_ROOT/linux64/lib
+
+# From $OFS_ASP_ROOT/hardware/
+# export OFS_ASP_BOARD_VARIANT=ofs_nc220
+# export OFS_ASP_BOARD_VARIANT=ofs_nc220_iopipes
+export OFS_ASP_BOARD_VARIANT=ofs_nc220_usm
+# export OFS_ASP_BOARD_VARIANT=ofs_nc220_usm_iopip
+
+########################
+# Print out enviroment #  
+########################
+echo "Dump environment:"
+# Printing all (Quartus, OpenCL SDK, GCC) versions for user info
+echo ""
+quartus_sh -v
+echo ""
+icpx --version # (for Intel® oneAPI Base Toolkit (Base Kit))
+echo ""
+gcc --version | grep gcc --color=none
+
+# Target PR-tree
+echo MTI_HOME           : $MTI_HOME
+echo OPAE_PLATFORM_ROOT : $(basename $(dirname $OPAE_PLATFORM_ROOT))
+echo AFU_NAME           : $AFU_NAME
+echo OFSS_CONFIG        : $OFSS_CONFIG
+echo PAC_PCIE_SBD       : $PAC_PCIE_SBD

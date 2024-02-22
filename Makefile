@@ -12,14 +12,14 @@ help: # TBD
 	@echo "	fim_update            Update flash images on the board (around 2m)"
 	@echo "	pac_powercycle_<page> Power cycle from page <user1|user2|factory>, necessary after FIM udpate (fim_update) (waits for 10s)"
 	@echo "	opae.io_bind          Bind all VFs to VFIO driver"
-	@echo "	opae.io_unbind        Unbind all VFs to VFIO driver"
+	@echo "	opae.io_release       Release all VFs to VFIO driver"
 	@echo "	oneapi_ip             Build oneapi design in oneapi_afu/...."
 	@echo "	afu_host              Build host application"
 	@echo "	ase_setup             Setup and launch ASE simulation environment {locks a terminal}"
 	@echo "	ase_launch            Subsequent launches of ASE simulator {locks a terminal}"
 	@echo "	ase_waves             Open simulated waveforms in ${AFU_ASE_DIR}/work/vsim.wlf"
 	@echo "	gbs                   Build green bitstream (takes around 40 minutes)"
-	@echo "	gbs_configure         Configure GBS in PR-slot. On error, you must first unbind all VFs with opae.io_unbind"
+	@echo "	gbs_configure         Configure GBS in PR-slot. On error, you must first release all VFs with opae.io_release"
 # @echo "	sign_gbs              sign green bitstreaam with empty key"
 	@echo "	test_gbs              Run host application against hadware"
 	@echo "	test_ase              Run host application against ASE simulator (requires ${MAKE} ase_setup or ${MAKE} ase_launch in another terminal)"
@@ -68,8 +68,30 @@ pac_powercycle_%:
 opae.io_bind: #gbs_configure
 	${ROOT_DIR}/scripts/opae.io_bind.sh
 
-opae.io_unbind:
-	sudo pci_device ${PAC_PCIE_BD}.0 vf 0
+# opae.io_unbind:
+# 	sudo pci_device ${PAC_PCIE_BD}.0 vf 0
+
+opae.io_release:
+# 	NOTE: this should be done for each VF bound by opae.io init	
+	sudo opae.io release -d ${PAC_PCIE_SBD}.0
+
+####################
+# ONE API ASP Flow #
+####################
+
+oneapi_asp_build_fim:
+	cd ${OFS_ASP_ROOT}; \
+	./build-default-aocx.sh -b ${OFS_ASP_BOARD_VARIANT}
+
+oneapi_asp_install:
+	aocl install ${OFS_ASP_ROOT}
+
+oneapi_asp_aocl_uninstall:
+	aocl uninstall ${OFS_ASP_ROOT}
+
+oneapi_asp_aocl_initalize:
+	aocl initialize acl0 ${OFS_ASP_BOARD_VARIANT} 
+	@echo "Expecting DIAGNOSTIC_PASSED at stdout"
 
 #############################
 # ONE API IP Authoring Flow #
