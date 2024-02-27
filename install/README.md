@@ -12,17 +12,21 @@ Extract Hitek FIM release in `hitek_release` folder.
 $ sudo dmesg | grep -e DMAR -e IOMMU
 ```
 
-## linux-dfl
-Install Linux DFL kernel 6.1.41-dfl.
+## Build  and install Linux-DFL and OPAE-SDK
+### Build 
+Build Linux DFL kernel 6.1.41-dfl.
 Run:
 ``` console 
 $ source install/ubuntu/ubuntu_linux_dfl_build.sh  
 ```
-
-## opae-sdk
-Build and install opae-sdk v2.8.0-1
+Build opae-sdk v2.8.0-1
 ``` console 
 $ source install/ubuntu/ubuntu_opae_build.sh  
+```
+
+### Install 
+``` console 
+$ source install/rh8_9/rh8_9_install.sh  
 ```
 
 ## Quartus Prime Pro 23.2
