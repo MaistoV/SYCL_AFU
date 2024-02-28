@@ -3,7 +3,7 @@
 sudo subscription-manager release --set=8.6
 sudo dnf update
 sudo subscription-manager repos --enable codeready-builder-for-rhel-8-x86_64-rpms
-sudo dnf install https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm
+sudo dnf install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm
 
 sudo dnf install -y python3 python3-pip python3-devel \
     gdb vim git gcc gcc-c++ make cmake libuuid-devel rpm-build systemd-devel nmap \
