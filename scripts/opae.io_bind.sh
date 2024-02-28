@@ -1,9 +1,11 @@
 #!/bin/bash
 
 # Initial setup
-SRIOV_NUMVF=$(sudo find /sys/ -name "sriov_numvfs" | head -n1 | xargs cat)
+SRIOV_NUMVF=$(sudo find /sys/ -wholename "*/${PAC_PCIE_SBD}.0/sriov_numvfs" | head -n1 | xargs cat)
+SRIOV_TOTVF=$(sudo find /sys/ -wholename "*/${PAC_PCIE_SBD}.0/sriov_totalvfs" | head -n1 | xargs cat)
 echo "[INFO] Found $SRIOV_NUMVF sriov_numvfs"
-if [ $SRIOV_NUMVF == "0" ]; then
+echo "[INFO] Found $SRIOV_TOTVF sriov_totalvfs"
+if [ $SRIOV_NUMVF -lt $SRIOV_TOTVF ]; then
     echo "[INFO] Setting up ${FIM_NUM_PF0_VFS} VFs"
     
     # Create new VFs
