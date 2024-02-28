@@ -1,19 +1,27 @@
-# change output color
-COLOR_GREEN := tput setaf 2
-COLOR_RED := tput setaf 1
-COLOR_NORMAL := tput setaf 7
-
 all: help
 
-help: # TBD
+help:
 	@echo "${MAKE} targets:"
+	@echo ""
+	@echo "FIM:"
 	@echo "	fim_build_pr          Build FIM and PR-tree (takes around 1h45m)"
 	@echo "	fim_build_flat        Build flat FIM (takes around 1h10m)"
 	@echo "	fim_update            Update flash images on the board (around 2m)"
 	@echo "	pac_powercycle_<page> Power cycle from page <user1|user2|factory>, necessary after FIM udpate (fim_update) (waits for 10s)"
 	@echo "	opae.io_bind          Bind all VFs to VFIO driver"
 	@echo "	opae.io_release       Release all VFs to VFIO driver"
-	@echo "	oneapi_ip             Build oneapi design in oneapi_afu/...."
+	@echo ""
+	@echo "OneAPI ASP flow (Altera OpenCL):"
+	@echo "	oneapi_asp_build_aocx Build bitstreaam for ASP"
+	@echo "	aocl_aocx_initalize   Program PAC with aocx (requires the right PR interface to be already flashed on the PAC)"
+	@echo "	aocl_bsp_build        Build PR-tree related BSP"
+	@echo "	aocl_bsp_[un]install  Install/uninstall BSP"
+	@echo ""
+	@echo "OneAPI IP flow:"
+	@echo "	oneapi_ip_<target>    Build oneapi design in oneapi/sycl_ip/, target in: {fpga_emu, fpga_sim, report, fpga}"
+	@echo "	oneapi_ip_report_open Open early report in browser" 
+	@echo ""
+	@echo "AFU flow:"
 	@echo "	afu_host              Build host application"
 	@echo "	ase_setup             Setup and launch ASE simulation environment {locks a terminal}"
 	@echo "	ase_launch            Subsequent launches of ASE simulator {locks a terminal}"
@@ -23,15 +31,19 @@ help: # TBD
 # @echo "	sign_gbs              sign green bitstreaam with empty key"
 	@echo "	test_gbs              Run host application against hadware"
 	@echo "	test_ase              Run host application against ASE simulator (requires ${MAKE} ase_setup or ${MAKE} ase_launch in another terminal)"
+	@echo ""
+	@echo "Clean targets:"
 # @echo "	clean_fim             Clean FIM build"
-	@echo "	clean_oneapi          Clean OneAPI build"
+	@echo "	clean_oneapi_asp      Clean OneAPI ASP build"
+	@echo "	clean_oneapi_ip       Clean OneAPI IP build"
 	@echo "	clean_gbs             Clean gbs build"
 	@echo "	clean_ase             Clean ASE simulator setup"
 	@echo "	clean_sw              Clean software build"
 	@echo "	clean_all             TBD"
-	@echo "${MAKE} variables:TBD"
+	@echo ""
+	@echo "${MAKE} variables:"
 	@echo "	OFSS_CONFIG           Suffix to identify FIM build and OFSS flow"
-# @echo "RS_SCHEMA            Reed-Solomon code schema [RS_3_2, RS_6_3, RS_10_4]"
+	@echo "	RS_SCHEMA            Reed-Solomon code schema [RS_3_2, RS_6_3, RS_10_4]"
 # @echo "GBS_NAME             Name of the final signed bitstream"
 # @echo "TEST_ARGS            Arguments to pass to the host exe in test_gbs and test_ase {try with -h}"
 
@@ -122,9 +134,6 @@ oneapi_ip_report_open:
 # 	TBD
 	browse ${ONEAPI_IP_DIR}/build/...report.html
 
-oneapi_ip_clean:
-	rm -rf ${ONEAPI_IP_DIR}/build
-
 #######
 # AFU #
 #######
@@ -152,33 +161,20 @@ ase_waves: ${AFU_ASE_DIR}/work/vsim.wlf
 		-do scripts/add_waves.do 				\
 		-debugdb # ${AFU_ASE_DIR}/work/vsim.dbg
 
-#########################
-# Build Green Bitstream #
-#########################
 
-GBS_FILE ?= ${AFU_SYNTH_DIR}/${AFU_NAME}.gbs
-
+# Build Green Bitstream
 # This takes around 40 minutes...
 gbs: ${AFU_SYNTH_DIR}
 ${AFU_SYNTH_DIR}: ${OPAE_PLATFORM_ROOT}	clean_gbs
 	${AFU_FLOW_DIR}/afu_synth.sh
 
-# {Empty-}Sign bitstreaam
-# sign_gbs: gbs
-# 	mkdir -p ${BACKUP_DIR}
-# 	PACSign PR -t UPDATE -H openssl_manager -i ${GBS_FILE} -o {AFU_SYNTH_DIR}/${AFU_NAME}.gbs && \
-# 	${COLOR_GREEN}; echo "INFO: Signed bitstream is at {AFU_SYNTH_DIR}/${AFU_NAME}.gbs"; \
-# 	${COLOR_NORMAL}
-
+GBS_FILE ?= ${AFU_SYNTH_DIR}/${AFU_NAME}.gbs
 gbs_configure:
-#	Configure PR with GBS
+#	Configure PR slot with GBS
 # sudo fpgaconf ${GBS_FILE}
 	sudo fpgasupdate ${GBS_FILE} ${PAC_PCIE_SBD}.0
 
-###############
-# System Test #
-###############
-
+# System Tests
 AFU_ELF_NAME ?= ${AFU_NAME}
 TEST_ARGS	 ?=
 
@@ -204,9 +200,11 @@ clean_gbs:
 clean_sw:
 	${MAKE} -C ${AFU_SW_DIR} clean
 
-clean_oneapi:
-	${MAKE} -C ${ONEAPI_WORK_DIR} clean_cosim RS_SCHEMA=${RS_SCHEMA}
-	rm -rf ${ONEAPI_WORK_DIR}/../qsys/oneapi_outputs
+clean_oneapi_ip:
+	rm -rf ${ONEAPI_IP_DIR}/build
 
-clean_all: clean_sw clean_gbs clean_ase clean_oneapi
-	# TBD: clean for all afus
+clean_oneapi_asp:
+	# TBD
+
+clean_all: # clean_ase clean_sw clean_gbs clean_ase clean_oneapi_ip clean_oneapi_asp 
+	# TBD: clean for all flows?
