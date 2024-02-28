@@ -74,7 +74,7 @@ Refere to [ASP UG Section](https://ofs.github.io/ofs-2023.2/hw/common/user_guide
 Clone repo:
 
 ``` console 
-$ cd $HTS_FIM_RELEASE
+$ cd $HTS_RELEASE
 $ git clone https://github.com/oneapi-src/oneAPI-samples.git
 $ cd oneAPI-samples
 $ git checkout tags/2024.0.0 # get compiler version using icpx –version
@@ -84,7 +84,7 @@ Build example:
 
 ``` console 
 $ # cd path-to-sample-location, e.g.:
-$ cd $HTS_FIM_RELEASE/oneAPI-samples/DirectProgramming/C++SYCL_FPGA/ReferenceDesigns/board_test/
+$ cd $HTS_RELEASE/oneAPI-samples/DirectProgramming/C++SYCL_FPGA/ReferenceDesigns/board_test/
 $ mkdir build
 $ cd build
 $ cmake .. \

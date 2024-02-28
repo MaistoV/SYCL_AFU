@@ -4,7 +4,7 @@ export ROOT_DIR=$( dirname $( realpath ${BASH_SOURCE[0]} ) )
 # Directory for installation builds
 export INSTALL_BUILD_DIR=${INSTALL_BUILD_DIR=${ROOT_DIR}/install/build}
 # Directory for Hitek release, parent of ofs-agx7-pcie-attach
-export HTS_FIM_RELEASE=${HTS_FIM_RELEASE=${ROOT_DIR}/hitek_release/AG_C220_NC220_OFS_Release_v1_0_2024-01-22/htk_ofs_nc220}
+export HTS_RELEASE=${HTS_RELEASE=${ROOT_DIR}/hitek_release/AG_C220_NC220_OFS_Release_v1_0_2024-01-22/htk_ofs_nc220}
 # PCIe address of PAC (if not set)
 export PAC_PCIE_SBD=${PAC_PCIE_SBD:="0000:8a:00"}
 # Remove segment value
@@ -46,17 +46,17 @@ export OFSS_CONFIG=pf0_${FIM_NUM_PF0_VFS}vf
 #####################
 # FIM/AFU synthesis #
 #####################
-export FIM_BUILD_DIR=$HTS_FIM_RELEASE/ofs-agx7-pcie-attach/work_htk_nc220_${FPGA}_$OFSS_CONFIG/
+export FIM_BUILD_DIR=$HTS_RELEASE/ofs-agx7-pcie-attach/work_htk_nc220_${FPGA}_$OFSS_CONFIG/
 
-export OFS_ROOTDIR=$HTS_FIM_RELEASE/ofs-agx7-pcie-attach
+export OFS_ROOTDIR=$HTS_RELEASE/ofs-agx7-pcie-attach
 
 # If not already done, export OFS_BUILD_ROOT to the top level directory for AFU development
-export OFS_BUILD_ROOT=$HTS_FIM_RELEASE/ofs-agx7-pcie-attach
+export OFS_BUILD_ROOT=$HTS_RELEASE/ofs-agx7-pcie-attach
 
 # If not already done, export OPAE_PLATFORM_ROOT to the PR build tree directory
-# export OPAE_PLATFORM_ROOT=$HTS_FIM_RELEASE/ofs-agx7-pcie-attach/work_htk_nc220_${FPGA}/pr_build_template
-# export OPAE_PLATFORM_ROOT=$HTS_FIM_RELEASE/ofs-agx7-pcie-attach/work_htk_nc220_${FPGA}_$OFSS_CONFIG/pr_build_template
-export OPAE_PLATFORM_ROOT=$HTS_FIM_RELEASE/prebuild_images/agf014/release_v1.1/pr_build_template
+# export OPAE_PLATFORM_ROOT=$HTS_RELEASE/ofs-agx7-pcie-attach/work_htk_nc220_${FPGA}/pr_build_template
+# export OPAE_PLATFORM_ROOT=$HTS_RELEASE/ofs-agx7-pcie-attach/work_htk_nc220_${FPGA}_$OFSS_CONFIG/pr_build_template
+export OPAE_PLATFORM_ROOT=$HTS_RELEASE/prebuild_images/agf014/release_v1.1/pr_build_template
 
 # OPAE SDK release
 export OPAE_SDK_VERSION=2.8.0-1
@@ -119,7 +119,7 @@ export LIBOPAE_C_ROOT=/usr
 source ${ONEAPI_ROOT}/setvars.sh
 
 # OneAPI ASP
-export OFS_ASP_ROOT="$HTS_FIM_RELEASE/oneapi/oneapi-asp_agf014/nc220"
+export OFS_ASP_ROOT="$HTS_RELEASE/oneapi/oneapi-asp_agf014/nc220"
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$OFS_ASP_ROOT/linux64/lib
 
 # From $OFS_ASP_ROOT/hardware/

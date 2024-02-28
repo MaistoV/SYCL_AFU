@@ -13,7 +13,7 @@
 source settings_afu.sh
 
 # OFS working dir
-export IOFS_BUILD_ROOT=$HTS_FIM_RELEASE
+export IOFS_BUILD_ROOT=$HTS_RELEASE
 export EXTERNAL_CLONE_DIR=$IOFS_BUILD_ROOT/ofs-agx7-pcie-attach/external
 mkdir -p build
 echo "[INFO] IOFS_BUILD_ROOT in $IOFS_BUILD_ROOT"
@@ -46,7 +46,7 @@ fi
 # 3. External repos # 
 #####################
 # Basic Building Blocks (PIM for AFU)
-# Inlcuded in Hitek FIM release under $HTS_FIM_RELEASE/ofs-agx7-pcie-attach/external/ofs-platform-afu-bbb/
+# Inlcuded in Hitek FIM release under $HTS_RELEASE/ofs-agx7-pcie-attach/external/ofs-platform-afu-bbb/
 # echo "[INFO] Getting BBB from OPAE's GitHub"
 # cd $EXTERNAL_CLONE_DIR
 # if [ ! -d ofs-platform-afu-bbb ]; then

@@ -2,7 +2,7 @@
 
 ## Hitek release
 Extract Hitek FIM release in `hitek_release` folder.
-> Set `HTS_FIM_RELEASE=<your dir>` to the parent directory of your `ofs-agx7-pcie-attach` clone.
+> Set `HTS_RELEASE=<your dir>` to the parent directory of your `ofs-agx7-pcie-attach` clone.
 
 ## BIOS
 * Enable IO-MMU

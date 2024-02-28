@@ -64,7 +64,7 @@ case "$1" in
 esac
 
 # Launch build
-cd $HTS_FIM_RELEASE
+cd $HTS_RELEASE
 ./ofs-agx7-pcie-attach/ofs-common/scripts/common/syn/build_top.sh \
   $BUILD_ARG \
   --ofss $OFSS_FILE \

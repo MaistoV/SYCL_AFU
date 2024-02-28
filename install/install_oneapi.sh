@@ -27,7 +27,7 @@ sudo sh ./l_BaseKit_p_2024.0.1.46.sh
 # Quartus patch
 IOFS_PATCH=quartus-0.0-0.02iofs-linux.run
 if [ ! -e $DOWNLOADS_DIR/$IOFS_PATCH ]; then
-    ln -s $HTS_FIM_RELEASE/ofs-agx7-pcie-attach/license/quartus-0.0-0.02iofs-linux.run
+    ln -s $HTS_RELEASE/ofs-agx7-pcie-attach/license/quartus-0.0-0.02iofs-linux.run
 fi
 # Install patch
 ./$IOFS_PATCH          \

@@ -46,7 +46,7 @@ fim_build_%:
 	if [ -d ${OFSS_CONFIG_DIR} ]; then \
 		cp -vr ${OFSS_CONFIG_DIR}/* ${OFS_BUILD_ROOT}/tools/ofss_config/; \
 	fi
-	cd ${HTS_FIM_RELEASE}; \
+	cd ${HTS_RELEASE}; \
 	./setup_env.sh; \
 	${ROOT_DIR}/fim_flow/build_fim.sh --$* ${OFSS_CONFIG}
 
