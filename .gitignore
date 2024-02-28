@@ -3,7 +3,7 @@
 
 # Download and build directory
 downloads/
-install/build/
+**/build/
 # FIM and AFU builds
 afu_flow/build/
 

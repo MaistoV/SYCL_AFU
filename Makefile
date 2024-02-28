@@ -62,8 +62,8 @@ pac_powercycle_user1:
 pac_powercycle_user2:
 pac_powercycle_factory:
 pac_powercycle_%:
-# 	Power cycle on page user1
-	sudo rsu  --debug fpga --page=$* ${PAC_PCIE_SBD}.0
+# 	Power cycle PAC
+	sudo rsu --debug fpga --page=$* ${PAC_PCIE_SBD}.0
 
 opae.io_bind: #gbs_configure
 	${ROOT_DIR}/scripts/opae.io_bind.sh
@@ -78,20 +78,28 @@ opae.io_release:
 ####################
 # ONE API ASP Flow #
 ####################
+ONEAPI_DEBUG_ENV =  MMD_ENABLE_DEBUG=1  \
+					MMD_PROGRAM_DEBUG=1
 
-oneapi_asp_build_fim:
+oneapi_asp_build_aocx:
 	cd ${OFS_ASP_ROOT}; \
-	./build-default-aocx.sh -b ${OFS_ASP_BOARD_VARIANT}
+	./scripts/build-default-aocx.sh -b ${OFS_ASP_BOARD_VARIANT}
+	@echo Built AOCX for PR tree ${OPAE_PLATFORM_ROOT}
 
-oneapi_asp_install:
-	aocl install ${OFS_ASP_ROOT}
+aocl_bsp_build:
+	cd ${OFS_ASP_ROOT}; ./scripts/build-bsp.sh
 
-oneapi_asp_aocl_uninstall:
-	aocl uninstall ${OFS_ASP_ROOT}
+aocl_bsp_install:
+	${ONEAPI_DEBUG_ENV} aocl install ${OFS_ASP_ROOT}
 
-oneapi_asp_aocl_initalize:
-	aocl initialize acl0 ${OFS_ASP_BOARD_VARIANT} 
-	@echo "Expecting DIAGNOSTIC_PASSED at stdout"
+aocl_bsp_uninstall:
+	${ONEAPI_DEBUG_ENV} aocl uninstall ${OFS_ASP_ROOT}
+
+ACL_DEVICE = acl0 # Assuming only one device connected
+aocl_aocx_initalize:
+	sudo pci_device ${PAC_PCIE_SBD}.0 vf 1 ; 				\
+	sudo opae.io init -d ${PAC_PCIE_SBD}.5 ${USER}:${USER};	\
+	${ONEAPI_DEBUG_ENV} aocl initialize ${ACL_DEVICE} ${OFS_ASP_BOARD_VARIANT} 
 
 #############################
 # ONE API IP Authoring Flow #

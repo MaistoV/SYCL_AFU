@@ -32,6 +32,9 @@ make fim_update PAC_PCIE_SBD=<ssss:bb:dd.f>
 ```
 
 ## Guides and documentation
+Each guide relies on sourcing `settings.sh` in this directory.
+> NOTE: You should only source this script **once** per session, otherwise the OneAPI environment would brake.
+
 1. [Installation steps](install/README.md)
 2. [Host Excerciser Modules](HEM/README.md)
 3. [AFU flow](afu_flow/README.md)
