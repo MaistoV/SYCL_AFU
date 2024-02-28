@@ -105,8 +105,25 @@ aocl_aocx_initalize:
 # ONE API IP Authoring Flow #
 #############################
 
-oneapi_ip:
-# TBD
+oneapi_ip_cmake:
+	mkdir ${ONEAPI_IP_DIR}/build;	\
+	cd ${ONEAPI_IP_DIR}/build;		\
+	cmake .. -DFPGA_DEVICE=${OFS_ASP_FPGA_DEVICE} 
+
+oneapi_ip_fpga_emu:
+oneapi_ip_fpga_sim:
+oneapi_ip_report:
+oneapi_ip_fpga:
+oneapi_ip_%: oneapi_ip_cmake
+	cd ${ONEAPI_IP_DIR}/build; \
+	make $*
+
+oneapi_ip_report_open:
+# 	TBD
+	browse ${ONEAPI_IP_DIR}/build/...report.html
+
+oneapi_ip_clean:
+	rm -rf ${ONEAPI_IP_DIR}/build
 
 #######
 # AFU #

@@ -34,18 +34,18 @@ export BOARD_VAR=agf014
 # export BOARD_VAR=agf027
 export FPGA="$BOARD_VAR"
 
-#####################
-# For OFSS FIM flow # 
-#####################
+#################
+# OFSS FIM flow # 
+#################
 
 export FIM_NUM_PF0_VFS=10
 export OFSS_CONFIG=pf0_${FIM_NUM_PF0_VFS}vf
 # export FIM_STATIC_AFUS=4 # VFs 1..4
 # export FIM_TOT_AFUS=$((${FIM_NUM_PF0_VFS} + ${FIM_STATIC_AFUS}))
 
-#########################
-# For FIM/AFU synthesis #
-#########################
+#####################
+# FIM/AFU synthesis #
+#####################
 export FIM_BUILD_DIR=$HTS_FIM_RELEASE/ofs-agx7-pcie-attach/work_htk_nc220_${FPGA}_$OFSS_CONFIG/
 
 export OFS_ROOTDIR=$HTS_FIM_RELEASE/ofs-agx7-pcie-attach
@@ -54,9 +54,9 @@ export OFS_ROOTDIR=$HTS_FIM_RELEASE/ofs-agx7-pcie-attach
 export OFS_BUILD_ROOT=$HTS_FIM_RELEASE/ofs-agx7-pcie-attach
 
 # If not already done, export OPAE_PLATFORM_ROOT to the PR build tree directory
-#export OPAE_PLATFORM_ROOT=$HTS_FIM_RELEASE/ofs-agx7-pcie-attach/work_htk_nc220_${FPGA}/pr_build_template
-export OPAE_PLATFORM_ROOT=$HTS_FIM_RELEASE/ofs-agx7-pcie-attach/work_htk_nc220_${FPGA}_$OFSS_CONFIG/pr_build_template
-# export OPAE_PLATFORM_ROOT=$HTS_FIM_RELEASE/prebuild_images/agf014/release_v1.1/pr_build_template
+# export OPAE_PLATFORM_ROOT=$HTS_FIM_RELEASE/ofs-agx7-pcie-attach/work_htk_nc220_${FPGA}/pr_build_template
+# export OPAE_PLATFORM_ROOT=$HTS_FIM_RELEASE/ofs-agx7-pcie-attach/work_htk_nc220_${FPGA}_$OFSS_CONFIG/pr_build_template
+export OPAE_PLATFORM_ROOT=$HTS_FIM_RELEASE/prebuild_images/agf014/release_v1.1/pr_build_template
 
 # OPAE SDK release
 export OPAE_SDK_VERSION=2.8.0-1
@@ -76,12 +76,11 @@ export LIBRARY_PATH=$OPAE_LOC/lib:$LIBRARY_PATH
 export LD_LIBRARY_PATH=$OPAE_LOC/lib64:$LD_LIBRARY_PATH
 
 export FIM_IMAGE_USER1=${OPAE_PLATFORM_ROOT}/hw/blue_bits/ofs_top_page1_unsigned_user1.bin
-# export FIM_IMAGE_USER2=${OPAE_PLATFORM_ROOT}/hw/blue_bits/ofs_top_page2_unsigned_user2.bin
-# export FIM_IMAGE_USER2=${HTS_FIM_RELEASE}/prebuild_images/agf014/release_v1.1/output_files/ofs_top_page2_unsigned_user2.bin
+export FIM_IMAGE_USER2=${OPAE_PLATFORM_ROOT}/hw/blue_bits/ofs_top_page2_unsigned_user2.bin
 
-################
-# For ASE only # 
-################
+############
+# ASE only #
+############
 # Add -debugdb to vsim builds
 # export DEBUG_VSIM=1 # Currently not working  
 
@@ -106,9 +105,9 @@ export PATH=$MTI_HOME/linux_x86_64/:$MTI_HOME/bin/:$PATH
 export AFU_NAME=my_custom_afu_array
 source ${ROOT_DIR}/afu_flow/settings_afu.sh
 
-##############
-# For OneAPI #  
-##############    
+##########
+# OneAPI #
+##########
 
 export ONEAPI_ROOT=/opt/intel/oneapi
 
@@ -128,6 +127,18 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$OFS_ASP_ROOT/linux64/lib
 # export OFS_ASP_BOARD_VARIANT=ofs_nc220_iopipes
 export OFS_ASP_BOARD_VARIANT=ofs_nc220_usm
 # export OFS_ASP_BOARD_VARIANT=ofs_nc220_usm_iopip
+
+# OneAPI compilation flag
+export OFS_ASP_FPGA_DEVICE=$OFS_ASP_ROOT:$OFS_ASP_BOARD_VARIANT
+
+##################
+# OneAPI FPGA IP #  
+##################
+export ONEAPI_IP_DIR=${ROOT_DIR}/oneapi/sycl_ip
+export ONEAPI_SAMPLES_DIR=${ROOT_DIR}/oneapi/oneAPI-samples
+export ONEAPI_SAMPLES_INCLUDE=${ONEAPI_SAMPLES_DIR}/DirectProgramming/C++SYCL_FPGA/include
+
+# TBD: export other vars
 
 ########################
 # Print out enviroment #  
