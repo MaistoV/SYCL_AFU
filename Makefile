@@ -1,51 +1,7 @@
 all: help
 
 help:
-	@echo "${MAKE} targets:"
-	@echo ""
-	@echo "FIM:"
-	@echo "	fim_build_pr          Build FIM and PR-tree (takes around 1h45m)"
-	@echo "	fim_build_flat        Build flat FIM (takes around 1h10m)"
-	@echo "	fim_update            Update flash images on the board (around 2m)"
-	@echo "	pac_powercycle_<page> Power cycle from page <user1|user2|factory>, necessary after FIM udpate (fim_update) (waits for 10s)"
-	@echo "	opae.io_bind          Bind all VFs to VFIO driver"
-	@echo "	opae.io_release       Release all VFs to VFIO driver"
-	@echo ""
-	@echo "OneAPI ASP flow (Altera OpenCL):"
-	@echo "	oneapi_asp_build_aocx Build bitstreaam for ASP"
-	@echo "	aocl_aocx_initalize   Program PAC with aocx (requires the right PR interface to be already flashed on the PAC)"
-	@echo "	aocl_bsp_build        Build PR-tree related BSP"
-	@echo "	aocl_bsp_[un]install  Install/uninstall BSP"
-	@echo ""
-	@echo "OneAPI IP flow:"
-	@echo "	oneapi_ip_<target>    Build oneapi design in oneapi/sycl_ip/, target in: {fpga_emu, fpga_sim, report, fpga}"
-	@echo "	oneapi_ip_report_open Open early report in browser" 
-	@echo ""
-	@echo "AFU flow:"
-	@echo "	afu_host              Build host application"
-	@echo "	ase_setup             Setup and launch ASE simulation environment {locks a terminal}"
-	@echo "	ase_launch            Subsequent launches of ASE simulator {locks a terminal}"
-	@echo "	ase_waves             Open simulated waveforms in ${AFU_ASE_DIR}/work/vsim.wlf"
-	@echo "	gbs                   Build green bitstream (takes around 40 minutes)"
-	@echo "	gbs_configure         Configure GBS in PR-slot. On error, you must first release all VFs with opae.io_release"
-# @echo "	sign_gbs              sign green bitstreaam with empty key"
-	@echo "	test_gbs              Run host application against hadware"
-	@echo "	test_ase              Run host application against ASE simulator (requires ${MAKE} ase_setup or ${MAKE} ase_launch in another terminal)"
-	@echo ""
-	@echo "Clean targets:"
-# @echo "	clean_fim             Clean FIM build"
-	@echo "	clean_oneapi_asp      Clean OneAPI ASP build"
-	@echo "	clean_oneapi_ip       Clean OneAPI IP build"
-	@echo "	clean_gbs             Clean gbs build"
-	@echo "	clean_ase             Clean ASE simulator setup"
-	@echo "	clean_sw              Clean software build"
-	@echo "	clean_all             TBD"
-	@echo ""
-	@echo "${MAKE} variables:"
-	@echo "	OFSS_CONFIG           Suffix to identify FIM build and OFSS flow"
-	@echo "	RS_SCHEMA            Reed-Solomon code schema [RS_3_2, RS_6_3, RS_10_4]"
-# @echo "GBS_NAME             Name of the final signed bitstream"
-# @echo "TEST_ARGS            Arguments to pass to the host exe in test_gbs and test_ase {try with -h}"
+	@cat scripts/help.txt
 
 #######
 # FIM #
@@ -80,9 +36,6 @@ pac_powercycle_%:
 opae.io_bind: #gbs_configure
 	${ROOT_DIR}/scripts/opae.io_bind.sh
 
-# opae.io_unbind:
-# 	sudo pci_device ${PAC_PCIE_BD}.0 vf 0
-
 opae.io_release:
 # 	NOTE: this should be done for each VF bound by opae.io init	
 	sudo opae.io release -d ${PAC_PCIE_SBD}.0
@@ -113,26 +66,47 @@ aocl_aocx_initalize:
 	sudo opae.io init -d ${PAC_PCIE_SBD}.5 ${USER}:${USER};	\
 	${ONEAPI_DEBUG_ENV} aocl initialize ${ACL_DEVICE} ${OFS_ASP_BOARD_VARIANT} 
 
+oneapi_asp_cmake: 
+	mkdir ${ONEAPI_IP_DIR}/build_asp;	\
+	cd ${ONEAPI_IP_DIR}/build_asp;		\
+	cmake .. -DFPGA_DEVICE=${OFS_ASP_FPGA_DEVICE} 
+
+oneapi_asp_fpga_emu:
+oneapi_asp_fpga_sim:
+oneapi_asp_report:
+oneapi_asp_fpga:
+oneapi_asp_%: oneapi_asp_cmake
+	cd ${ONEAPI_IP_DIR}/build_asp; \
+	make $*
+
 #############################
 # ONE API IP Authoring Flow #
 #############################
-
-oneapi_ip_cmake:
-	mkdir ${ONEAPI_IP_DIR}/build;	\
-	cd ${ONEAPI_IP_DIR}/build;		\
-	cmake .. -DFPGA_DEVICE=${OFS_ASP_FPGA_DEVICE} 
+oneapi_ip_cmake: 
+	mkdir ${ONEAPI_IP_DIR}/build_ip;	\
+	cd ${ONEAPI_IP_DIR}/build_ip;	\
+	cmake .. -DFPGA_DEVICE=${AGILEX7_PART_NUMBER} 
 
 oneapi_ip_fpga_emu:
 oneapi_ip_fpga_sim:
 oneapi_ip_report:
 oneapi_ip_fpga:
 oneapi_ip_%: oneapi_ip_cmake
-	cd ${ONEAPI_IP_DIR}/build; \
+	cd ${ONEAPI_IP_DIR}/build_ip; \
 	make $*
 
 oneapi_ip_report_open:
-# 	TBD
-	browse ${ONEAPI_IP_DIR}/build/...report.html
+	firefox ${ONEAPI_IP_DIR}/build/sycl_ip_report.prj/reports/report.html &
+
+oneapi_ip: oneapi_ip_report
+#	TBD: Copy output files to FIM project
+#	Or just reference them?
+	cp -r ${ONEAPI_IP_DIR}/build/sycl_ip_report.prj ---quartus_fim_prj_dir---
+# NOTE: insstantiation template is sycl_ip_report.prj/sycl_ip_report_di_inst.v
+#	CSR map header to sw project?
+#	Or just reference them?
+	cp -r ${ONEAPI_IP_DIR}/build/sycl_ip_report.prj/include/* ---sw_dir---
+
 
 #######
 # AFU #
@@ -201,9 +175,10 @@ clean_sw:
 	${MAKE} -C ${AFU_SW_DIR} clean
 
 clean_oneapi_ip:
-	rm -rf ${ONEAPI_IP_DIR}/build
+	rm -rf ${ONEAPI_IP_DIR}/build_ip
 
 clean_oneapi_asp:
+	rm -rf ${ONEAPI_IP_DIR}/build_asp
 	# TBD
 
 clean_all: # clean_ase clean_sw clean_gbs clean_ase clean_oneapi_ip clean_oneapi_asp 

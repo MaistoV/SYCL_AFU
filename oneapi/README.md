@@ -1,7 +1,6 @@
 # OneAPI flow
 
-# Requirements
-## Software
+## Software Requirements
 OneAPI software sits on top of Intel OFS stack, therefore it needs:
 * Linux DFL 
 * OPAE-SDK
@@ -71,20 +70,12 @@ $ aocl diagnose acl0
 ## OneAPI SYCL Sample Kernels
 Refere to [ASP UG Section](https://ofs.github.io/ofs-2023.2/hw/common/user_guides/oneapi_asp/ug_oneapi_asp/#26-compile-and-run-oneapi-sample-applications).
 
-Clone repo:
-
-``` console 
-$ cd $HTS_RELEASE
-$ git clone https://github.com/oneapi-src/oneAPI-samples.git
-$ cd oneAPI-samples
-$ git checkout tags/2024.0.0 # get compiler version using icpx –version
-```
-
 Build example:
 
 ``` console 
 $ # cd path-to-sample-location, e.g.:
-$ cd $HTS_RELEASE/oneAPI-samples/DirectProgramming/C++SYCL_FPGA/ReferenceDesigns/board_test/
+$ git update submodules
+$ cd oneapi/oneAPI-samples/DirectProgramming/C++SYCL_FPGA/ReferenceDesigns/board_test/
 $ mkdir build
 $ cd build
 $ cmake .. \
@@ -94,13 +85,21 @@ $ cmake .. \
 $ make fpga_emu             # Build emulation    (<test_name>.<fpga_emu>)
 $ make fpga_sim             # Build co-simulaton (<test_name>.<fpga_sim>)
 $ make fpga                 # Build for device   (<test_name>.<fpga>) (1h build)
-$ ./<test_name>.<target>    # Run emulation/co-simulation/on device
+$ ./<test_name>.<target>    # Run emulation/co-simulation/on device (CL_CONTEXT_MPSIM_DEVICE_INTELFPGA=1 for fpga_sim)
 $ make report               # Optimization report  
 $ browse <test_name>.report.prj/reports/report.html # Open report
 ```
 In case timing is not met, you can pass `USER_HARDWARE_FLAGS=-Xsseed=seed_value` in the cmake command above and recompile hardware image.
 
+Utility make targets are provided in the top level Makefile:
+``` console 
+$ make oneapi_asp_<target>
+$ make oneapi_asp_report_open # Uses firefox, not fpga_report, for convenience
+``` 
+
 # IP Authoring Flow
+TBD
+
 Following the [install guide](https://www.intel.com/content/www/us/en/docs/programmable/749869/22-4/installing-the-ip-authoring-development.html).
 
 From OneAPI base toolkit, just:
@@ -109,4 +108,15 @@ From OneAPI base toolkit, just:
 * Intel® oneAPI Threading Building Blocks
 * Intel® oneAPI DPC++/C++ Compiler
 * Intel® VTune™ Profiler
+
+Build the SYCL IP and import it in FIM project:
+``` console 
+$ make oneapi_ip # WIP
+``` 
+
+Utility make targets are provided in the top level Makefile:
+``` console 
+$ make oneapi_ip_<target>
+$ make oneapi_ip_report_open # Uses firefox, not fpga_report, for convenience
+``` 
 

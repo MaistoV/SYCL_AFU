@@ -128,7 +128,7 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$OFS_ASP_ROOT/linux64/lib
 export OFS_ASP_BOARD_VARIANT=ofs_nc220_usm
 # export OFS_ASP_BOARD_VARIANT=ofs_nc220_usm_iopip
 
-# OneAPI compilation flag
+# ASP BSP OneAPI compilation flag
 export OFS_ASP_FPGA_DEVICE=$OFS_ASP_ROOT:$OFS_ASP_BOARD_VARIANT
 
 ##################
@@ -137,6 +137,9 @@ export OFS_ASP_FPGA_DEVICE=$OFS_ASP_ROOT:$OFS_ASP_BOARD_VARIANT
 export ONEAPI_IP_DIR=${ROOT_DIR}/oneapi/sycl_ip
 export ONEAPI_SAMPLES_DIR=${ROOT_DIR}/oneapi/oneAPI-samples
 export ONEAPI_SAMPLES_INCLUDE=${ONEAPI_SAMPLES_DIR}/DirectProgramming/C++SYCL_FPGA/include
+
+# Non-BSP OneAPI compilation flag
+export AGILEX7_PART_NUMBER=AGFB014R24C2E2V # Agilex7 part number
 
 # TBD: export other vars
 
@@ -151,8 +154,8 @@ echo ""
 icpx --version # (for Intel® oneAPI Base Toolkit (Base Kit))
 echo ""
 gcc --version | grep gcc --color=none
+echo ""
 
-# Target PR-tree
 echo MTI_HOME           : $MTI_HOME
 echo OPAE_PLATFORM_ROOT : $(basename $(dirname $OPAE_PLATFORM_ROOT))
 echo AFU_NAME           : $AFU_NAME
