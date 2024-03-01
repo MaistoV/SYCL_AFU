@@ -5,6 +5,7 @@ Extract Hitek FIM release in `hitek_release` folder.
 > Set `HTS_RELEASE=<your dir>` to the parent directory of your `ofs-agx7-pcie-attach` clone.
 
 ## BIOS
+* Enable PCIe hot-plug (for RSU)
 * Enable IO-MMU
 * Enable VT-d
 (NOT WORKING) You can check if they are enabled in the system log:
@@ -30,9 +31,40 @@ $ source install/rh8/rh8_opae_build.sh
 
 ### Install 
 Installation has been separated from build for RHEL 8.9 for convenience, since it needs to be repeted for each node of the demo cluster. On the other hand, Ubuntu is here used only for developement.
+
+On the building node, after build, send the built packages to the other nodes:
+``` console 
+$ source install/scp_package.sh  
+```
+> NOTE: this scripts assumes to send from node rh8-50 to all others (51-59). Modify the script's `addresses` variable as needed.
+
+On each target node, you will find the following tree:
+
+```
+~/install/
+├── check_install.sh        # Check installation (not automated)
+├── package                 # Pre-built packages
+│   └── rpm                 # RPMs
+│       ├── linux-dfl       # Linux-DFL RPMs
+│       │   ├── kernel-6.1.41_dfl_dirty-1.x86_64.rpm
+│       │   └── kernel-headers-6.1.41_dfl_dirty-1.x86_64.rpm
+│       └── opae-sdk        # OPAE-SDK RPMs
+│           ├── opae-2.8.0-1.el8.x86_64.rpm
+│           ├── opae-debuginfo-2.8.0-1.el8.x86_64.rpm
+│           ├── opae-debugsource-2.8.0-1.el8.x86_64.rpm
+│           ├── opae-devel-2.8.0-1.el8.x86_64.rpm
+│           ├── opae-devel-debuginfo-2.8.0-1.el8.x86_64.rpm
+│           ├── opae-extra-tools-2.8.0-1.el8.x86_64.rpm
+│           └── opae-extra-tools-debuginfo-2.8.0-1.el8.x86_64.rpm
+├── rh8_9_install.sh        # Install script
+└── rh8_9_prerequisites.sh  # Install prerequisites (ran by rh8_9_install.sh)
+```
+
+Run the install script:
 ``` console 
 $ source install/rh8_9/rh8_9_install.sh  
 ```
+> NOTE: Requires sudo access and proper dnf subscription.
 
 ## Quartus Prime Pro 23.2
 >*Requires license*.
@@ -58,5 +90,5 @@ $ source install/install_oneapi.sh ## WIP
 ASP requires Base Toolkit
 
 ### IP Authoring flow
-Requires a BSP (WIP)
+Requires a BSP? (WIP)
  
