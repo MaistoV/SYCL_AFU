@@ -5,7 +5,19 @@
 // =============================================================
 #include <sycl/sycl.hpp>
 
-using namespace sycl;
+// Reed-Solomon header
+#include "rs_erasure.h"
+// SYCL-related 
+#include "rs_erasure_sycl.h"
 
-void RunKernel(queue& q, buffer<float,1>& buf_a, buffer<float,1>& buf_b,
-               buffer<float,1>& buf_r, size_t size);
+void RunKernelLambda( sycl::queue& q, 
+                line_t* buf_master_read, 
+                line_t* buf_master_write,
+                rs_erasure_csr_t csr
+              );
+
+void RunKernelFunctor( sycl::queue& q, 
+                sycl::buffer<line_t,1>& buf_master_read, 
+                sycl::buffer<line_t,1>& buf_master_write,
+                rs_erasure_csr_t csr
+              );

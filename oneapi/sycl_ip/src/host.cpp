@@ -12,27 +12,17 @@
 
 #include "exception_handler.hpp"
 
-// This code sample demonstrates how to split the host and FPGA kernel code into
-// separate compilation units so that they can be separately recompiled.
-// Consult the README for a detailed discussion.
-//  - host.cpp (this file) contains exclusively code that executes on the host.
-//  - kernel.cpp contains almost exclusively code that executes on the device.
-//  - kernel.hpp contains only the forward declaration of a function containing
-//    the device code.
+// Header for device code.
 #include "kernel.hpp"
 
 using namespace sycl;
-
-// the tolerance used in floating point comparisons
-constexpr float kTol = 0.001;
 
 // the array size of vectors a, b and c
 constexpr size_t kArraySize = 32;
 
 int main() {
-  std::vector<float> vec_a(kArraySize);
-  std::vector<float> vec_b(kArraySize);
-  std::vector<float> vec_r(kArraySize);
+  std::vector<line_t> vec_a(kArraySize);
+  std::vector<line_t> vec_b(kArraySize);
 
   // Fill vectors a and b with random float values
   for (size_t i = 0; i < kArraySize; i++) {
@@ -61,14 +51,22 @@ int main() {
               << device.get_info<sycl::info::device::name>().c_str()
               << std::endl;
 
-    // create the device buffers
-    buffer device_a(vec_a);
-    buffer device_b(vec_b);
-    buffer device_r(vec_r);
+    // Input argumens
+    rs_erasure_csr_t rs_erasure_csr;
+    rs_erasure_csr.erasure_pattern	= -1;
+    rs_erasure_csr.survived_cells	= -1;
+    rs_erasure_csr.cell_length_cci_byte_width = 128u;
 
-    // The definition of this function is in a different compilation unit,
-    // so host and device code can be separately compiled.
-    RunKernel(q, device_a, device_b, device_r, kArraySize);
+    // For Functor
+    // Create the device buffers
+    buffer device_read (vec_a);
+    buffer device_write(vec_b);
+    RunKernelFunctor(q, device_read, device_write, rs_erasure_csr);
+    
+    // For Lambda
+    // line_t* device_read  = sycl::malloc_shared<line_t>(kArraySize, q);
+    // line_t* device_write = sycl::malloc_shared<line_t>(kArraySize, q);
+    // RunKernelLambda(q, device_read, device_write, rs_erasure_csr);
 
   } catch (exception const &e) {
     // Catches exceptions in the host code
@@ -92,10 +90,10 @@ int main() {
   // Test the results
   size_t correct = 0;
   for (size_t i = 0; i < kArraySize; i++) {
-    float tmp = vec_a[i] + vec_b[i] - vec_r[i];
-    if (tmp * tmp < kTol * kTol) {
-      correct++;
-    }
+    // float tmp = vec_a[i] + vec_b[i] - vec_r[i];
+    // if (tmp * tmp < kTol * kTol) {
+    //   correct++;
+    // }
   }
 
   // Summarize results

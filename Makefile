@@ -82,10 +82,14 @@ oneapi_asp_%: oneapi_asp_cmake
 #############################
 # ONE API IP Authoring Flow #
 #############################
+RS_SCHEMA := RS_3_2
 oneapi_ip_cmake: 
 	mkdir ${ONEAPI_IP_DIR}/build_ip;	\
 	cd ${ONEAPI_IP_DIR}/build_ip;	\
-	cmake .. -DFPGA_DEVICE=${AGILEX7_PART_NUMBER} 
+	cmake .. \
+		-DFPGA_DEVICE=${AGILEX7_PART_NUMBER} \
+		-DRS_SCHEMA=${RS_SCHEMA} \
+		# --trace-expand
 
 oneapi_ip_fpga_emu:
 oneapi_ip_fpga_sim:
@@ -95,8 +99,10 @@ oneapi_ip_%: oneapi_ip_cmake
 	cd ${ONEAPI_IP_DIR}/build_ip; \
 	make $*
 
+oneapi_asp_report_open:
 oneapi_ip_report_open:
-	firefox ${ONEAPI_IP_DIR}/build/sycl_ip_report.prj/reports/report.html &
+oneapi_%_report_open:
+	firefox ${ONEAPI_IP_DIR}/build_$*/sycl_ip_report.prj/reports/report.html &
 
 oneapi_ip: oneapi_ip_report
 #	TBD: Copy output files to FIM project
