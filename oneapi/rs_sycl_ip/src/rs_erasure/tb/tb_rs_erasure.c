@@ -4,10 +4,8 @@
 #include <string.h>
 #include <getopt.h>
 #include <isa-l.h>	
-#include "../src/roms/src/rs_rom_utils.h"
-#include "../src/rs_erasure_sycl.h"
-
-
+#include "roms/src/rs_rom_utils.h"
+#include "rs_erasure_sycl.h"
 
 int usage( char** argv ) {
 	fprintf(stderr,
@@ -178,7 +176,7 @@ int main(int argc, char *argv[]) {
 				}
 			}
 		}
-	}
+	} // Encode with rs_erasure component
 	
 #ifdef DEBUG
 	printf("%s:%d: Complete cell array:\n", __FILE__, __LINE__);

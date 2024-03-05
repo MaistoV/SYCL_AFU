@@ -1,6 +1,13 @@
 #ifndef _RS_ROM_UTILS_H
 #define _RS_ROM_UTILS_H
 
+#include <isa-l.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <getopt.h>
+#include <isa-l.h>	// linking against installed
+
 #define NUM_BASE_PATTERNS_10_1 11
 #define NUM_BASE_PATTERNS_6_3 10
 #define NUM_BASE_PATTERNS_3_2 2

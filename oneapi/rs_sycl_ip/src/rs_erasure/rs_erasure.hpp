@@ -51,7 +51,7 @@ typedef struct rs_erasure_csr {
 	#define permutations_pattern  		erasures_patterns_3_2
 	#define decode_index     			decode_index_3_2
 	#define	decode_index_bitstring		decode_index_3_2_bitstring
-	#define decode_matrix 				DECMAT_ROM_3_2
+	#define decode_matrix_rom			DECMAT_ROM_3_2
 #endif
 #ifdef RS_6_3
 	#define RS_K 6
@@ -64,7 +64,7 @@ typedef struct rs_erasure_csr {
 	#define permutations_pattern  		erasures_patterns_6_3
 	#define decode_index     			decode_index_6_3
 	#define	decode_index_bitstring		decode_index_6_3_bitstring
-	#define decode_matrix 				DECMAT_ROM_6_3
+	#define decode_matrix_rom			DECMAT_ROM_6_3
 #endif
 #ifdef RS_10_4
 	#define RS_K 10
@@ -77,7 +77,7 @@ typedef struct rs_erasure_csr {
 	#define permutations_pattern  		erasures_patterns_10_4
 	#define decode_index     			decode_index_10_4
 	#define	decode_index_bitstring		decode_index_10_4_bitstring
-	#define decode_matrix 				DECMAT_ROM_10_4
+	#define decode_matrix_rom 				DECMAT_ROM_10_4
 #endif
 
 #ifndef RS_K

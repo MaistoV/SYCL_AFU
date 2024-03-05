@@ -120,7 +120,7 @@ LOOP_WRITE_SCHRATCHPAD:
 	// Read decoding matrix from the right ROM address
 	#pragma unroll
 	for ( unsigned int j = 0; j < RS_K; j++ ) {
-		scratchpad_register[j] = decode_matrix[decmat_idx][j]; 
+		scratchpad_register[j] = decode_matrix_rom[decmat_idx][j]; 
 	}
 
 #ifdef DEBUG

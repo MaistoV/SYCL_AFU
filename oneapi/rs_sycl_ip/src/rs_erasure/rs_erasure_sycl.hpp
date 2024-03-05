@@ -6,7 +6,7 @@
 #include <sycl/ext/intel/ac_types/ac_int.hpp>
 
 // Reed-Solomon header
-#include "rs_erasure.h"
+#include "rs_erasure.hpp"
 
 //////////////
 // Typedefs //
