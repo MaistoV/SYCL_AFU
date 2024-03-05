@@ -16,10 +16,9 @@
 // TODO: should it be compatible to CCI-P, TLP or PIM's host_chan?
 #define ADDR_SPACE_READ 1
 #define ADDR_SPACE_WRITE 2
-#define DATA_WITH 64
 
 // Custom AC types
-typedef ac_int<DATA_WITH, false> line_t;
+typedef ac_int<DATA_BYTE_WIDTH*8, false> line_t;
 typedef ac_int<1, false> uint1;
 typedef ac_int<8, false> uint8;
 typedef ac_int<16, false> uint16;

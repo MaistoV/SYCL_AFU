@@ -84,10 +84,7 @@ oneapi_asp_%: oneapi_asp_cmake
 #############################
 RS_SCHEMA ?= RS_3_2
 RS_IP_NAME := rs_sycl_ip
-DEBUG ?= 0
-ifeq ($(DEBUG), 1)
-	CMAKE_DEBUG_FLAG="-DDEBUG=DEBUG"
-endif
+RS_SYCL_IP_DEBUG ?= 0
 oneapi_ip_cmake: 
 	mkdir ${ONEAPI_IP_DIR}/build_ip;	\
 	cd ${ONEAPI_IP_DIR}/build_ip;	\

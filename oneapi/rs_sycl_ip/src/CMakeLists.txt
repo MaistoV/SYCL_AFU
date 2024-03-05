@@ -31,7 +31,7 @@ if(WIN32)
     set(WIN_FLAG "/EHsc")
 endif()
 
-if(DEFINED DEBUG)
+if($ENV{RS_SYCL_IP_DEBUG})
     set(DEBUG_FLAGS "-DDEBUG")
 endif()
 
@@ -41,7 +41,7 @@ endif()
 #    For this reason, FPGA backend flags must be passed as link flags in CMake.
 set(COMMON_COMPILE_FLAGS "-fsycl -fintelfpga -Wall ${WIN_FLAG} -D${RS_SCHEMA} -Wno-unused-label")
 # Temporary -Wno-unused-variable
-set(COMMON_COMPILE_FLAGS "${COMMON_COMPILE_FLAGS} -Wno-unused-variable ${DEBUG_FLAGS}")
+set(COMMON_COMPILE_FLAGS "${COMMON_COMPILE_FLAGS} -Wno-unused-variable -Wno-unused-but-set-variable ${DEBUG_FLAGS}")
 set(COMMON_LINK_FLAGS "-fsycl -fintelfpga -lisal")
 
 set(EMULATOR_COMPILE_FLAGS "${COMMON_COMPILE_FLAGS} -DFPGA_EMULATOR")

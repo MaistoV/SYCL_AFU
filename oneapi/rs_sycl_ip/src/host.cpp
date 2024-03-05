@@ -65,10 +65,10 @@ int main(int argc, char *argv[]) {
 	unsigned int cell_length = CELL_LENGTH_DEFAULT;
 
 	unsigned long max_permutations;
-	if ( NUM_ERRORS == RS_P ) {
+	if ( NUM_ERASURES == RS_P ) {
 		max_permutations = compute_max_erasure_patterns( RS_K, RS_P ); 
 	}
-	else if ( NUM_ERRORS == 1 ) {
+	else if ( NUM_ERASURES == 1 ) {
 		max_permutations = RS_K + RS_P; 
 	}
 
@@ -87,7 +87,7 @@ int main(int argc, char *argv[]) {
 			break;
 		case 'l':
 			cell_length = atoi(optarg);
-			if ( (cell_length <= 0) || ((cell_length % BYTE_WIDTH) != 0) ) {
+			if ( (cell_length <= 0) || ((cell_length % DATA_BYTE_WIDTH) != 0) ) {
 				usage( argv );
 			}
 			break;
@@ -101,15 +101,12 @@ int main(int argc, char *argv[]) {
 	// Interface arguments for IP
 	line_t* rs_erasure_input		 = (line_t*)malloc( RS_INPUT_SIZE(cell_length)	);
 	line_t* reconstructed_blocks_out = (line_t*)malloc( RS_OUTPUT_SIZE(cell_length)	);
-	// // Memory interfaces to IP under test
-	// master_read_line_t	master_read (rs_erasure_input			, RS_INPUT_SIZE(cell_length)	);	
-	// master_write_line_t master_write(reconstructed_blocks_out	, RS_OUTPUT_SIZE(cell_length)	);
 
 	// CSR input to IP under test
 	rs_erasure_csr_t rs_erasure_csr;
 	rs_erasure_csr.erasure_pattern	= -1;
 	rs_erasure_csr.survived_cells	= -1;
-	rs_erasure_csr.cell_length_BYTE_WIDTH = cell_length / BYTE_WIDTH;
+	rs_erasure_csr.cell_length_byte_width = cell_length / DATA_BYTE_WIDTH;
 	
 	// Seed the PRNG
 	srand(prng_seed);
@@ -149,7 +146,7 @@ int main(int argc, char *argv[]) {
 	for ( unsigned int i = 0; i < RS_K; i++ ) {
 		for ( unsigned int l = 0; l < cell_length; l++ ) {
 			printf("%02x ", frag_ptrs[i][l]);
-			if ( ((l+1) % BYTE_WIDTH) == 0 ) {
+			if ( ((l+1) % DATA_BYTE_WIDTH) == 0 ) {
 				printf("\n");
 			}
 		}
@@ -187,7 +184,7 @@ int main(int argc, char *argv[]) {
 		for ( unsigned int i = 0; i < RS_K; i++ ) {
 			for ( unsigned int l = 0; l < cell_length; l++ ) {
 				printf("%02x ", ((uint8_t(*)[cell_length])rs_erasure_input)[i][l]);
-				if ( ((l+1) % BYTE_WIDTH) == 0 ) {
+				if ( ((l+1) % DATA_BYTE_WIDTH) == 0 ) {
 					printf("\n");
 				}
 			}
@@ -213,7 +210,7 @@ int main(int argc, char *argv[]) {
 				);
 
 			// Pack results in fragments buffer
-			for ( unsigned int e = 0; e < NUM_ERRORS; e++ ) {
+			for ( unsigned int e = 0; e < NUM_ERASURES; e++ ) {
 				for ( int l = 0; l < cell_length; l++ ) {
 					frag_ptrs[i + RS_K][l] = ((uint8_t(*)[cell_length])reconstructed_blocks_out)[e][l];
 				}
@@ -225,7 +222,7 @@ int main(int argc, char *argv[]) {
 	for ( unsigned int i = 0; i < RS_K + RS_P; i++ ) {
 		for ( unsigned int l = 0; l < cell_length; l++ ) {
 			printf("%02x ", frag_ptrs[i][l]);
-			if ( ((l+1) % BYTE_WIDTH) == 0 ) {
+			if ( ((l+1) % DATA_BYTE_WIDTH) == 0 ) {
 				printf("\n");
 			}
 		}
@@ -241,7 +238,7 @@ int main(int argc, char *argv[]) {
 
 	// Loop over all possible RS_K:RS_P permutations
 	for ( unsigned int permutation_index = 0; permutation_index < max_permutations; permutation_index++ ) {
-		uint8_t* erasure_list = (uint8_t*)(permutations[ permutation_index * NUM_ERRORS ]);
+		uint8_t* erasure_list = (uint8_t*)(permutations[ permutation_index * NUM_ERASURES ]);
 
 		for ( unsigned int survival_index = 0; survival_index < num_vectors_per_erasure_pattern; survival_index++ ) {
 			printf("%s:%d: Reconstructing cell %d [%d/%lu] with survival pattern [%d/%d]\n", 
@@ -256,13 +253,13 @@ int main(int argc, char *argv[]) {
 				// Find a decode matrix to regenerate all erasures from remaining frags
 				// ret_val = gf_gen_decode_matrix_simple(encode_matrix, decode_matrix,
 				// 				invert_matrix, temp_matrix, decode_index,
-				// 				erasure_list, NUM_ERRORS, RS_K, RS_M);
+				// 				erasure_list, NUM_ERASURES, RS_K, RS_M);
 				// if ( ret_val != 0 ) {
 				// 	printf("%s:%d: Fail on generating decode matrix\n", __FILE__, __LINE__);
 				// 	return -1;
 				// }
 			#ifdef DEBUG	
-				print_matrix_2d(stdout, NUM_ERRORS, RS_K, (uint8_t*)(decode_matrix_rom[permutation_index]), "decode_matrix_rom ");
+				print_matrix_2d(stdout, NUM_ERASURES, RS_K, (uint8_t*)(decode_matrix_rom[permutation_index]), "decode_matrix_rom ");
 				print_matrix_2d(stdout, 1, RS_K, (uint8_t*)decode_index[permutation_index][survival_index], "decode_index[permutation_index]");
 			#endif
 
@@ -272,15 +269,15 @@ int main(int argc, char *argv[]) {
 				}
 				// Recover data
 				uint8_t* decode_matrix = (uint8_t*)decode_matrix_rom[permutation_index*num_vectors_per_erasure_pattern + survival_index];
-				ec_init_tables(RS_K, NUM_ERRORS, decode_matrix, g_tbls);
-				ec_encode_data(cell_length, RS_K, NUM_ERRORS, g_tbls, (unsigned char **)recover_srcs, (unsigned char **)recover_outp);
+				ec_init_tables(RS_K, NUM_ERASURES, decode_matrix, g_tbls);
+				ec_encode_data(cell_length, RS_K, NUM_ERASURES, g_tbls, (unsigned char **)recover_srcs, (unsigned char **)recover_outp);
 				
 			#ifdef DEBUG			
 				printf("%s:%d: reconstructed_blocks_out:\n", __FILE__, __LINE__);
-				for ( unsigned int i = 0; i < NUM_ERRORS; i++ ) {
+				for ( unsigned int i = 0; i < NUM_ERASURES; i++ ) {
 					for ( int l = 0; l < cell_length; l++ ) {
 						printf("%02x ", recover_outp[i][l]);
-						if ( ((l+1) % BYTE_WIDTH) == 0 ) {
+						if ( ((l+1) % DATA_BYTE_WIDTH) == 0 ) {
 							printf("\n");
 						}
 					}
@@ -303,7 +300,7 @@ int main(int argc, char *argv[]) {
 				for ( unsigned int i = 0; i < RS_K; i++ ) {
 					for ( unsigned int l = 0; l < cell_length; l++ ) {
 						printf("%02x ", ((uint8_t(*)[cell_length])rs_erasure_input)[i][l]);
-						if ( ((l+1) % BYTE_WIDTH) == 0 ) {
+						if ( ((l+1) % DATA_BYTE_WIDTH) == 0 ) {
 							printf("\n");
 						}
 					}
@@ -326,12 +323,11 @@ int main(int argc, char *argv[]) {
 					);
 
 			#ifdef DEBUG			
-				printf("%s:%d: ret_val: 0x%08x\n", __FILE__, __LINE__, (uint32_t)ret_val);
 				printf("%s:%d: reconstructed_blocks_out:\n", __FILE__, __LINE__);
-				for ( unsigned int i = 0; i < NUM_ERRORS; i++ ) {
+				for ( unsigned int i = 0; i < NUM_ERASURES; i++ ) {
 					for ( int l = 0; l < cell_length; l++ ) {
 						printf("%02x ", ((uint8_t(*)[cell_length])reconstructed_blocks_out)[i][l]);
-						if ( ((l+1) % BYTE_WIDTH) == 0 ) {
+						if ( ((l+1) % DATA_BYTE_WIDTH) == 0 ) {
 							printf("\n");
 						}
 					}
@@ -348,17 +344,17 @@ int main(int argc, char *argv[]) {
 			} // !decode_isal
 
 			// Check that recovered buffers are the same as original
-			for ( unsigned int i = 0; i < NUM_ERRORS; i++ ) {
+			for ( unsigned int i = 0; i < NUM_ERASURES; i++ ) {
 				ret_val = memcmp(recover_outp[i], frag_ptrs[erasure_list[i]], cell_length);
 				if ( ret_val ) {
 					printf("%s:%d: Fail erasure recovery %d, frag %d\n", __FILE__, __LINE__, i, erasure_list[i]);
 					
 				#ifdef DEBUG			
 					printf("%s:%d: expected:\n", __FILE__, __LINE__);
-					for ( unsigned int i = 0; i < NUM_ERRORS; i++ ) {
+					for ( unsigned int i = 0; i < NUM_ERASURES; i++ ) {
 						for ( int l = 0; l < cell_length; l++ ) {
 							printf("%02x ", frag_ptrs[erasure_list[i]][l]);
-							if ( ((l+1) % BYTE_WIDTH) == 0 ) {
+							if ( ((l+1) % DATA_BYTE_WIDTH) == 0 ) {
 								printf("\n");
 							}
 						}
@@ -389,6 +385,13 @@ void RunKernel(
 		rs_erasure_csr_t rs_erasure_csr
 	){
 
+	// rs_erasure (
+    //              rs_erasure_input,
+    //              reconstructed_blocks_out,
+    //              rs_erasure_csr 
+    //             );
+	// return;
+
 	try {
 
 		// Create a queue bound to the chosen device.
@@ -408,8 +411,17 @@ void RunKernel(
 		// RunKernelFunctor(q, device_read, device_write, rs_erasure_csr);
 		
 		// For Lambda
-		line_t* device_read		 = sycl::malloc_shared<line_t>( RS_INPUT_SIZE(cell_length) , q);
+		line_t* device_read  = sycl::malloc_shared<line_t>( RS_INPUT_SIZE(cell_length) , q);
 		line_t* device_write = sycl::malloc_shared<line_t>( RS_OUTPUT_SIZE(cell_length), q);
+
+		// Check pointers are valid
+		assert(device_read);
+		assert(device_write);
+
+		// Copy data in input region
+		for ( unsigned int i = 0; i < RS_INPUT_SIZE(cell_length); i++ ) {
+			((uint8_t*)device_read)[i] = ((uint8_t*)rs_erasure_input)[i];
+		}
 
 		// Run kernel
 		RunKernelLambda(
@@ -418,6 +430,11 @@ void RunKernel(
 						device_write, 
 						rs_erasure_csr
 					);
+		
+		// Read back data
+		for ( unsigned int i = 0; i < RS_OUTPUT_SIZE(cell_length); i++ ) {
+			((uint8_t*)reconstructed_blocks_out)[i] = ((uint8_t*)device_write)[i];
+		}
 
 	} catch (exception const &e) {
 		// Catches exceptions in the host code
