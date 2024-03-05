@@ -1,25 +1,29 @@
+
 #ifndef _RS_ERASURE_H_
 #define _RS_ERASURE_H_
 
-#define GF_POLY 	29	// Genrator polynomial of the Galois field: 0x1d
+///////////////////////////////////////////////////
+// This header contains all the non-SYCL defines //
+///////////////////////////////////////////////////
+
+#define GF_POLY 	29	// Generator polynomial of the Galois field: 0x1d
 #define GF_ORDER	8	// Order of Galois filed (2^GF_ORDER)
 
 #define SCRATCHPAD_WIDTH	sizeof(uint8_t)			// Total number of cells
 #define SCRATCHPAD_DEPTH	(RS_K/SCRATCHPAD_WIDTH)	// Number of words of SCRATCHPAD Memory
 
-
-#define CCI_BYTE_WIDTH 			64u // Width of CCI interface 512 bits /8
-#define CCI_BYTE_WIDTH_BITS		6u	// log2(CCI_BYTE_WIDTH)
+#define BYTE_WIDTH 			64u // Width of CCI interface 512 bits /8
+#define BYTE_WIDTH_BITS		6u	// log2(BYTE_WIDTH)
 
 #define _1B						(1			 	)	// 1 Byte
 #define _64KB					(64 * 1024 		)	// 64KiloBbyte
 #define _1MB					(1024 * 1024 	)	// 1Megabyte
 #define _2MB					(2 * 1024 * 1024)	// 2Megabytes
 #define CELL_LENGTH_MAX			(_1MB) 				// With huge pages 2MB
-#define CELL_LENGTH_MIN 		(CCI_BYTE_WIDTH)	// MIN (by design)
+#define CELL_LENGTH_MIN 		(BYTE_WIDTH)	// MIN (by design)
 #ifndef CELL_LENGTH_DEFAULT
-	#warning CELL_LENGTH_DEFAULT undefined, defaulting to CCI_BYTE_WIDTH*2=128
-	#define CELL_LENGTH_DEFAULT (CCI_BYTE_WIDTH*2)	// Length of RS cell in bytes
+	// #warning CELL_LENGTH_DEFAULT undefined, defaulting to BYTE_WIDTH*2=128
+	#define CELL_LENGTH_DEFAULT (BYTE_WIDTH*2)	// Length of RS cell in bytes
 #endif
 
 #define NUM_ERRORS 		1	// Number of paraller erasures to corrections
@@ -32,9 +36,8 @@ typedef struct rs_erasure_csr {
 	//  uint8_t	 cell_length_id;	  	// Length of each cell (Constant for now)
 	 uint16_t	erasure_pattern;	 	// Which cells were erased (1-hot for now)
 	 uint16_t	survived_cells;	  		// Which k cells of the k+p are provided for reconstruction
-	 uint32_t	cell_length_cci_byte_width;			// Cell length in multiples of CCI_BYTE_WIDTH
+	 uint32_t	cell_length_BYTE_WIDTH;			// Cell length in multiples of BYTE_WIDTH
 } rs_erasure_csr_t;
-
 
 // Mux ROM values among RS codes
 #ifdef RS_3_2
@@ -46,7 +49,7 @@ typedef struct rs_erasure_csr {
 	#define PERMUTATION_PATTERN_MASK 	0x001fu
 	#define permutations		 		erasures_3_2
 	#define permutations_pattern  		erasures_patterns_3_2
-	#define decode_index_hls 			decode_index_3_2
+	#define decode_index     			decode_index_3_2
 	#define	decode_index_bitstring		decode_index_3_2_bitstring
 	#define decode_matrix 				DECMAT_ROM_3_2
 #endif
@@ -59,7 +62,7 @@ typedef struct rs_erasure_csr {
 	#define PERMUTATION_PATTERN_MASK 	0x01ffu
 	#define permutations		 		erasures_6_3
 	#define permutations_pattern  		erasures_patterns_6_3
-	#define decode_index_hls 			decode_index_6_3
+	#define decode_index     			decode_index_6_3
 	#define	decode_index_bitstring		decode_index_6_3_bitstring
 	#define decode_matrix 				DECMAT_ROM_6_3
 #endif
@@ -72,7 +75,7 @@ typedef struct rs_erasure_csr {
 	#define PERMUTATION_PATTERN_MASK 	0x3fffu
 	#define permutations		 		erasures_10_4
 	#define permutations_pattern  		erasures_patterns_10_4
-	#define decode_index_hls 			decode_index_10_4
+	#define decode_index     			decode_index_10_4
 	#define	decode_index_bitstring		decode_index_10_4_bitstring
 	#define decode_matrix 				DECMAT_ROM_10_4
 #endif
@@ -83,10 +86,10 @@ typedef struct rs_erasure_csr {
 #endif
 #endif
 
-#define STR(x) #x
-#define XSTR(x) STR(x)
-#pragma message "Building RS[" XSTR(RS_K) ":" XSTR(RS_P) "]"
+// #define STR(x) #x
+// #define XSTR(x) STR(x)
+// #pragma message "Building RS[" XSTR(RS_K) ":" XSTR(RS_P) "]"
 
 #define RS_M (RS_K + RS_P) // Total number of cells
 
-#endif
+#endif // _RS_ERASURE_H_

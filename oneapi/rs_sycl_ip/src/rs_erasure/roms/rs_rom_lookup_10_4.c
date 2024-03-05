@@ -869,7 +869,7 @@ uint16_t rs_10_4_rom_lookup( uint16_t erasure_pattern, uint16_t survival_pattern
 				break;
 			default:
 				// Error
-				printf("%s:%d ERROR: Unsupported survival pattern 0x%04x\n", __FILE__, __LINE__, survival_pattern);
+				// printf("%s:%d ERROR: Unsupported survival pattern 0x%04x\n", __FILE__, __LINE__, survival_pattern);
 				ret_val = -1;
 				break;
 			}
@@ -1736,7 +1736,7 @@ uint16_t rs_10_4_rom_lookup( uint16_t erasure_pattern, uint16_t survival_pattern
 				break;
 			default:
 				// Error
-				printf("%s:%d ERROR: Unsupported survival pattern 0x%04x\n", __FILE__, __LINE__, survival_pattern);
+				// printf("%s:%d ERROR: Unsupported survival pattern 0x%04x\n", __FILE__, __LINE__, survival_pattern);
 				ret_val = -1;
 				break;
 			}
@@ -2603,7 +2603,7 @@ uint16_t rs_10_4_rom_lookup( uint16_t erasure_pattern, uint16_t survival_pattern
 				break;
 			default:
 				// Error
-				printf("%s:%d ERROR: Unsupported survival pattern 0x%04x\n", __FILE__, __LINE__, survival_pattern);
+				// printf("%s:%d ERROR: Unsupported survival pattern 0x%04x\n", __FILE__, __LINE__, survival_pattern);
 				ret_val = -1;
 				break;
 			}
@@ -3470,7 +3470,7 @@ uint16_t rs_10_4_rom_lookup( uint16_t erasure_pattern, uint16_t survival_pattern
 				break;
 			default:
 				// Error
-				printf("%s:%d ERROR: Unsupported survival pattern 0x%04x\n", __FILE__, __LINE__, survival_pattern);
+				// printf("%s:%d ERROR: Unsupported survival pattern 0x%04x\n", __FILE__, __LINE__, survival_pattern);
 				ret_val = -1;
 				break;
 			}
@@ -4337,7 +4337,7 @@ uint16_t rs_10_4_rom_lookup( uint16_t erasure_pattern, uint16_t survival_pattern
 				break;
 			default:
 				// Error
-				printf("%s:%d ERROR: Unsupported survival pattern 0x%04x\n", __FILE__, __LINE__, survival_pattern);
+				// printf("%s:%d ERROR: Unsupported survival pattern 0x%04x\n", __FILE__, __LINE__, survival_pattern);
 				ret_val = -1;
 				break;
 			}
@@ -5204,7 +5204,7 @@ uint16_t rs_10_4_rom_lookup( uint16_t erasure_pattern, uint16_t survival_pattern
 				break;
 			default:
 				// Error
-				printf("%s:%d ERROR: Unsupported survival pattern 0x%04x\n", __FILE__, __LINE__, survival_pattern);
+				// printf("%s:%d ERROR: Unsupported survival pattern 0x%04x\n", __FILE__, __LINE__, survival_pattern);
 				ret_val = -1;
 				break;
 			}
@@ -6071,7 +6071,7 @@ uint16_t rs_10_4_rom_lookup( uint16_t erasure_pattern, uint16_t survival_pattern
 				break;
 			default:
 				// Error
-				printf("%s:%d ERROR: Unsupported survival pattern 0x%04x\n", __FILE__, __LINE__, survival_pattern);
+				// printf("%s:%d ERROR: Unsupported survival pattern 0x%04x\n", __FILE__, __LINE__, survival_pattern);
 				ret_val = -1;
 				break;
 			}
@@ -6938,7 +6938,7 @@ uint16_t rs_10_4_rom_lookup( uint16_t erasure_pattern, uint16_t survival_pattern
 				break;
 			default:
 				// Error
-				printf("%s:%d ERROR: Unsupported survival pattern 0x%04x\n", __FILE__, __LINE__, survival_pattern);
+				// printf("%s:%d ERROR: Unsupported survival pattern 0x%04x\n", __FILE__, __LINE__, survival_pattern);
 				ret_val = -1;
 				break;
 			}
@@ -7805,7 +7805,7 @@ uint16_t rs_10_4_rom_lookup( uint16_t erasure_pattern, uint16_t survival_pattern
 				break;
 			default:
 				// Error
-				printf("%s:%d ERROR: Unsupported survival pattern 0x%04x\n", __FILE__, __LINE__, survival_pattern);
+				// printf("%s:%d ERROR: Unsupported survival pattern 0x%04x\n", __FILE__, __LINE__, survival_pattern);
 				ret_val = -1;
 				break;
 			}
@@ -8672,7 +8672,7 @@ uint16_t rs_10_4_rom_lookup( uint16_t erasure_pattern, uint16_t survival_pattern
 				break;
 			default:
 				// Error
-				printf("%s:%d ERROR: Unsupported survival pattern 0x%04x\n", __FILE__, __LINE__, survival_pattern);
+				// printf("%s:%d ERROR: Unsupported survival pattern 0x%04x\n", __FILE__, __LINE__, survival_pattern);
 				ret_val = -1;
 				break;
 			}
@@ -9539,7 +9539,7 @@ uint16_t rs_10_4_rom_lookup( uint16_t erasure_pattern, uint16_t survival_pattern
 				break;
 			default:
 				// Error
-				printf("%s:%d ERROR: Unsupported survival pattern 0x%04x\n", __FILE__, __LINE__, survival_pattern);
+				// printf("%s:%d ERROR: Unsupported survival pattern 0x%04x\n", __FILE__, __LINE__, survival_pattern);
 				ret_val = -1;
 				break;
 			}
@@ -10406,7 +10406,7 @@ uint16_t rs_10_4_rom_lookup( uint16_t erasure_pattern, uint16_t survival_pattern
 				break;
 			default:
 				// Error
-				printf("%s:%d ERROR: Unsupported survival pattern 0x%04x\n", __FILE__, __LINE__, survival_pattern);
+				// printf("%s:%d ERROR: Unsupported survival pattern 0x%04x\n", __FILE__, __LINE__, survival_pattern);
 				ret_val = -1;
 				break;
 			}
@@ -11273,7 +11273,7 @@ uint16_t rs_10_4_rom_lookup( uint16_t erasure_pattern, uint16_t survival_pattern
 				break;
 			default:
 				// Error
-				printf("%s:%d ERROR: Unsupported survival pattern 0x%04x\n", __FILE__, __LINE__, survival_pattern);
+				// printf("%s:%d ERROR: Unsupported survival pattern 0x%04x\n", __FILE__, __LINE__, survival_pattern);
 				ret_val = -1;
 				break;
 			}
@@ -12140,14 +12140,14 @@ uint16_t rs_10_4_rom_lookup( uint16_t erasure_pattern, uint16_t survival_pattern
 				break;
 			default:
 				// Error
-				printf("%s:%d ERROR: Unsupported survival pattern 0x%04x\n", __FILE__, __LINE__, survival_pattern);
+				// printf("%s:%d ERROR: Unsupported survival pattern 0x%04x\n", __FILE__, __LINE__, survival_pattern);
 				ret_val = -1;
 				break;
 			}
 			break;
 	default:
 		// Error
-		printf("%s:%d ERROR: Unsupported erasure pattern 0x%04x\n", __FILE__, __LINE__, erasure_pattern);
+		// printf("%s:%d ERROR: Unsupported erasure pattern 0x%04x\n", __FILE__, __LINE__, erasure_pattern);
 		ret_val = -1;
 	break;
 	}

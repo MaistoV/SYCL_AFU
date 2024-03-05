@@ -38,5 +38,5 @@ Clean targets:
 
 make variables:
 	OFSS_CONFIG           Suffix to identify FIM build and OFSS flow
-	RS_SCHEMA             Reed-Solomon code schema [RS_3_2, RS_6_3, RS_10_4]
+	RS_SCHEMA             Reed-Solomon code schema in [RS_3_2, RS_6_3, RS_10_4]
 	TEST_ARGS             Arguments to pass to the host exe in test_gbs and test_ase {try with -h}

@@ -13,7 +13,7 @@
 #include "exception_handler.hpp"
 
 // Header for device code.
-#include "kernel.hpp"
+#include "rs_erasure_sycl.hpp"
 
 using namespace sycl;
 
@@ -55,18 +55,18 @@ int main() {
     rs_erasure_csr_t rs_erasure_csr;
     rs_erasure_csr.erasure_pattern	= -1;
     rs_erasure_csr.survived_cells	= -1;
-    rs_erasure_csr.cell_length_cci_byte_width = 128u;
+    rs_erasure_csr.cell_length_BYTE_WIDTH = 128u;
 
     // For Functor
     // Create the device buffers
-    buffer device_read (vec_a);
-    buffer device_write(vec_b);
-    RunKernelFunctor(q, device_read, device_write, rs_erasure_csr);
+    // buffer device_read (vec_a);
+    // buffer device_write(vec_b);
+    // RunKernelFunctor(q, device_read, device_write, rs_erasure_csr);
     
     // For Lambda
-    // line_t* device_read  = sycl::malloc_shared<line_t>(kArraySize, q);
-    // line_t* device_write = sycl::malloc_shared<line_t>(kArraySize, q);
-    // RunKernelLambda(q, device_read, device_write, rs_erasure_csr);
+    line_t* device_read  = sycl::malloc_shared<line_t>(kArraySize, q);
+    line_t* device_write = sycl::malloc_shared<line_t>(kArraySize, q);
+    RunKernelLambda(q, device_read, device_write, rs_erasure_csr);
 
   } catch (exception const &e) {
     // Catches exceptions in the host code

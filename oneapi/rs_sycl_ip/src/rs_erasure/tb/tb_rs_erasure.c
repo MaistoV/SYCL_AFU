@@ -12,10 +12,10 @@
 int usage( char** argv ) {
 	fprintf(stderr,
 		"Usage: %s [options]\n"
-		"  -h		  Print this help\n"
-		"  -r <seed> 	Seed for PRNG for randomized data\n"
-		"  -e <0|1>	Perform encoding with ISA-L\n"
-		"  -d <0|1>	Perform decoding with ISA-L\n"
+		"  -h		  	Print this help\n"
+		"  -r <seed>	Seed for PRNG for randomized data\n"
+		"  -e <0|1>		Perform encoding with ISA-L\n"
+		"  -d <0|1>		Perform decoding with ISA-L\n"
 		"  -l <value>	Cell length in bytes (positive multiple of 64B)\n",
 		argv[0]
 	);
@@ -53,7 +53,7 @@ int main(int argc, char *argv[]) {
 			break;
 		case 'l':
 			cell_length = atoi(optarg);
-			if ( (cell_length <= 0) || ((cell_length % CCI_BYTE_WIDTH) != 0) ) {
+			if ( (cell_length <= 0) || ((cell_length % BYTE_WIDTH) != 0) ) {
 				usage( argv );
 			}
 			break;
@@ -65,17 +65,17 @@ int main(int argc, char *argv[]) {
 	}
 	
 	// Interface arguments for component
-	cci_line_t* rs_erasure_input		 = (cci_line_t*)malloc( RS_INPUT_SIZE(cell_length)	);
-	cci_line_t* reconstructed_blocks_out = (cci_line_t*)malloc( RS_OUTPUT_SIZE(cell_length)	);
+	line_t* rs_erasure_input		 = (line_t*)malloc( RS_INPUT_SIZE(cell_length)	);
+	line_t* reconstructed_blocks_out = (line_t*)malloc( RS_OUTPUT_SIZE(cell_length)	);
 	// CCI interfaces to component under test
-	master_read_cci_line_t  master_read (rs_erasure_input			, RS_INPUT_SIZE(cell_length)	);	
-	master_write_cci_line_t master_write(reconstructed_blocks_out	, RS_OUTPUT_SIZE(cell_length)	);
+	master_read_line_t  master_read (rs_erasure_input			, RS_INPUT_SIZE(cell_length)	);	
+	master_write_line_t master_write(reconstructed_blocks_out	, RS_OUTPUT_SIZE(cell_length)	);
 
 	// CSR input to component under test
 	rs_erasure_csr_t rs_erasure_csr;
 	rs_erasure_csr.erasure_pattern	= -1;
 	rs_erasure_csr.survived_cells	= -1;
-	rs_erasure_csr.cell_length_cci_byte_width = cell_length / CCI_BYTE_WIDTH;
+	rs_erasure_csr.cell_length_BYTE_WIDTH = cell_length / BYTE_WIDTH;
 	
 	// Seed the PRNG
 	srand(prng_seed);
@@ -115,7 +115,7 @@ int main(int argc, char *argv[]) {
 	for ( unsigned int i = 0; i < RS_K; i++ ) {
 		for ( unsigned int l = 0; l < cell_length; l++ ) {
 			printf("%02x ", frag_ptrs[i][l]);
-			if ( ((l+1) % CCI_BYTE_WIDTH) == 0 ) {
+			if ( ((l+1) % BYTE_WIDTH) == 0 ) {
 				printf("\n");
 			}
 		}
@@ -152,7 +152,7 @@ int main(int argc, char *argv[]) {
 		for ( unsigned int i = 0; i < RS_K; i++ ) {
 			for ( unsigned int l = 0; l < cell_length; l++ ) {
 				printf("%02x ", ((uint8_t(*)[cell_length])rs_erasure_input)[i][l]);
-				if ( ((l+1) % CCI_BYTE_WIDTH) == 0 ) {
+				if ( ((l+1) % BYTE_WIDTH) == 0 ) {
 					printf("\n");
 				}
 			}
@@ -185,7 +185,7 @@ int main(int argc, char *argv[]) {
 	for ( unsigned int i = 0; i < RS_K + RS_P; i++ ) {
 		for ( unsigned int l = 0; l < cell_length; l++ ) {
 			printf("%02x ", frag_ptrs[i][l]);
-			if ( ((l+1) % CCI_BYTE_WIDTH) == 0 ) {
+			if ( ((l+1) % BYTE_WIDTH) == 0 ) {
 				printf("\n");
 			}
 		}
@@ -240,7 +240,7 @@ int main(int argc, char *argv[]) {
 				for ( unsigned int i = 0; i < NUM_ERRORS; i++ ) {
 					for ( int l = 0; l < cell_length; l++ ) {
 						printf("%02x ", recover_outp[i][l]);
-						if ( ((l+1) % CCI_BYTE_WIDTH) == 0 ) {
+						if ( ((l+1) % BYTE_WIDTH) == 0 ) {
 							printf("\n");
 						}
 					}
@@ -262,7 +262,7 @@ int main(int argc, char *argv[]) {
 				for ( unsigned int i = 0; i < RS_K; i++ ) {
 					for ( unsigned int l = 0; l < cell_length; l++ ) {
 						printf("%02x ", ((uint8_t(*)[cell_length])rs_erasure_input)[i][l]);
-						if ( ((l+1) % CCI_BYTE_WIDTH) == 0 ) {
+						if ( ((l+1) % BYTE_WIDTH) == 0 ) {
 							printf("\n");
 						}
 					}
@@ -284,7 +284,7 @@ int main(int argc, char *argv[]) {
 				for ( unsigned int i = 0; i < NUM_ERRORS; i++ ) {
 					for ( int l = 0; l < cell_length; l++ ) {
 						printf("%02x ", ((uint8_t(*)[cell_length])reconstructed_blocks_out)[i][l]);
-						if ( ((l+1) % CCI_BYTE_WIDTH) == 0 ) {
+						if ( ((l+1) % BYTE_WIDTH) == 0 ) {
 							printf("\n");
 						}
 					}
@@ -311,7 +311,7 @@ int main(int argc, char *argv[]) {
 					for ( unsigned int i = 0; i < NUM_ERRORS; i++ ) {
 						for ( int l = 0; l < cell_length; l++ ) {
 							printf("%02x ", frag_ptrs[erasure_list[i]][l]);
-							if ( ((l+1) % CCI_BYTE_WIDTH) == 0 ) {
+							if ( ((l+1) % BYTE_WIDTH) == 0 ) {
 								printf("\n");
 							}
 						}

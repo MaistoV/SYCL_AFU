@@ -1,11 +1,12 @@
-set(DEVICE_SOURCE_FILE kernel.cpp)
-set(KERNEL_HEADER_FILE kernel.hpp)
+set(DEVICE_SOURCE_FILE rs_erasure/rs_erasure.cpp)
+set(RS_HEADER_FILE rs_erasure/rs_erasure.h)
+set(KERNEL_HEADER_FILE rs_erasure/rs_erasure_sycl.hpp)
 set(HOST_SOURCE_FILE host.cpp)
-set(TARGET_NAME sycl_ip)
+set(TARGET_NAME rs_sycl_ip)
 set(EMULATOR_TARGET ${TARGET_NAME}.fpga_emu)
 set(SIMULATOR_TARGET ${TARGET_NAME}.fpga_sim)
 set(FPGA_TARGET ${TARGET_NAME}.fpga)
-set(RS_INCLUDE "../sycl/rs_erasure")
+set(RS_INCLUDE "rs_erasure")
 
 # set(RS_SCHEMA "RS_3_2")
 # set(RS_SCHEMA "RS_6_3")
@@ -33,12 +34,15 @@ endif()
 # 1. The "compile" stage compiles the device code to an intermediate representation (SPIR-V).
 # 2. The "link" stage invokes the compiler's FPGA backend before linking.
 #    For this reason, FPGA backend flags must be passed as link flags in CMake.
-set(EMULATOR_COMPILE_FLAGS "-fsycl -fintelfpga -Wall ${WIN_FLAG} -DFPGA_EMULATOR -D${RS_SCHEMA}")
-set(EMULATOR_LINK_FLAGS "-fsycl -fintelfpga")
-set(SIMULATOR_COMPILE_FLAGS "-fsycl -fintelfpga -Wall ${WIN_FLAG} -Xssimulation -DFPGA_SIMULATOR -D${RS_SCHEMA}")
-set(SIMULATOR_LINK_FLAGS "-fsycl -fintelfpga -Xssimulation -Xsghdl -Xstarget=${FPGA_DEVICE} ${USER_HARDWARE_FLAGS}")
-set(HARDWARE_COMPILE_FLAGS "-fsycl -fintelfpga -Wall ${WIN_FLAG} -DFPGA_HARDWARE -D${RS_SCHEMA}")
-set(HARDWARE_LINK_FLAGS "-fsycl -fintelfpga -Xshardware -Xstarget=${FPGA_DEVICE} ${USER_HARDWARE_FLAGS}")
+set(COMMON_COMPILE_FLAGS "-fsycl -fintelfpga -Wall ${WIN_FLAG} -D${RS_SCHEMA} -Wno-unused-label")
+set(COMMON_LINK_FLAGS "-fsycl -fintelfpga")
+
+set(EMULATOR_COMPILE_FLAGS "${COMMON_COMPILE_FLAGS} -DFPGA_EMULATOR")
+set(EMULATOR_LINK_FLAGS "${COMMON_LINK_FLAGS}")
+set(SIMULATOR_COMPILE_FLAGS "${COMMON_COMPILE_FLAGS} -Xssimulation -DFPGA_SIMULATOR")
+set(SIMULATOR_LINK_FLAGS "${COMMON_LINK_FLAGS} -Xssimulation -Xsghdl -Xstarget=${FPGA_DEVICE} ${USER_HARDWARE_FLAGS}")
+set(HARDWARE_COMPILE_FLAGS "${COMMON_COMPILE_FLAGS} -DFPGA_HARDWARE")
+set(HARDWARE_LINK_FLAGS "${COMMON_LINK_FLAGS} -Xshardware -Xstarget=${FPGA_DEVICE} ${USER_HARDWARE_FLAGS}")
 # use cmake -D USER_HARDWARE_FLAGS=<flags> to set extra flags for FPGA backend compilation
 
 ###############################################################################
@@ -114,11 +118,11 @@ separate_arguments(HARDWARE_LINK_FLAGS_LIST)
 
 add_custom_command(OUTPUT ${HOST_OBJ}
                    COMMAND ${CMAKE_CXX_COMPILER} ${CMAKE_CXX_FLAGS_LIST} ${HARDWARE_COMPILE_FLAGS_LIST} -c ${CMAKE_CURRENT_SOURCE_DIR}/${HOST_SOURCE_FILE} -o ${HOST_OBJ} -I${CMAKE_CURRENT_LIST_DIR}/$ENV{ONEAPI_SAMPLES_INCLUDE} -I ${RS_INCLDE}
-                   DEPENDS ${HOST_SOURCE_FILE} ${KERNEL_HEADER_FILE})
+                   DEPENDS ${HOST_SOURCE_FILE} ${KERNEL_HEADER_FILE} ${RS_HEADER_FILE})
 
 add_custom_command(OUTPUT ${DEVICE_IMAGE_OBJ}
                    COMMAND ${CMAKE_CXX_COMPILER} ${CMAKE_CXX_FLAGS_LIST} ${HARDWARE_LINK_FLAGS_LIST} -fsycl-link=image ${CMAKE_CURRENT_SOURCE_DIR}/${DEVICE_SOURCE_FILE} -o ${DEVICE_IMAGE_OBJ} -I${CMAKE_CURRENT_LIST_DIR}/$ENV{ONEAPI_SAMPLES_INCLUDE} -I ${RS_INCLDE}
-                   DEPENDS ${DEVICE_SOURCE_FILE} ${KERNEL_HEADER_FILE})
+                   DEPENDS ${DEVICE_SOURCE_FILE} ${KERNEL_HEADER_FILE} ${RS_HEADER_FILE})
 
 add_custom_command(OUTPUT ${FPGA_TARGET}
 target_include_directories(${FPGA_EARLY_IMAGE} PRIVATE ${RS_INCLUDE} )

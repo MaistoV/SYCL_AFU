@@ -131,17 +131,16 @@ export OFS_ASP_BOARD_VARIANT=ofs_nc220_usm
 # ASP BSP OneAPI compilation flag
 export OFS_ASP_FPGA_DEVICE=$OFS_ASP_ROOT:$OFS_ASP_BOARD_VARIANT
 
-##################
-# OneAPI FPGA IP #  
-##################
-export ONEAPI_IP_DIR=${ROOT_DIR}/oneapi/sycl_ip
+############################
+# OneAPI FPGA IP Authoring #  
+############################
+
+export ONEAPI_IP_DIR=${ROOT_DIR}/oneapi/rs_sycl_ip
 export ONEAPI_SAMPLES_DIR=${ROOT_DIR}/oneapi/oneAPI-samples
 export ONEAPI_SAMPLES_INCLUDE=${ONEAPI_SAMPLES_DIR}/DirectProgramming/C++SYCL_FPGA/include
 
 # Non-BSP OneAPI compilation flag
-export AGILEX7_PART_NUMBER=AGFB014R24C2E2V # Agilex7 part number
-
-# TBD: export other vars
+export AGILEX7_PART_NUMBER=AGFB014R24C2E2V # C220 part number
 
 ########################
 # Print out enviroment #  

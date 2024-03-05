@@ -8,7 +8,7 @@ HLS_CXX_FLAGS := -v
 
 # Default to RS[6:3]
 RS_SCHEMA ?= RS_6_3
-# Default to CCI_BYTE_WIDTH*2=128
+# Default to BYTE_WIDTH*2=128
 CELL_LENGTH_DEFAULT ?= 128u
 # Defalt unroll factor
 UNROLL_FACTOR ?= 1
