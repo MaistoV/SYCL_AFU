@@ -410,17 +410,22 @@ void RunKernel(
 		// buffer device_write(vec_b);
 		// RunKernelFunctor(q, device_read, device_write, rs_erasure_csr);
 		
-		// For Lambda
-		line_t* device_read  = sycl::malloc_shared<line_t>( RS_INPUT_SIZE(cell_length) , q);
-		line_t* device_write = sycl::malloc_shared<line_t>( RS_OUTPUT_SIZE(cell_length), q);
+		// For Lambda (Single mem interface)
+		// line_t* device_read  = sycl::malloc_shared<line_t>( RS_INPUT_SIZE(cell_length) , q);
+		// line_t* device_write = sycl::malloc_shared<line_t>( RS_OUTPUT_SIZE(cell_length), q);
+
+		// For Lambda (Separated mem interfaces)
+		device_read_t  device_read;
+		device_write_t device_write;
 
 		// Check pointers are valid
 		assert(device_read);
 		assert(device_write);
 
 		// Copy data in input region
-		for ( unsigned int i = 0; i < RS_INPUT_SIZE(cell_length); i++ ) {
-			((uint8_t*)device_read)[i] = ((uint8_t*)rs_erasure_input)[i];
+		for ( unsigned int i = 0; i < RS_INPUT_SIZE(cell_length)/sizeof(line_t); i++ ) {
+			// ((uint8_t*)device_read)[i] = ((uint8_t*)rs_erasure_input)[i];
+			device_read[i] = rs_erasure_input[i];
 		}
 
 		// Run kernel
@@ -432,8 +437,8 @@ void RunKernel(
 					);
 		
 		// Read back data
-		for ( unsigned int i = 0; i < RS_OUTPUT_SIZE(cell_length); i++ ) {
-			((uint8_t*)reconstructed_blocks_out)[i] = ((uint8_t*)device_write)[i];
+		for ( unsigned int i = 0; i < RS_INPUT_SIZE(cell_length)/sizeof(line_t); i++ ) {
+			reconstructed_blocks_out[i] = device_write[i];
 		}
 
 	} catch (exception const &e) {

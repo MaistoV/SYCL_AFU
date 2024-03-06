@@ -23,6 +23,33 @@ typedef ac_int<1, false> uint1;
 typedef ac_int<8, false> uint8;
 typedef ac_int<16, false> uint16;
 
+// Definitions for memroy interfaces
+#define BUFFER_LOCATION_READ 1
+#define BUFFER_LOCATION_WRITE 2
+#define	ADDR_WIDTH 	41
+#define	DATA_WIDTH 	64
+#define	ALIGN		DATA_WIDTH/8
+typedef decltype(sycl::ext::oneapi::experimental::properties{
+  sycl::ext::intel::experimental::buffer_location<BUFFER_LOCATION_READ>,
+  sycl::ext::intel::experimental::awidth<ADDR_WIDTH>,
+  sycl::ext::intel::experimental::dwidth<DATA_WIDTH>,
+  sycl::ext::intel::experimental::latency<0>,
+  sycl::ext::oneapi::experimental::alignment<ALIGN>,
+  sycl::ext::intel::experimental::read_write_mode_read
+}) read_properties;
+
+typedef decltype(sycl::ext::oneapi::experimental::properties{
+  sycl::ext::intel::experimental::buffer_location<BUFFER_LOCATION_WRITE>,
+  sycl::ext::intel::experimental::awidth<ADDR_WIDTH>,
+  sycl::ext::intel::experimental::dwidth<DATA_WIDTH>,
+  sycl::ext::intel::experimental::latency<0>,
+  sycl::ext::oneapi::experimental::alignment<ALIGN>,
+  sycl::ext::intel::experimental::read_write_mode_write
+}) write_properties;
+
+typedef sycl::ext::oneapi::experimental::annotated_arg<line_t *, read_properties > device_read_t;
+typedef sycl::ext::oneapi::experimental::annotated_arg<line_t *, write_properties> device_write_t;
+
 // Functor
 // struct RSErasureFunctor {
 //     // Interface properties
@@ -77,8 +104,8 @@ typedef ac_int<16, false> uint16;
 // Lambda
 void RunKernelLambda( 
                 sycl::queue& q, 
-                line_t* buf_master_read, 
-                line_t* buf_master_write,
+                device_read_t buf_master_read, 
+                device_write_t buf_master_write,
                 rs_erasure_csr_t csr
               );
 
@@ -92,8 +119,8 @@ void RunKernelFunctor (
 
 // Function encapsulating the Reed-Solomon logic              
 void rs_erasure (
-                line_t*     master_read,
-                line_t*     master_write,
+                device_read_t     master_read,
+                device_write_t    master_write,
                 rs_erasure_csr_t 	rs_erasure_csr 
                 );
 

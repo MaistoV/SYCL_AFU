@@ -9,16 +9,19 @@ class RSErasureID;
 
 // Lambda
 void RunKernelLambda( sycl::queue& q, 
-                line_t* device_read, 
-                line_t* device_write,
+                device_read_t device_read, 
+                device_write_t device_write,
                 rs_erasure_csr_t rs_erasure_csr
               ){
-
     // submit the kernel
     q.submit([&](sycl::handler &h) {
 		// Use kernel_args_restrict to specify that pointers do not alias.
 		h.single_task<RSErasureID>([=]() [[intel::kernel_args_restrict]] {
-			rs_erasure(device_read, device_write, rs_erasure_csr);
+			rs_erasure(
+					device_read,
+					device_write,
+					rs_erasure_csr
+				);
       	});
     })
 	.wait();
@@ -74,8 +77,8 @@ int is_n_hot ( int n, uint16_t pattern ) {
 
 // Function implementing the Reed-Solomon logic
 void rs_erasure (
-                line_t* device_read,
-                line_t* device_write,
+                device_read_t  device_read,
+                device_write_t device_write,
                 rs_erasure_csr_t rs_erasure_csr 
                 ){
 #ifdef DEBUG0
@@ -137,7 +140,7 @@ LOOP_WRITE_SCHRATCHPAD:
 	/////////////////////////////////////////
 	// Logic from mat_mult_gf 
 	/////////////////////////////////////////
-LOOP_lineS:
+LOOP_LINES:
 	// Loop over CCI lines in a cell
 	#define NUM_LINES	(cell_length / DATA_BYTE_WIDTH)
 	for ( unsigned int line_index = 0; line_index < NUM_LINES; line_index++ ) {
