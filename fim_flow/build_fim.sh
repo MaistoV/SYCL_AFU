@@ -4,8 +4,9 @@
 # THIS IS EXTENDED FROM HITEK RELEASE #
 # Main differences:
 # 1. Always assume no_hssi
-# 2. Never PCIE_SMALL no_hssi
+# 2. Never PCIE_SMALL
 # 3. Extend for custom OFSS flow
+# 4. Extend for null HEMs instantiation
 #######################################
 
 # Parse ARGS and variables
@@ -62,6 +63,16 @@ case "$1" in
     echo "Usage: $0 <--flat|--pr>"
     exit -1
 esac
+
+# Parse NULL_HEMS
+if [ "$NULL_HEMS" == "1" ]; then
+    echo "[INFO] Removing all HEMs, the PFs would still be instantiatied"
+    ARGS=$ARGS",null_he_lb,null_he_mem,null_he_mem_tg"
+  # - null_he_lb - Replaces the Host Exerciser Loopback (HE_LBK) with he_null .
+  # - null_he_mem - Replaces the Host Exerciser Memory (HE_MEM) with he_null.
+  # - null_he_mem_tg - Replaces the Host Exerciser Memory Traffic Generator with he_null.    
+    WORK_DIR=$WORK_DIR"_NULL_HEMS"
+fi
 
 # Launch build
 cd $HTS_RELEASE
