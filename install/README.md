@@ -74,6 +74,8 @@ $ source install/ubuntu/ubuntu_quartus.sh
 ```
 > Set `QUARTUS_HOME=<your dir>`.
 
+For RHEL, install also libnsl.
+
 ## Simulator
 >*Requires license*.
 Install QuestaSim or VCS. 

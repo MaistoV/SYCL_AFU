@@ -19,10 +19,10 @@ Export `AFU_NAME` and create a directory in `afu_flow/afus/` with the following 
 ```  
 afu_flow/afus/${AFU_NAME}
     ├── hw/rtl
-    |   ├── ${AFU_NAME}.json
+    |   ├── ${AFU_NAME}.json # Indicate your interface type ofs_plat_afu or afu_main
     |   ├── sources.txt
     |   ├── [ofs_plat_afu.sv] # Top-level for full-PIM flow (name is mandatory)
-    |   ├── [afu_main.sv] # Top-level for non-full-PIM flow (name is mandatory)
+    |   ├── [afu_main.sv] # Top-level for non-PIM flow (name is mandatory)
     |   └── <other rtl soruces>
     └── sw
         ├── Makefile # Template file available in afu_flow/afus/common/sw/
@@ -62,4 +62,4 @@ $ make fim_update # Flash the FIM
 $ make make pac_powercycle_user1 # Powercycle the PAC
 $ make opae.io_bind # Bind VFs
 $ make test_gbs # Configure GBS and software against FPGA hardware
-``` 
+```
