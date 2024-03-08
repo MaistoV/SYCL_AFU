@@ -13,13 +13,15 @@ OneAPI ASP flow (Altera OpenCL):
 	aocl_aocx_initalize   Program PAC with aocx (requires the right PR interface to be already flashed on the PAC)
 	aocl_bsp_build        Build PR-tree related BSP
 	aocl_bsp_[un]install  Install/uninstall BSP
+	oneapi_asp_<target>   Build oneapi design in ${ONEAPI_IP_DIR}, target in: {fpga_emu, fpga_sim, report, fpga}
 
 OneAPI IP flow:
-	oneapi_ip_<target>    Build oneapi design in oneapi/sycl_ip/, target in: {fpga_emu, fpga_sim, report, fpga}
+	oneapi_ip_emu         Build oneapi design in ${ONEAPI_IP_DIR}, target fpga_emu
+	oneapi_ip_report      Build oneapi design in ${ONEAPI_IP_DIR}, target report
 	oneapi_ip_report_open Open early report in browser 
 
 AFU flow:
-	afu_host              Build host application
+	afu_host              Build AFU host application in ${AFU_SW_DIR}
 	ase_setup             Setup and launch ASE simulation environment {locks a terminal}
 	ase_launch            Subsequent launches of ASE simulator {locks a terminal}
 	ase_waves             Open simulated waveforms in ${AFU_ASE_DIR}/work/vsim.wlf
@@ -39,4 +41,4 @@ Clean targets:
 make variables:
 	OFSS_CONFIG           Suffix to identify FIM build and OFSS flow
 	RS_SCHEMA             Reed-Solomon code schema in [RS_3_2, RS_6_3, RS_10_4]
-	TEST_ARGS             Arguments to pass to the host elf in test_gbs and test_ase, try with -h
+	TEST_ARGS             Arguments to pass to the host elf in oneapi_ip_emu, test_gbs and test_ase, start with -h

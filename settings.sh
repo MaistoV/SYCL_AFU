@@ -39,7 +39,7 @@ export FPGA="$BOARD_VAR"
 #################
 
 export FIM_NUM_PF0_VFS=10
-export OFSS_CONFIG=pf0_${FIM_NUM_PF0_VFS}vf
+export OFSS_CONFIG=pf0_${FIM_NUM_PF0_VFS}vf_no_hems
 # export FIM_STATIC_AFUS=4 # VFs 1..4
 # export FIM_TOT_AFUS=$((${FIM_NUM_PF0_VFS} + ${FIM_STATIC_AFUS}))
 
@@ -55,8 +55,8 @@ export OFS_BUILD_ROOT=$HTS_RELEASE/ofs-agx7-pcie-attach
 
 # If not already done, export OPAE_PLATFORM_ROOT to the PR build tree directory
 # export OPAE_PLATFORM_ROOT=$HTS_RELEASE/ofs-agx7-pcie-attach/work_htk_nc220_${FPGA}/pr_build_template
-# export OPAE_PLATFORM_ROOT=$HTS_RELEASE/ofs-agx7-pcie-attach/work_htk_nc220_${FPGA}_$OFSS_CONFIG/pr_build_template
-export OPAE_PLATFORM_ROOT=$HTS_RELEASE/prebuild_images/agf014/release_v1.1/pr_build_template
+export OPAE_PLATFORM_ROOT=$HTS_RELEASE/ofs-agx7-pcie-attach/work_htk_nc220_${FPGA}_$OFSS_CONFIG/pr_build_template
+# export OPAE_PLATFORM_ROOT=$HTS_RELEASE/prebuild_images/agf014/release_v1.1/pr_build_template
 
 # OPAE SDK release
 export OPAE_SDK_VERSION=2.8.0-1
@@ -102,7 +102,8 @@ export PATH=$MTI_HOME/linux_x86_64/:$MTI_HOME/bin/:$PATH
 ############
 # AFU flow # 
 ############
-export AFU_NAME=my_custom_afu_array
+# export AFU_NAME=my_custom_afu_array
+export AFU_NAME=sycl_afu
 source ${ROOT_DIR}/afu_flow/settings_afu.sh
 
 ##########
