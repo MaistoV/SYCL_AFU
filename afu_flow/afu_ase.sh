@@ -6,6 +6,21 @@
 # Removing old directory, if any
 rm -rf ${AFU_ASE_DIR} 
 
+SYCL_AFU_DIR=${AFU_FLOW_DIR}/afus/sycl_afu/hw/rtl/
+
+echo $SYCL_AFU_DIR
+# In case of imported IP, prepare Questa file list from kernel_system.qip, using the original ASP flow
+if [ -d ${SYCL_AFU_DIR}/${SYCL_IP_NAME}_report.prj ]; then
+    # Move to where the kernel_system.qip file is
+    cd ${SYCL_AFU_DIR}/${SYCL_IP_NAME}_report.prj
+    echo "[INFO] Launching ase-sim-compile.sh"
+    # NOTE: this script is the same as for n6001
+    # NOTE: this script strictly relies on oneapi-asp's tag: ofs-2023.3-2
+    source ${OFS_ASP_ROOT}/hardware/ofs_nc220/build/scripts/ase-sim-compile.sh
+    # Remove output
+    rm -rf ../../../../../../fpga.bin simulation.tar.gz
+fi
+
 cd ${AFU_FLOW_DIR}
 
 # Setup optional flags
@@ -26,7 +41,7 @@ afu_sim_setup                       \
     ${AFU_ASE_DIR}
 # Check for exit code
 if [ $? -ne 0 ]; then
-    echo '[ERROR] Could not setup synthesis directory.' ; exit 1;
+    echo "[ERROR] Could not setup synthesis directory." ; exit 1;
 fi
 
 cd ${AFU_ASE_DIR}
@@ -39,10 +54,9 @@ cd ${AFU_ASE_DIR}
 echo "[INFO] Start compilation of full AFU bitstream..."
 echo "[INFO] Using PR-tree in $(basename ${OPAE_PLATFORM_ROOT}) ..."
 
+# Launch simulation
 make
 make sim
 
-# NOTE: now in another shell source afu_ase_sw.sh
-
-echo "You can now inspect the waves with:"
-echo "  make ase_waves"
+echo "[INFO] On success, you can inspect the waves with:"
+echo "[INFO]   make ase_waves"

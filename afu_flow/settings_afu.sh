@@ -11,6 +11,8 @@ mkdir -p ${AFU_BUILD_DIR}
 ##################
 # RTL source list file  
 export AFU_SOURCE_LIST=${AFU_DEF_DIR}/${AFU_NAME}/hw/rtl/sources.txt
+# AFU-related hardware directory
+export AFU_HW_DIR=${AFU_DEF_DIR}/${AFU_NAME}/hw/rtl
 # AFU-related software directory (location of sofware sources and Makefile)
 export AFU_SW_DIR=${AFU_DEF_DIR}/${AFU_NAME}/sw
 

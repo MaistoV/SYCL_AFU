@@ -20,7 +20,7 @@ Export `AFU_NAME` and create a directory in `afu_flow/afus/` with the following 
 afu_flow/afus/${AFU_NAME}
     ├── hw/rtl
     |   ├── ${AFU_NAME}.json # Indicate your interface type ofs_plat_afu or afu_main
-    |   ├── sources.txt
+    |   ├── sources.txt # use only relative paths here
     |   ├── [ofs_plat_afu.sv] # Top-level for full-PIM flow (name is mandatory)
     |   ├── [afu_main.sv] # Top-level for non-PIM flow (name is mandatory)
     |   └── <other rtl soruces>

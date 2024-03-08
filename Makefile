@@ -1,8 +1,14 @@
+# Default variables value
+RS_SCHEMA ?= RS_3_2
+TEST_ARGS ?=
+
+# NOTE: Most of this flow does rely on file timestamps, therefore, it is going to build most of the targets for every call
+
 all: help
 
 help:
-	@cat scripts/help.txt
-
+	@cat "scripts/make_help.txt"
+	
 #######
 # FIM #
 #######
@@ -43,7 +49,7 @@ opae.io_release:
 ####################
 # ONE API ASP Flow #
 ####################
-ONEAPI_DEBUG_ENV =  MMD_ENABLE_DEBUG=1  \
+ONEAPI_DEBUG_ENV := MMD_ENABLE_DEBUG=1  \
 					MMD_PROGRAM_DEBUG=1
 
 oneapi_asp_build_aocx:
@@ -82,41 +88,55 @@ oneapi_asp_%: oneapi_asp_cmake
 #############################
 # ONE API IP Authoring Flow #
 #############################
-RS_SCHEMA ?= RS_3_2
-RS_IP_NAME := rs_sycl_ip
-RS_SYCL_IP_DEBUG ?= 0
-oneapi_ip_cmake: 
-	mkdir ${ONEAPI_IP_DIR}/build_ip;	\
-	cd ${ONEAPI_IP_DIR}/build_ip;	\
-	cmake .. \
-		-DFPGA_DEVICE=${AGILEX7_PART_NUMBER} \
-		-DRS_SCHEMA=${RS_SCHEMA} \
-		# --trace-expand
+# Since we want to modify the RS_SCHEMA variable at this Makefile level, 
+# the following variables cannot be exported separately, e.g. in a bash file
+SYCL_IP_NAME = rs_sycl_ip_${RS_SCHEMA}
+SYCL_IP_WORKDIR = ${ONEAPI_IP_DIR}/build_ip_${RS_SCHEMA}
+SYCL_IP_PRJ = ${SYCL_IP_WORKDIR}/${SYCL_IP_NAME}_report.prj
+# Wrap these variables in a single list
+SYCL_IP_ENV += RS_SCHEMA=${RS_SCHEMA} \
+				SYCL_IP_NAME=${SYCL_IP_NAME} \
+				SYCL_IP_WORKDIR=${SYCL_IP_WORKDIR} \
+				SYCL_IP_PRJ=${SYCL_IP_PRJ}
 
-oneapi_ip_fpga_emu:
-oneapi_ip_fpga_sim:
-oneapi_ip_report:
-oneapi_ip_fpga:
-oneapi_ip_%: oneapi_ip_cmake
-	cd ${ONEAPI_IP_DIR}/build_ip; \
-	make $*
+SYCL_IP_DEBUG ?= 0
+FAST_COMPILE ?= 1
+ifeq (${FAST_COMPILE}, 1)
+	CMAKE_FLAGS += "-DUSER_HARDWARE_FLAGS=-Xsfast-compile"
+endif
+ifeq (${SYCL_IP_DEBUG}, 1)
+	CMAKE_FLAGS += "--trace-expand"
+endif
 
-oneapi_asp_report_open:
+# Environment setup for cmake
+CMAKE_ENV = USER_HARDWARE_FLAGS=${USER_HARDWARE_FLAGS} \
+			SYCL_IP_NAME=${SYCL_IP_NAME} \
+			${SYCL_IP_ENV} 
+
+CMAKE_FLAGS += -DFPGA_DEVICE=${AGILEX7_PART_NUMBER} 
+oneapi_ip_cmake: ${SYCL_IP_PRJ}
+${SYCL_IP_PRJ}: 
+	mkdir ${SYCL_IP_WORKDIR};	\
+	cd ${SYCL_IP_WORKDIR};		\
+	${CMAKE_ENV} cmake .. ${CMAKE_FLAGS}
+
+oneapi_ip_report: oneapi_ip_cmake
+	cd ${SYCL_IP_WORKDIR}; \
+	make report ${SYCL_IP_ENV}
+
 oneapi_ip_report_open:
-oneapi_%_report_open:
-	firefox ${ONEAPI_IP_DIR}/build_$*/${RS_IP_NAME}_report.prj/reports/report.html &
+	firefox ${SYCL_IP_PRJ}/reports/report.html &
 
 oneapi_ip: oneapi_ip_report
-#	TBD: Copy output files to FIM project
-#	Or just reference them?
-	cp -r ${ONEAPI_IP_DIR}/build_ip/${RS_IP_NAME}_report.prj ---quartus_fim_prj_dir---
-# NOTE: insstantiation template is ${RS_IP_NAME}_report.prj/${RS_IP_NAME}_report_di_inst.v
-#	CSR map header to sw project?
-#	Or just reference them?
-	cp -r ${ONEAPI_IP_DIR}/build_ip/${RS_IP_NAME}_report.prj/include/* ---sw_dir---
+	@echo "[INFO] Copying IP files to AFU workdir"
+#	SYCL IP output files
+	cp -r ${SYCL_IP_PRJ} ${AFU_HW_DIR}
+#	SYCL IP CSR map headers to sw project
+	cp -r ${SYCL_IP_PRJ}/include/* ${AFU_SW_DIR}
 
+# TMP
 oneapi_ip_emu:
-	cd ${ONEAPI_IP_DIR}/build_ip; ./${RS_IP_NAME}.fpga_emu ${TEST_ARGS}
+	cd ${SYCL_IP_WORKDIR}; ./${SYCL_IP_NAME}.fpga_emu ${TEST_ARGS}
 
 #######
 # AFU #
@@ -127,9 +147,9 @@ afu_host:
 	${MAKE} -C ${AFU_SW_DIR} clean all;
 
 # Build and launch simulation
-ase_setup: clean_ase
+ase_setup: clean_ase ${OPAE_PLATFORM_ROOT}
 #	Setup and launch simulator
-	${AFU_FLOW_DIR}/afu_ase.sh
+	${SYCL_IP_ENV} ${AFU_FLOW_DIR}/afu_ase.sh
 
 # Launch simulation without rebuilding it
 ase_launch: ${AFU_ASE_DIR}
@@ -145,12 +165,11 @@ ase_waves: ${AFU_ASE_DIR}/work/vsim.wlf
 		-do scripts/add_waves.do 				\
 		-debugdb # ${AFU_ASE_DIR}/work/vsim.dbg
 
-
 # Build Green Bitstream
 # This takes around 40 minutes...
-gbs: ${AFU_SYNTH_DIR}
-${AFU_SYNTH_DIR}: ${OPAE_PLATFORM_ROOT}	clean_gbs
-	${AFU_FLOW_DIR}/afu_synth.sh
+gbs: ${AFU_SYNTH_DIR} oneapi_ip
+${AFU_SYNTH_DIR}: ${OPAE_PLATFORM_ROOT} clean_gbs
+	${SYCL_IP_ENV} ${AFU_FLOW_DIR}/afu_synth.sh
 
 GBS_FILE ?= ${AFU_SYNTH_DIR}/${AFU_NAME}.gbs
 gbs_configure:
@@ -176,16 +195,20 @@ test_ase: afu_host
 # 	rm -rf ${FIM_BUILD_DIR}/
 
 clean_ase:
-	rm -rf ${AFU_ASE_DIR}/
+	rm -rf ${AFU_ASE_DIR}
 
 clean_gbs:
+#	GBS build directory
 	rm -rf ${AFU_SYNTH_DIR}
 
 clean_sw:
 	${MAKE} -C ${AFU_SW_DIR} clean
 
 clean_oneapi_ip:
-	rm -rf ${ONEAPI_IP_DIR}/build_ip
+#	Build directory
+	rm -rf ${ONEAPI_IP_DIR}/${SYCL_IP_WORKDIR}
+#	Exported SYCL IP
+	rm -rf ${AFU_HW_DIR}/${SYCL_IP_NAME}_report.prj
 
 clean_oneapi_asp:
 	rm -rf ${ONEAPI_IP_DIR}/build_asp
