@@ -13,7 +13,6 @@
 //////////////
 
 // Compatible interfaces for top-level component
-// TODO: should it be compatible to CCI-P, TLP or PIM's host_chan?
 #define ADDR_SPACE_READ 1
 #define ADDR_SPACE_WRITE 2
 
@@ -23,63 +22,46 @@ typedef ac_int<1, false> uint1;
 typedef ac_int<8, false> uint8;
 typedef ac_int<16, false> uint16;
 
-// Definitions for memroy interfaces
+// Definitions for memory interfaces
 #define BUFFER_LOCATION_READ 1
 #define BUFFER_LOCATION_WRITE 2
 #define	ADDR_WIDTH 	41
 #define	DATA_WIDTH 	64
 #define	ALIGN		DATA_WIDTH/8
+// Read interface
 typedef decltype(sycl::ext::oneapi::experimental::properties{
   sycl::ext::intel::experimental::buffer_location<BUFFER_LOCATION_READ>,
   sycl::ext::intel::experimental::awidth<ADDR_WIDTH>,
   sycl::ext::intel::experimental::dwidth<DATA_WIDTH>,
   sycl::ext::intel::experimental::latency<0>,
   sycl::ext::oneapi::experimental::alignment<ALIGN>,
-  sycl::ext::intel::experimental::read_write_mode_read
+  sycl::ext::intel::experimental::read_write_mode_read // Read-only
 }) read_properties;
 
+// Write interface
 typedef decltype(sycl::ext::oneapi::experimental::properties{
   sycl::ext::intel::experimental::buffer_location<BUFFER_LOCATION_WRITE>,
   sycl::ext::intel::experimental::awidth<ADDR_WIDTH>,
   sycl::ext::intel::experimental::dwidth<DATA_WIDTH>,
   sycl::ext::intel::experimental::latency<0>,
   sycl::ext::oneapi::experimental::alignment<ALIGN>,
-  sycl::ext::intel::experimental::read_write_mode_write
+  sycl::ext::intel::experimental::read_write_mode_write // Write-only
 }) write_properties;
 
+// Interface typedefs
 typedef sycl::ext::oneapi::experimental::annotated_arg<line_t *, read_properties > device_read_t;
 typedef sycl::ext::oneapi::experimental::annotated_arg<line_t *, write_properties> device_write_t;
 
 // Functor
 // struct RSErasureFunctor {
 //     // Interface properties
-//     using master_read_prop = decltype( sycl::ext::oneapi::experimental::properties{
-//         sycl::ext::intel::experimental::buffer_location<ADDR_SPACE_READ>,   // Address space
-//         sycl::ext::intel::experimental::dwidth<DATA_WITH>,                  // Data width
-//         sycl::ext::intel::experimental::latency<0>,                         // Minimum Latency 
-//         sycl::ext::intel::experimental::read_write_mode_read,               // Read-only
-//         sycl::ext::oneapi::experimental::alignment<DATA_WITH/8>             // Byte alignement
-//         // maxburst<value>	// Maximum number of data transfers
-//         }
-//     );
-//     using master_write_prop = decltype( sycl::ext::oneapi::experimental::properties{
-//         sycl::ext::intel::experimental::buffer_location<ADDR_SPACE_WRITE>,   // Address space
-//         sycl::ext::intel::experimental::dwidth<DATA_WITH>,                  // Data width
-//         sycl::ext::intel::experimental::latency<0>,                         // Minimum Latency 
-//         sycl::ext::intel::experimental::read_write_mode_write,              // Write-only
-//         sycl::ext::oneapi::experimental::alignment<DATA_WITH/8>             // Byte alignement
-//         // maxburst<value>	// Maximum number of data transfers
-//         }
-//     );
-
 //     // Arguments
-//     sycl::ext::oneapi::experimental::annotated_arg<line_t*, master_read_prop > master_read;
-//     sycl::ext::oneapi::experimental::annotated_arg<line_t*, master_write_prop> master_write;
+//     device_read_t master_read;
+//     device_write_t master_write;
 //     rs_erasure_csr_t rs_erasure_csr;
-
 //     void rs_erasure (
-//                     line_t* master_read,
-//                     line_t* master_write,
+//                     device_read_t master_read,
+//                     device_write_t master_write,
 //                     rs_erasure_csr_t rs_erasure_csr 
 //                     ) const;
 //     // Operator

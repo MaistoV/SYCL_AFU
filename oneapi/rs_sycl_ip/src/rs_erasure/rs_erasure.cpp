@@ -116,6 +116,7 @@ void rs_erasure (
 	assert( (cell_length % DATA_BYTE_WIDTH) == 0 ); // Must be an integer multiple
 #endif
 	// Schratchpad memory buffering ROM data
+	// Force it as register [[intel::fpga_register]]
 	uint8_t scratchpad_register	[SCRATCHPAD_DEPTH];	 
 	
 	// ROM address

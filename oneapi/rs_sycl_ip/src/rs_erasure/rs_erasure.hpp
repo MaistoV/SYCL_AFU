@@ -12,9 +12,11 @@
 #define SCRATCHPAD_WIDTH	sizeof(uint8_t)			// Total number of cells
 #define SCRATCHPAD_DEPTH	(RS_K/SCRATCHPAD_WIDTH)	// Number of words of SCRATCHPAD Memory
 
+// TODO: should it be compatible to CCI-P, TLP or PIM's host_chan?
 #define DATA_BYTE_WIDTH 			64u // Width of interface 512 bits /8
 #define LOG2_DATA_BYTE_WIDTH		6u	// log2(DATA_BYTE_WIDTH)
 
+// Utility macros for cell length
 #define _1B						(1			 	)	// 1 Byte
 #define _64KB					(64 * 1024 		)	// 64KiloBbyte
 #define _1MB					(1024 * 1024 	)	// 1Megabyte
@@ -26,7 +28,8 @@
 	#define CELL_LENGTH_DEFAULT (DATA_BYTE_WIDTH*2)	// Length of RS cell in bytes
 #endif
 
-#define NUM_ERASURES 		1	// Number of paraller erasures to corrections
+// Utility macros for input and output buffer size
+#define NUM_ERASURES 		1	// Number of supported paraller erasures/reconstructions
 #define RS_INPUT_SIZE(cell_length)	( cell_length * RS_K 		)	// Size of input buffer
 #define RS_OUTPUT_SIZE(cell_length)	( cell_length * NUM_ERASURES 	)	// Size of output buffer
 
@@ -80,6 +83,7 @@ typedef struct rs_erasure_csr {
 	#define decode_matrix_rom 			DECMAT_ROM_10_4
 #endif
 
+// Safety macro definition check
 #ifndef RS_K
 #ifndef RS_P
 	#error RS_K and RS_P undefined, define [RS_3_2 | RS_6_3 | RS_10_4]

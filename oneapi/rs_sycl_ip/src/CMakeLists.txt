@@ -4,18 +4,11 @@ set(KERNEL_HEADER_FILE rs_erasure/rs_erasure_sycl.hpp)
 set(HOST_SOURCE_FILE host.cpp)
 set(ROM_UTILS_SOURCE_FILE rs_erasure/roms/src/rs_rom_utils.cpp)
 set(ROM_UTILS_HEADER_FILE rs_erasure/roms/src/rs_rom_utils.h)
-set(TARGET_NAME $ENV{RS_SYCL_IP_NAME})
+set(TARGET_NAME $ENV{SYCL_IP_NAME})
 set(EMULATOR_TARGET ${TARGET_NAME}.fpga_emu)
 set(SIMULATOR_TARGET ${TARGET_NAME}.fpga_sim)
 set(FPGA_TARGET ${TARGET_NAME}.fpga)
 set(ISA_L_LINK_FLAG "-lisal")
-
-# set(RS_SCHEMA "RS_3_2")
-# set(RS_SCHEMA "RS_6_3")
-# set(RS_SCHEMA "RS_10_4")
-if(NOT DEFINED RS_SCHEMA)
-    message(ERROR "RS_SCHEMA not defined")
-endif()
 
 # FPGA board selection
 if(NOT DEFINED FPGA_DEVICE)
@@ -32,7 +25,7 @@ if(WIN32)
     set(WIN_FLAG "/EHsc")
 endif()
 
-if($ENV{RS_SYCL_IP_DEBUG})
+if($ENV{SYCL_IP_DEBUG})
     set(DEBUG_FLAGS "-DDEBUG")
 endif()
 
@@ -40,7 +33,7 @@ endif()
 # 1. The "compile" stage compiles the device code to an intermediate representation (SPIR-V).
 # 2. The "link" stage invokes the compiler's FPGA backend before linking.
 #    For this reason, FPGA backend flags must be passed as link flags in CMake.
-set(COMMON_COMPILE_FLAGS "-fsycl -fintelfpga -Wall ${WIN_FLAG} -D${RS_SCHEMA} -Wno-unused-label ${DEBUG_FLAGS}")
+set(COMMON_COMPILE_FLAGS "-fsycl -fintelfpga -Wall ${WIN_FLAG} -D$ENV{RS_SCHEMA} -Wno-unused-label ${DEBUG_FLAGS}")
 # Temporary -Wno-unused-variable
 set(COMMON_COMPILE_FLAGS "${COMMON_COMPILE_FLAGS} -Wno-unused-variable -Wno-unused-but-set-variable")
 # Link against ISA-L
@@ -131,7 +124,7 @@ add_custom_command(OUTPUT ${HOST_OBJ}
                    DEPENDS ${HOST_SOURCE_FILE} ${KERNEL_HEADER_FILE} ${RS_HEADER_FILE} ${ROM_UTILS_HEADER_FILE})
 
 add_custom_command(OUTPUT ${DEVICE_IMAGE_OBJ}
-                   COMMAND ${CMAKE_CXX_COMPILER} ${CMAKE_CXX_FLAGS_LIST} ${HARDWARE_LINK_FLAGS_LIST} -fsycl-link=image -D${RS_SCHEMA} ${CMAKE_CURRENT_SOURCE_DIR}/${DEVICE_SOURCE_FILE} -o ${DEVICE_IMAGE_OBJ} -I${CMAKE_CURRENT_LIST_DIR} -I$ENV{ONEAPI_SAMPLES_INCLUDE}
+                   COMMAND ${CMAKE_CXX_COMPILER} ${CMAKE_CXX_FLAGS_LIST} ${HARDWARE_LINK_FLAGS_LIST} -fsycl-link=image -D$ENV{RS_SCHEMA} ${CMAKE_CURRENT_SOURCE_DIR}/${DEVICE_SOURCE_FILE} -o ${DEVICE_IMAGE_OBJ} -I${CMAKE_CURRENT_LIST_DIR} -I$ENV{ONEAPI_SAMPLES_INCLUDE}
                    DEPENDS ${DEVICE_SOURCE_FILE} ${KERNEL_HEADER_FILE} ${RS_HEADER_FILE})
 
 add_custom_command(OUTPUT ${FPGA_TARGET}
