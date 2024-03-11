@@ -7,7 +7,7 @@ ofs_plat_afu.sv
 +incdir+${SYCL_IP_NAME}_report.prj/ip
 # Source files
 ${SYCL_IP_NAME}_report.prj/opencl.ipx
-${SYCL_IP_NAME}_report.prj/kernel_system.qip
+QI:${SYCL_IP_NAME}_report.prj/kernel_system.qip
 ${SYCL_IP_NAME}_report.prj/${SYCL_IP_NAME}_report_di.sv
 # TCL scripts
 ${SYCL_IP_NAME}_report.prj/ip_include.tcl

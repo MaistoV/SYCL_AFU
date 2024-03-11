@@ -17,8 +17,42 @@ if [ -d ${SYCL_AFU_DIR}/${SYCL_IP_NAME}_report.prj ]; then
     # NOTE: this script is the same as for n6001
     # NOTE: this script strictly relies on oneapi-asp's tag: ofs-2023.3-2
     source ${OFS_ASP_ROOT}/hardware/ofs_nc220/build/scripts/ase-sim-compile.sh
-    # Remove output
+    # Remove spurious output
     rm -rf ../../../../../../fpga.bin simulation.tar.gz
+
+    cd ${SYCL_AFU_DIR}
+
+    # Generate new file for source list
+    SIM_AFU_SOURCE_LIST=tmp_$(basename ${AFU_SOURCE_LIST} .txt )_sim.txt
+    cp ${AFU_SOURCE_LIST} ${SIM_AFU_SOURCE_LIST}
+    # Append header line
+    printf "\n\n# Force Questa to include files from kernel_system.qip" >> ${SIM_AFU_SOURCE_LIST}
+    printf "\n\n# Generated from sim_files tree\n" >> ${SIM_AFU_SOURCE_LIST}
+
+    # Append new list, inject compile order
+    SIM_FILES_DIR=${SYCL_IP_NAME}_report.prj/sim_files
+
+    # NOTE: Injecting the compile order is a dirty workaround, but this is just a PoC
+
+    echo "# Fist acl_* primitives" >> ${SIM_AFU_SOURCE_LIST}
+    find ${SIM_FILES_DIR} -type f -name "acl_ecc_pkg.sv" | sort >> ${SIM_AFU_SOURCE_LIST}
+    find ${SIM_FILES_DIR} -type f -name "acl_*" | grep -v acl_ecc_pkg | sort >> ${SIM_AFU_SOURCE_LIST}
+    
+    echo "# Fist hld_* primitives" >> ${SIM_AFU_SOURCE_LIST}
+    find ${SIM_FILES_DIR} -type f -name "hld_*" | sort >> ${SIM_AFU_SOURCE_LIST}
+
+    echo "# All others, exclude acl primitives and IP" >> ${SIM_AFU_SOURCE_LIST}
+    find ${SIM_FILES_DIR} -type f               | grep -Ev "RSErasureID|acl|hld|inst|kernel_system\.v" | sort >> ${SIM_AFU_SOURCE_LIST}
+
+    echo "# SYCL IP internal"
+    find ${SIM_FILES_DIR} -type f -name "*RSErasureID*"  | sort >> ${SIM_AFU_SOURCE_LIST}
+
+    echo "# Finally, SYCL IP and wrapper"
+    find ${SIM_FILES_DIR} -type f -name "*${SYCL_IP_NAME}*" | grep -Ev "inst|RSErasureID|sys" | sort >> ${SIM_AFU_SOURCE_LIST}
+    find ${SIM_FILES_DIR} -type f -name "kernel_system.v" >> ${SIM_AFU_SOURCE_LIST}
+
+    # Override old filename
+    AFU_SOURCE_LIST=$(realpath ${SIM_AFU_SOURCE_LIST})
 fi
 
 cd ${AFU_FLOW_DIR}
@@ -55,6 +89,7 @@ echo "[INFO] Start compilation of full AFU bitstream..."
 echo "[INFO] Using PR-tree in $(basename ${OPAE_PLATFORM_ROOT}) ..."
 
 # Launch simulation
+make questa_build # debug
 make
 make sim
 
