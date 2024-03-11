@@ -100,7 +100,7 @@ SYCL_IP_ENV += RS_SCHEMA=${RS_SCHEMA} \
 				SYCL_IP_PRJ=${SYCL_IP_PRJ}
 
 SYCL_IP_DEBUG ?= 0
-FAST_COMPILE ?= 1
+FAST_COMPILE ?= 0
 ifeq (${FAST_COMPILE}, 1)
 	CMAKE_FLAGS += "-DUSER_HARDWARE_FLAGS=-Xsfast-compile"
 endif
@@ -206,7 +206,7 @@ clean_sw:
 
 clean_oneapi_ip:
 #	Build directory
-	rm -rf ${ONEAPI_IP_DIR}/${SYCL_IP_WORKDIR}
+	rm -rf ${SYCL_IP_WORKDIR}
 #	Exported SYCL IP
 	rm -rf ${AFU_HW_DIR}/${SYCL_IP_NAME}_report.prj
 

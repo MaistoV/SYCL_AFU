@@ -25,9 +25,13 @@ typedef ac_int<16, false> uint16;
 // Definitions for memory interfaces
 #define BUFFER_LOCATION_READ 1
 #define BUFFER_LOCATION_WRITE 2
-#define	ADDR_WIDTH 	41
-#define	DATA_WIDTH 	64
-#define	ALIGN		DATA_WIDTH/8
+// Match Avalon MM hostchan parameters
+// see ofs_plat_if_top_config.vh and ofs_plat_avalon_mem_rdwr_if.sv
+#define	ADDR_WIDTH 	41              // This should match ofs_plat_if_top_config.vh and ofs_plat_avalon_mem_rdwr_if.sv
+#define	DATA_WIDTH 	DATA_BIT_WIDTH  // This should match ofs_plat_if_top_config.vh and ofs_plat_avalon_mem_rdwr_if.sv
+#define	ALIGN		    DATA_BYTE_WIDTH // This should match ofs_plat_if_top_config.vh and ofs_plat_avalon_mem_rdwr_if.sv
+#define MAX_BURST   64              // This should match ofs_plat_if_top_config.vh and ofs_plat_avalon_mem_rdwr_if.sv
+
 // Read interface
 typedef decltype(sycl::ext::oneapi::experimental::properties{
   sycl::ext::intel::experimental::buffer_location<BUFFER_LOCATION_READ>,
@@ -35,7 +39,8 @@ typedef decltype(sycl::ext::oneapi::experimental::properties{
   sycl::ext::intel::experimental::dwidth<DATA_WIDTH>,
   sycl::ext::intel::experimental::latency<0>,
   sycl::ext::oneapi::experimental::alignment<ALIGN>,
-  sycl::ext::intel::experimental::read_write_mode_read // Read-only
+  sycl::ext::intel::experimental::read_write_mode_read, // Read-only
+  sycl::ext::intel::experimental::maxburst<MAX_BURST>
 }) read_properties;
 
 // Write interface
@@ -45,7 +50,8 @@ typedef decltype(sycl::ext::oneapi::experimental::properties{
   sycl::ext::intel::experimental::dwidth<DATA_WIDTH>,
   sycl::ext::intel::experimental::latency<0>,
   sycl::ext::oneapi::experimental::alignment<ALIGN>,
-  sycl::ext::intel::experimental::read_write_mode_write // Write-only
+  sycl::ext::intel::experimental::read_write_mode_write, // Write-only
+  sycl::ext::intel::experimental::maxburst<MAX_BURST>
 }) write_properties;
 
 // Interface typedefs
