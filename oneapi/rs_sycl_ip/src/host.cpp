@@ -411,12 +411,8 @@ void RunKernel(
 		// RunKernelFunctor(q, device_read, device_write, rs_erasure_csr);
 		
 		// For Lambda (Single mem interface)
-		// line_t* device_read  = sycl::malloc_shared<line_t>( RS_INPUT_SIZE(cell_length) , q);
-		// line_t* device_write = sycl::malloc_shared<line_t>( RS_OUTPUT_SIZE(cell_length), q);
-
-		// For Lambda (Separated mem interfaces)
-		device_read_t  device_read;
-		device_write_t device_write;
+		device_read_t  device_read  = sycl::malloc_shared<line_t>( RS_INPUT_SIZE(cell_length) , q);
+		device_write_t device_write = sycl::malloc_shared<line_t>( RS_OUTPUT_SIZE(cell_length), q);
 
 		// Check pointers are valid
 		assert(device_read);
@@ -437,7 +433,7 @@ void RunKernel(
 					);
 		
 		// Read back data
-		for ( unsigned int i = 0; i < RS_INPUT_SIZE(cell_length)/sizeof(line_t); i++ ) {
+		for ( unsigned int i = 0; i < RS_OUTPUT_SIZE(cell_length)/sizeof(line_t); i++ ) {
 			reconstructed_blocks_out[i] = device_write[i];
 		}
 
