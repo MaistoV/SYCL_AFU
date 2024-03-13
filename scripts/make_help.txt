@@ -23,7 +23,7 @@ OneAPI IP flow:
 AFU flow:
 	afu_host              Build AFU host application in ${AFU_SW_DIR}
 	ase_setup             Setup and launch ASE simulation environment {locks a terminal}
-	ase_launch            Subsequent launches of ASE simulator {locks a terminal}
+	ase_launch            Subsequent launches of ASE simulator, if the source list of sim config has not changed {locks a terminal}
 	ase_waves             Open simulated waveforms in ${AFU_ASE_DIR}/work/vsim.wlf
 	gbs                   Build green bitstream (takes around 40 minutes)
 	gbs_configure         Configure GBS in PR-slot. On error, you must first release all VFs with opae.io_release

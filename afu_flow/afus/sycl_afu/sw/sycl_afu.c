@@ -13,15 +13,31 @@
 // State from the AFU's JSON file, extracted using OPAE's afu_json_mgr script
 #include "afu_json_info.h"
 
-
+// Register map emitted for DFL
+#include "sycl_afu_regmap.h"
 // Register map emitted by SYCL 
 #include "register_map_offsets.hpp"
 // RS header 
 #include "rs_erasure.hpp"
 
-#define CACHELINE_BYTES 64
-#define CL(x) ((x) * CACHELINE_BYTES)
-
+/*
+ * macro to check return codes, print error message, and goto cleanup label
+ * NOTE: this changes the program flow (uses goto)!
+ */
+int s_error_count = 0;
+void print_err(const char *s, fpga_result res) {
+	fprintf(stderr, "%s:%d: Error %s: %s\n", __FILE__, __LINE__, s, fpgaErrStr(res));
+}			
+#define ON_ERR_GOTO(res, label, desc) \
+	do                                \
+	{                                 \
+		if ((res) != FPGA_OK)         \
+		{                             \
+			print_err((desc), (res)); \
+			s_error_count += 1;       \
+			goto label;               \
+		}                             \
+	} while (0)
 
 //
 // Search for all accelerators matching the requested properties and
@@ -33,8 +49,7 @@ static fpga_result
 connect_to_matching_accels(const char *accel_uuid,
                            uint32_t *num_handles,
                            fpga_handle *accel_handles,
-                           bool *is_ase_sim)
-{
+                           bool *is_ase_sim) {
     fpga_properties filter = NULL;
     fpga_guid guid;
     const uint32_t max_tokens = 32;
@@ -111,8 +126,7 @@ connect_to_matching_accels(const char *accel_uuid,
 static volatile void* alloc_buffer(fpga_handle accel_handle,
                                    ssize_t size,
                                    uint64_t *wsid,
-                                   uint64_t *io_addr)
-{
+                                   uint64_t *io_addr) {
     fpga_result r;
     volatile void* buf;
 
@@ -127,14 +141,13 @@ static volatile void* alloc_buffer(fpga_handle accel_handle,
 }
 
 
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
     static const uint32_t max_handles = 32;
     fpga_handle accel_handles[max_handles];
     uint32_t num_handles = max_handles;
     volatile char *buf;
-    uint64_t wsid;
-    uint64_t buf_pa;
+    uint64_t wsid_in, wsid_out;
+    uint64_t buf_pa_in, buf_pa_out;
     bool is_ase_sim = false;
     fpga_result r;
 
@@ -151,35 +164,142 @@ int main(int argc, char *argv[])
 
     printf("Found %d instance(s) of AFU:\n\n", num_handles);
 
+    fpga_result res = FPGA_OK;
+
+    #define SIZE 64
+    
+    volatile uint8_t * rs_erasure_input        ;
+	volatile uint8_t * reconstructed_blocks_out;
+    
     for (uint32_t i = 0; i < num_handles; i += 1)
     {
+        printf("Handle %d\n", i);
+
         // Allocate a single page memory buffer
-        buf = (volatile char*)alloc_buffer(accel_handles[i], getpagesize(),
-                                           &wsid, &buf_pa);
-        assert(NULL != buf);
+        rs_erasure_input = (volatile char*)alloc_buffer(accel_handles[i], getpagesize(),
+                                           &wsid_in, &buf_pa_in);
+        // Allocate a single page memory buffer
+        reconstructed_blocks_out = (volatile char*)alloc_buffer(accel_handles[i], getpagesize(),
+                                           &wsid_out, &buf_pa_out);
 
-        // // Set the low byte of the shared buffer to 0.  The FPGA will write
-        // // a non-zero value to it.
-        // buf[0] = 0;
+        assert(NULL != rs_erasure_input);
+        assert(NULL != reconstructed_blocks_out);
 
-        // // Tell the accelerator the address of the buffer using cache line
-        // // addresses.  The accelerator will respond by writing to the buffer.
-        // fpgaWriteMMIO64(accel_handles[i], 0, 0, buf_pa / CL(1));
+        uint64_t data;
+        
+        if ( accel_handles[i] == NULL ) {									
+            return FPGA_INVALID_PARAM;
+        }
 
-        // // Spin, waiting for the value in memory to change to something non-zero.
-        // while (0 == buf[0])
-        // {
-        //     // A well-behaved program would use _mm_pause(), nanosleep() or
-        //     // equivalent to save power here.
-        // };
+        res = fpgaReadMMIO64(accel_handles[i], 0, AFU_DFH_REG, &data);
+        ON_ERR_GOTO(res, out_exit, "Reading MMIO AFU_DFH_REG");
 
-        // // Print the string written by the FPGA
-        // printf("%d: %s\n", i, buf);
+        res = fpgaReadMMIO64(accel_handles[i], 0, AFU_ID_LO, &data);
+        ON_ERR_GOTO(res, out_exit, "Reading MMIO AFU_ID_LO");
+        printf("AFU ID LO = %08lx\n", data);
 
-        // Done
-        fpgaReleaseBuffer(accel_handles[i], wsid);
+        res = fpgaReadMMIO64(accel_handles[i], 0, AFU_ID_HI, &data);
+        ON_ERR_GOTO(res, out_exit, "Reading MMIO AFU_ID_HI");
+        printf("AFU ID HI = %08lx\n", data);
+
+        res = fpgaReadMMIO64(accel_handles[i], 0, AFU_NEXT, &data);
+        ON_ERR_GOTO(res, out_exit, "Reading MMIO AFU_NEXT");
+        printf("AFU NEXT = %08lx\n", data);
+
+        res = fpgaReadMMIO64(accel_handles[i], 0, AFU_RESERVED, &data);
+        ON_ERR_GOTO(res, out_exit, "Reading MMIO AFU_RESERVED");
+        printf("AFU RESERVED = %08lx\n", data);
+        
+        ////////////////////////////////
+        // Load AFU parameters
+        ////////////////////////////////
+        #define KERNEL_ARG_DEVICE_READ_REG ZTS11RSERASUREID_REGISTER_MAP_ARG_ARG_DEVICE_READ_REG
+        #define KERNEL_ARG_DEVICE_WRITE_REG ZTS11RSERASUREID_REGISTER_MAP_ARG_ARG_DEVICE_WRITE_REG
+        #define KERNEL_ARG_RS_ERASURE_CSR_REG ZTS11RSERASUREID_REGISTER_MAP_ARG_ARG_RS_ERASURE_CSR_REG
+        
+        res = fpgaWriteMMIO64(accel_handles[i], 0, KERNEL_ARG_DEVICE_READ_REG, buf_pa_in);
+        printf("%s:%d write @%x, value = %x\n", __FILE__, __LINE__, KERNEL_ARG_DEVICE_READ_REG, buf_pa_in);
+        printf("%s:%d res = %d\n", __FILE__, __LINE__, res);
+
+        res = fpgaWriteMMIO64(accel_handles[i], 0, KERNEL_ARG_DEVICE_WRITE_REG, buf_pa_out);
+        printf("%s:%d write @%x, value = %x\n", __FILE__, __LINE__, KERNEL_ARG_DEVICE_WRITE_REG, buf_pa_out);
+        printf("%s:%d res = %d\n", __FILE__, __LINE__, res);
+
+        // Serialize CSR inputs
+        uint64_t rs_erasure_csrs = 0;
+        uint64_t erasure_pattern_64 	= 0b01000;
+        uint64_t survived_cells_64 		= 0b00111;
+        uint64_t cell_length_64			= 2;
+        rs_erasure_csrs |= erasure_pattern_64 	<< 0u ;
+        rs_erasure_csrs |= survived_cells_64 	<< 16u;
+        rs_erasure_csrs |= cell_length_64		<< 32u;
+
+        res = fpgaWriteMMIO64(accel_handles[i], 0, KERNEL_ARG_RS_ERASURE_CSR_REG, rs_erasure_csrs);
+        printf("%s:%d write @%x, value = %d\n", __FILE__, __LINE__, KERNEL_ARG_RS_ERASURE_CSR_REG, rs_erasure_csrs);
+        printf("%s:%d res = %d\n", __FILE__, __LINE__, res);
+        
+		// printf("%s:%d: rs_erasure_input\n", __FILE__, __LINE__);
+        // for ( unsigned int j = 0; j < (SIZE * RS_K); j++ ){
+        //     rs_erasure_input[j] = rand();
+        //     printf("%02x ", rs_erasure_input[j]);
+        // }
+        // printf("\n");
+
+        ////////////////////////////////
+        // Wait for AF to be ready
+        ////////////////////////////////
+        // Poll on busy register
+        // TODO: is there a cleaner way?
+        uint64_t status_val;		
+        #define SLEEP_TIME_US 10000
+        #define KERNEL_STATUS ( ZTS11RSERASUREID_REGISTER_MAP_STATUS_REG )
+        do {
+            usleep( SLEEP_TIME_US );
+            res = fpgaReadMMIO64(accel_handles[i], 0, KERNEL_STATUS, &status_val);
+            if ( res != FPGA_OK ) {
+                printf("%s:%d res = %s\n", __FILE__, __LINE__, fpgaErrStr(res));
+            }            
+            printf("%s:%d status_val = %0lx\n", __FILE__, __LINE__, status_val);
+        } while ( status_val & KERNEL_REGISTER_MAP_BUSY_MASK );
+			
+        // Start and wait AFU
+        // fpga_result start_and_wait_afu(fpga_handle afc_handle, struct pollfd *pfd, int *poll_res)
+        // TODO: automate the setting of ZTS11RSERASUREID_REGISTER_MAP_OFFSET (default is zero)
+        #define KERNEL_START                 (0x8            + ZTS11RSERASUREID_REGISTER_MAP_OFFSET)
+        #define POLL_TIMEOUT_MS 1000
+        /* Start the AFU by writing a '1' into the valid_in bit */
+        res = fpgaWriteMMIO64(accel_handles[i], 0, KERNEL_START, (uint32_t)1u);
+        if ( res != FPGA_OK ) {
+            printf("%s:%d res = %s\n", __FILE__, __LINE__, fpgaErrStr(res));
+            return res;
+        }
+        // Active polling on AFU
+        // TODO: switch to events
+        do {
+            usleep( SLEEP_TIME_US );
+            res = fpgaReadMMIO64(accel_handles[i], 0, KERNEL_STATUS, &status_val);
+            if ( res != FPGA_OK ) {
+                printf("%s:%d res = %s\n", __FILE__, __LINE__, fpgaErrStr(res));
+            }
+            printf("%s:%d status_val = %0lx\n", __FILE__, __LINE__, status_val);
+        } while ( !(status_val & KERNEL_REGISTER_MAP_DONE_MASK) );
+		
+        
+        // Check output buffer
+		printf("%s:%d: reconstructed_blocks_out\n", __FILE__, __LINE__);
+        for ( unsigned int j = 0; j < SIZE; j++ ){
+            printf("%02x ", reconstructed_blocks_out[j]);
+        }
+        printf("\n");
+
+        // Clean up
+        fpgaReleaseBuffer(accel_handles[i], wsid_in);
+        fpgaReleaseBuffer(accel_handles[i], wsid_out);
         fpgaClose(accel_handles[i]);
     }
 
     return 0;
+
+out_exit:
+	return res;
 }

@@ -1,7 +1,14 @@
+# Import these flags from common makefile
+# 	LDFLAGS += -luuid
+# 	FPGA_LIBS = -lopae-c
+# 	ASE_LIBS = -lopae-c-ase
 include ${EXAMPLES_AFU}/tutorial/afu_types/01_pim_ifc/common/sw/common_include.mk
 
 # Primary test name
 TEST = $(AFU_NAME)
+
+# AFU aspecific targets
+-include $(AFU_NAME).mk
 
 # Build directory
 OBJDIR = obj

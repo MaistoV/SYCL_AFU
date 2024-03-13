@@ -26,14 +26,16 @@ if [ -d ${SYCL_AFU_DIR}/${SYCL_IP_NAME}_report.prj ]; then
     SIM_AFU_SOURCE_LIST=tmp_$(basename ${AFU_SOURCE_LIST} .txt )_sim.txt
     cp ${AFU_SOURCE_LIST} ${SIM_AFU_SOURCE_LIST}
     # Append header line
-    printf "\n\n# Force Questa to include files from kernel_system.qip" >> ${SIM_AFU_SOURCE_LIST}
+    printf "\n########################################################" >> ${SIM_AFU_SOURCE_LIST}
+    printf "\n# Force Questa to include files from kernel_system.qip #" >> ${SIM_AFU_SOURCE_LIST}
+    printf "\n########################################################" >> ${SIM_AFU_SOURCE_LIST}
     printf "\n\n# Generated from sim_files tree\n" >> ${SIM_AFU_SOURCE_LIST}
 
     # Append new list, inject compile order
     SIM_FILES_DIR=${SYCL_IP_NAME}_report.prj/sim_files
 
     # NOTE: Injecting the compile order is a dirty workaround, but this is just a PoC
-
+    # TODO: there is some redundancy here, remove replicates
     echo "# Fist acl_* primitives" >> ${SIM_AFU_SOURCE_LIST}
     find ${SIM_FILES_DIR} -type f -name "acl_ecc_pkg.sv" | sort >> ${SIM_AFU_SOURCE_LIST}
     find ${SIM_FILES_DIR} -type f -name "acl_*" | grep -v acl_ecc_pkg | sort >> ${SIM_AFU_SOURCE_LIST}
@@ -42,13 +44,14 @@ if [ -d ${SYCL_AFU_DIR}/${SYCL_IP_NAME}_report.prj ]; then
     find ${SIM_FILES_DIR} -type f -name "hld_*" | sort >> ${SIM_AFU_SOURCE_LIST}
 
     echo "# All others, exclude acl primitives and IP" >> ${SIM_AFU_SOURCE_LIST}
-    find ${SIM_FILES_DIR} -type f               | grep -Ev "RSErasureID|acl|hld|inst|kernel_system\.v" | sort >> ${SIM_AFU_SOURCE_LIST}
+    find ${SIM_FILES_DIR} -type f               | grep -Ev "_report_di|RSErasureID|acl|hld|inst|kernel_system\.v" | sort >> ${SIM_AFU_SOURCE_LIST}
 
     echo "# SYCL IP internal"
     find ${SIM_FILES_DIR} -type f -name "*RSErasureID*"  | sort >> ${SIM_AFU_SOURCE_LIST}
 
-    echo "# Finally, SYCL IP and wrapper"
-    find ${SIM_FILES_DIR} -type f -name "*${SYCL_IP_NAME}*" | grep -Ev "inst|RSErasureID|sys" | sort >> ${SIM_AFU_SOURCE_LIST}
+    # echo "# Finally, SYCL IP and wrapper"
+    # find ${SIM_FILES_DIR} -type f -name "*${SYCL_IP_NAME}*" | grep -Ev "inst|RSErasureID|sys" | sort >> ${SIM_AFU_SOURCE_LIST}
+    echo "# Finally, SYCL IP wrapper"
     find ${SIM_FILES_DIR} -type f -name "kernel_system.v" >> ${SIM_AFU_SOURCE_LIST}
 
     # Override old filename
@@ -89,7 +92,6 @@ echo "[INFO] Start compilation of full AFU bitstream..."
 echo "[INFO] Using PR-tree in $(basename ${OPAE_PLATFORM_ROOT}) ..."
 
 # Launch simulation
-make questa_build # debug
 make
 make sim
 

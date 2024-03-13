@@ -135,6 +135,11 @@ oneapi_ip: oneapi_ip_report
 	cp -r ${SYCL_IP_PRJ}/include/* ${AFU_SW_DIR}
 
 # TMP
+oneapi_ip_fpga_emu:
+oneapi_ip_%: 
+	cd ${SYCL_IP_WORKDIR}; \
+	make $*
+
 oneapi_ip_emu:
 	cd ${SYCL_IP_WORKDIR}; ./${SYCL_IP_NAME}.fpga_emu ${TEST_ARGS}
 
@@ -144,7 +149,7 @@ oneapi_ip_emu:
 
 # Build host application
 afu_host:
-	${MAKE} -C ${AFU_SW_DIR} clean all;
+	${MAKE} -C ${AFU_SW_DIR} clean all RS_SCHEMA=${RS_SCHEMA};
 
 # Build and launch simulation
 ase_setup: clean_ase ${OPAE_PLATFORM_ROOT}
@@ -155,14 +160,15 @@ ase_setup: clean_ase ${OPAE_PLATFORM_ROOT}
 ase_launch: ${AFU_ASE_DIR}
 #	Clear previous runs' lock file
 	rm -vf ${AFU_ASE_DIR}/work/.ase_ready.pid;
-#	Launch simulation
-	${MAKE} -C ${AFU_ASE_DIR} sim
+#	Launch simulation (make must be invoked from its own direcotry)
+	cd ${AFU_ASE_DIR}; ${MAKE}
+	cd ${AFU_ASE_DIR}; ${MAKE} sim
 
 # Open Wafeform Log File
 ase_waves: ${AFU_ASE_DIR}/work/vsim.wlf
 # ${MAKE} -C ${AFU_ASE_DIR} wave
 	vsim $<										\
-		-do scripts/add_waves.do 				\
+		-do ${ROOT_DIR}/scripts/add_waves.do 	\
 		-debugdb # ${AFU_ASE_DIR}/work/vsim.dbg
 
 # Build Green Bitstream
@@ -178,15 +184,15 @@ gbs_configure:
 	sudo fpgasupdate ${GBS_FILE} ${PAC_PCIE_SBD}.0
 
 # System Tests
-AFU_ELF_NAME ?= ${AFU_NAME}
+AFU_ELF_NAME ?= bin/${AFU_NAME}
 TEST_ARGS	 ?=
 
 test_gbs: afu_host gbs_configure ${GBS_FILE} 
 #	Run host application
-	cd ${AFU_SW_DIR}/bin; ./${AFU_ELF_NAME} ${TEST_ARGS}
+	cd ${AFU_SW_DIR}; ./${AFU_ELF_NAME} ${TEST_ARGS}
 
 test_ase: afu_host
-	cd ${AFU_SW_DIR}/bin; with_ase ./${AFU_ELF_NAME} ${TEST_ARGS}
+	cd ${AFU_SW_DIR}; with_ase ./${AFU_ELF_NAME} ${TEST_ARGS}
 
 ############
 # Clean up #

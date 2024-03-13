@@ -1,4 +1,7 @@
 sycl_afu.json
+avalon_interrupt_proxy.sv 
+dfl_csr_avalon_proxy.sv 
+kernel_dfl_wrapper.sv
 ofs_plat_afu.sv
 
 # Include SYCL IP
@@ -7,13 +10,9 @@ ofs_plat_afu.sv
 +incdir+${SYCL_IP_NAME}_report.prj/ip
 # Source files
 ${SYCL_IP_NAME}_report.prj/opencl.ipx
+# Quartus only, Questa is not going to source this
 QI:${SYCL_IP_NAME}_report.prj/kernel_system.qip
 ${SYCL_IP_NAME}_report.prj/${SYCL_IP_NAME}_report_di.sv
 # TCL scripts
 ${SYCL_IP_NAME}_report.prj/ip_include.tcl
 # ${SYCL_IP_NAME}_report.prj/${SYCL_IP_NAME}_report_di_hw.tcl
-
-
-# Force Questa to include files from kernel_system.qip
-# This is going to replicate many includes for Quartus, let it handle them with digests
-+incdir+${SYCL_IP_NAME}_report.prj/sim_files
