@@ -17,7 +17,7 @@
 #define ADDR_SPACE_WRITE 2
 
 // Custom AC types
-typedef ac_int<DATA_BYTE_WIDTH*8, false> line_t;
+typedef ac_int<DATA_BIT_WIDTH, false> line_t;
 typedef ac_int<1, false> uint1;
 typedef ac_int<8, false> uint8;
 typedef ac_int<16, false> uint16;

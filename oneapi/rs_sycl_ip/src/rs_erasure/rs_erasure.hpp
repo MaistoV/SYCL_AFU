@@ -1,4 +1,3 @@
-
 #ifndef _RS_ERASURE_H_
 #define _RS_ERASURE_H_
 
@@ -15,7 +14,7 @@
 // Match Native Avalon MM hostchan parameters
 // see ofs_plat_if_top_config.vh and ofs_plat_avalon_mem_rdwr_if.sv
 #define DATA_BIT_WIDTH 				512U // Width of interface in bits
-#define DATA_BYTE_WIDTH 			DATA_BIT_WIDTH/8 // Width of interface in bytes
+#define DATA_BYTE_WIDTH 			(DATA_BIT_WIDTH/8) // Width of interface in bytes
 #define LOG2_DATA_BYTE_WIDTH		6u	// log2(DATA_BYTE_WIDTH)
 
 // Utility macros for cell length
