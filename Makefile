@@ -133,12 +133,13 @@ oneapi_ip: oneapi_ip_report
 	cp -r ${SYCL_IP_PRJ} ${AFU_HW_DIR}
 #	SYCL IP CSR map headers to sw project
 	cp -r ${SYCL_IP_PRJ}/include/* ${AFU_SW_DIR}
+#	Update SYCL IP CSR offset
+	make -C ${AFU_SW_DIR} register_map_offsets
 
 # TMP
 oneapi_ip_fpga_emu:
-oneapi_ip_%: 
 	cd ${SYCL_IP_WORKDIR}; \
-	make $*
+	make fpga_emu
 
 oneapi_ip_emu:
 	cd ${SYCL_IP_WORKDIR}; ./${SYCL_IP_NAME}.fpga_emu ${TEST_ARGS}
@@ -154,7 +155,7 @@ afu_host:
 # Build and launch simulation
 ase_setup: clean_ase ${OPAE_PLATFORM_ROOT}
 #	Setup and launch simulator
-	${SYCL_IP_ENV} ${AFU_FLOW_DIR}/afu_ase.sh
+	${SYCL_IP_ENV} VERBOSE=1 ${AFU_FLOW_DIR}/afu_ase.sh 
 
 # Launch simulation without rebuilding it
 ase_launch: ${AFU_ASE_DIR}
