@@ -11,7 +11,7 @@ ofs_plat_afu.sv
 # Source files
 ${SYCL_IP_NAME}_report.prj/opencl.ipx
 # Quartus only, Questa is not going to source this
-QI:${SYCL_IP_NAME}_report.prj/kernel_system.qip
+${SYCL_IP_NAME}_report.prj/kernel_system.qip
 ${SYCL_IP_NAME}_report.prj/${SYCL_IP_NAME}_report_di.sv
 # TCL scripts
 ${SYCL_IP_NAME}_report.prj/ip_include.tcl

@@ -24,6 +24,7 @@ module ofs_plat_afu
       // The PIM provides parameters for configuring a standard host
       // memory DMA AXI memory interface.
       `HOST_CHAN_AVALON_MEM_RDWR_PARAMS,
+      // .BURST_CNT_WIDTH(4), // TODO: tune this
       // PIM interfaces can be configured to log traffic during
       // simulation. In ASE, see work/log_ofs_plat_host_chan.tsv.
       .LOG_CLASS(ofs_plat_log_pkg::HOST_CHAN)

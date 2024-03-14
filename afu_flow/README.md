@@ -63,3 +63,12 @@ $ make make pac_powercycle_user1 # Powercycle the PAC
 $ make opae.io_bind # Bind VFs
 $ make test_gbs # Configure GBS and software against FPGA hardware
 ```
+
+## SYCL AFUs
+Using an AFU name including the substring `"sycl"`, an AFU can be defined in [OneAPI flow](../oneapi/) and exported in AFU flow with:
+``` console 
+$ make oneapi_ip
+``` 
+The AFU flow will take care of integrating the necessary sources for simulation and synthesis.
+
+The SYCL IP integration needs to be performed by hand, see the example  [SYCL AFU](afus/sycl_afu).

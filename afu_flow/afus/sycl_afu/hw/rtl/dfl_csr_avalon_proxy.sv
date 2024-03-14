@@ -6,12 +6,14 @@
 
 import ofs_plat_host_chan_pkg::*;
 
-module dfl_csr_avalon (
+module dfl_csr_avalon_proxy #(
+    parameter logic [ofs_plat_host_chan_pkg::MMIO_ADDR_WIDTH_BYTES-1 : 0] REGISTER_MAP_OFFSET = 'h40
+    ) (
     input  logic                     clock_i, 
     input  logic                     reset_ni,
-    output logic                     kernel_cra_enable_o,   // Enable signal for kernel CSR interface
-    ofs_plat_avalon_mem_if.to_sink   csr_mmio64_to_afu,     // to ofs_plat_afu      
-    ofs_plat_avalon_mem_if.to_source csr_mmio64_to_kernel   // to kernel
+    // output logic                     kernel_cra_enable_o,   // Enable signal for kernel CSR interface
+    ofs_plat_avalon_mem_if.to_source  csr_mmio64_to_afu,     // to ofs_plat_afu      
+    ofs_plat_avalon_mem_if.to_sink  csr_mmio64_to_kernel   // to kernel
     );
 
     // =========================================================================
@@ -31,7 +33,6 @@ module dfl_csr_avalon (
     logic is_dfl_kernel_n;
 
     // Compose address mask    
-    localparam REGISTER_MAP_OFFSET = 0'h40; // TODO: export this
     localparam DFL_ADDR_MASK_ZEROS = $clog2(REGISTER_MAP_OFFSET);
     localparam DFL_ADDR_MASK_ONES = ofs_plat_host_chan_pkg::ADDR_WIDTH_LINES - DFL_ADDR_MASK_ZEROS;
     logic [ofs_plat_host_chan_pkg::ADDR_WIDTH_LINES -1 : 0] DFL_ADDR_MASK;
@@ -41,17 +42,18 @@ module dfl_csr_avalon (
 
     // Disable kernel's CSR interface if the requests falls in DFL address range
     // assign kernel_cra_enable_o = ~is_dfl_kernel_n;
-    assign kernel_cra_enable_o = 1'b1;
+    // assign kernel_cra_enable_o = 1'b1;
 
     always_comb begin : kernel_interface
         // Pass through the whole interface, except for the address field
         // We can't use ofs_plat_avalon_mem_rdwr_if_connect here
 
         // Input
-        // We need to 
-        //  - offset the address of REGISTER_MAP_OFFSET csr_mmio64_to_kernel
+        // We need to:
+        //  - extend the address of 3 LSBs, since the module kernel_system is going to ingnore the 3 LSBs (because it addresses 64-bits words)
         //  - subtract the offset of the kernel address space
-        csr_mmio64_to_kernel.address = (csr_mmio64_to_afu.address << 3) - REGISTER_MAP_OFFSET;
+        //  - zero-extend to full width
+        csr_mmio64_to_kernel.address = {csr_mmio64_to_afu.address, 3'b000} - REGISTER_MAP_OFFSET;
         // Disable incoming requests towards the kernel
         csr_mmio64_to_kernel.write           = ( is_dfl_kernel_n ) ? 1'b0 : csr_mmio64_to_afu.write;
         csr_mmio64_to_kernel.read            = ( is_dfl_kernel_n ) ? 1'b0 : csr_mmio64_to_afu.read;
@@ -209,4 +211,4 @@ module dfl_csr_avalon (
         end
     end
 */
-endmodule : dfl_csr_avalon
+endmodule : dfl_csr_avalon_proxy
