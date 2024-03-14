@@ -13,9 +13,9 @@
 
 // Match Native Avalon MM hostchan parameters
 // see ofs_plat_if_top_config.vh and ofs_plat_avalon_mem_rdwr_if.sv
-#define DATA_BIT_WIDTH 				512U // Width of interface in bits
-#define DATA_BYTE_WIDTH 			(DATA_BIT_WIDTH/8) // Width of interface in bytes
-#define LOG2_DATA_BYTE_WIDTH		6u	// log2(DATA_BYTE_WIDTH)
+#define CELL_BIT_WIDTH 				512U // Width of interface in bits
+#define CELL_BYTE_WIDTH 			(CELL_BIT_WIDTH/8) // Width of interface in bytes
+#define LOG2_CELL_BYTE_WIDTH		6u	// log2(CELL_BYTE_WIDTH)
 
 // Utility macros for cell length
 #define _1B						(1			 	)	// 1 Byte
@@ -23,10 +23,10 @@
 #define _1MB					(1024 * 1024 	)	// 1Megabyte
 #define _2MB					(2 * 1024 * 1024)	// 2Megabytes
 #define CELL_LENGTH_MAX			(_1MB) 				// With huge pages 2MB
-#define CELL_LENGTH_MIN 		(DATA_BYTE_WIDTH)	// MIN (by design)
+#define CELL_LENGTH_MIN 		(CELL_BYTE_WIDTH)	// MIN (by design)
 #ifndef CELL_LENGTH_DEFAULT
-	// #warning CELL_LENGTH_DEFAULT undefined, defaulting to DATA_BYTE_WIDTH*2=128
-	#define CELL_LENGTH_DEFAULT (DATA_BYTE_WIDTH*2)	// Length of RS cell in bytes
+	// #warning CELL_LENGTH_DEFAULT undefined, defaulting to CELL_BYTE_WIDTH*2=128
+	#define CELL_LENGTH_DEFAULT (CELL_BYTE_WIDTH*2)	// Length of RS cell in bytes
 #endif
 
 // Utility macros for input and output buffer size
@@ -40,7 +40,7 @@ typedef struct rs_erasure_csr {
 	//  uint8_t	 cell_length_id;	  	// Length of each cell (Constant for now)
 	 uint16_t	erasure_pattern;	 	// Which cells were erased (1-hot for now)
 	 uint16_t	survived_cells;	  		// Which k cells of the k+p are provided for reconstruction
-	 uint32_t	cell_length_byte_width;			// Cell length in multiples of DATA_BYTE_WIDTH
+	 uint32_t	cell_length_byte_width;			// Cell length in multiples of CELL_BYTE_WIDTH
 } rs_erasure_csr_t;
 
 // Mux ROM values among RS codes

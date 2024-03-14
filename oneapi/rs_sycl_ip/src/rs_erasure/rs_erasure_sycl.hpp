@@ -17,7 +17,7 @@
 #define ADDR_SPACE_WRITE 2
 
 // Custom AC types
-typedef ac_int<DATA_BIT_WIDTH, false> line_t;
+typedef ac_int<CELL_BIT_WIDTH, false> line_t;
 typedef ac_int<1, false> uint1;
 typedef ac_int<8, false> uint8;
 typedef ac_int<16, false> uint16;
@@ -28,8 +28,8 @@ typedef ac_int<16, false> uint16;
 // Match Avalon MM hostchan parameters
 // see ofs_plat_if_top_config.vh and ofs_plat_avalon_mem_rdwr_if.sv
 #define	ADDR_WIDTH 	41              // This should match ofs_plat_if_top_config.vh and ofs_plat_avalon_mem_rdwr_if.sv
-#define	DATA_WIDTH 	DATA_BIT_WIDTH  // This should match ofs_plat_if_top_config.vh and ofs_plat_avalon_mem_rdwr_if.sv
-#define	ALIGN		    DATA_BYTE_WIDTH // This should match ofs_plat_if_top_config.vh and ofs_plat_avalon_mem_rdwr_if.sv
+#define	DATA_WIDTH 	CELL_BIT_WIDTH  // This should match ofs_plat_if_top_config.vh and ofs_plat_avalon_mem_rdwr_if.sv
+#define	ALIGN		    CELL_BYTE_WIDTH // This should match ofs_plat_if_top_config.vh and ofs_plat_avalon_mem_rdwr_if.sv
 #define MAX_BURST   64              // This should match ofs_plat_if_top_config.vh and ofs_plat_avalon_mem_rdwr_if.sv
 
 // Read interface
@@ -68,14 +68,13 @@ typedef sycl::ext::oneapi::experimental::annotated_arg<line_t *, write_propertie
 //     void rs_erasure (
 //                     device_read_t master_read,
 //                     device_write_t master_write,
-//                     rs_erasure_csr_t rs_erasure_csr 
+//                     rs_erasure_csr_t rs_erasure_csr
 //                     ) const;
 //     // Operator
-//     void operator()() const 
+//     void operator()() const
 //     {
 //         // Call to function
 //         rs_erasure(master_read, master_write, rs_erasure_csr);
-        
 //         // Mock logic
 //         // for (int idx = 0; idx < 10; idx++) {
 //         //     // Dummy logic here
@@ -90,26 +89,26 @@ typedef sycl::ext::oneapi::experimental::annotated_arg<line_t *, write_propertie
 //////////////////////////
 
 // Lambda
-void RunKernelLambda( 
-                sycl::queue& q, 
-                device_read_t buf_master_read, 
+void RunKernelLambda(
+                sycl::queue& q,
+                device_read_t buf_master_read,
                 device_write_t buf_master_write,
                 rs_erasure_csr_t csr
               );
 
 // Functor
-void RunKernelFunctor ( 
-                sycl::queue& q, 
-                sycl::buffer<line_t,1>& buf_master_read, 
+void RunKernelFunctor (
+                sycl::queue& q,
+                sycl::buffer<line_t,1>& buf_master_read,
                 sycl::buffer<line_t,1>& buf_master_write,
                 rs_erasure_csr_t csr
               );
 
-// Function encapsulating the Reed-Solomon logic              
+// Function encapsulating the Reed-Solomon logic
 void rs_erasure (
                 device_read_t     master_read,
                 device_write_t    master_write,
-                rs_erasure_csr_t 	rs_erasure_csr 
+                rs_erasure_csr_t 	rs_erasure_csr
                 );
 
 #endif // _RS_ERASURE_SYCL_H_

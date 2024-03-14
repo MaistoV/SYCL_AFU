@@ -20,7 +20,7 @@
 // For ISA-L
 // #include <isa-l.h>
 // For compute_max_erasure_patterns, gf_gen_cauchy1_matrix, compute_num_vectors_per_erasure_pattern
-#include "rs_erasure/roms/src/rs_rom_utils.h" 
+#include "rs_erasure/roms/src/rs_rom_utils.h"
 
 using namespace sycl;
 
@@ -59,17 +59,17 @@ int usage( char** argv ) {
 int main(int argc, char *argv[]) {
 	int ret_val = 0;
 	// Default params
-	unsigned int prng_seed = 54656; 
+	unsigned int prng_seed = 54656;
 	int encode_isal = 0;
 	int decode_isal = 0;
 	unsigned int cell_length = CELL_LENGTH_DEFAULT;
 
 	unsigned long max_permutations;
 	if ( NUM_ERASURES == RS_P ) {
-		max_permutations = compute_max_erasure_patterns( RS_K, RS_P ); 
+		max_permutations = compute_max_erasure_patterns( RS_K, RS_P );
 	}
 	else if ( NUM_ERASURES == 1 ) {
-		max_permutations = RS_K + RS_P; 
+		max_permutations = RS_K + RS_P;
 	}
 
 	// Permutation buffers
@@ -87,7 +87,7 @@ int main(int argc, char *argv[]) {
 			break;
 		case 'l':
 			cell_length = atoi(optarg);
-			if ( (cell_length <= 0) || ((cell_length % DATA_BYTE_WIDTH) != 0) ) {
+			if ( (cell_length <= 0) || ((cell_length % CELL_BYTE_WIDTH) != 0) ) {
 				usage( argv );
 			}
 			break;
@@ -106,7 +106,7 @@ int main(int argc, char *argv[]) {
 	rs_erasure_csr_t rs_erasure_csr;
 	rs_erasure_csr.erasure_pattern	= -1;
 	rs_erasure_csr.survived_cells	= -1;
-	rs_erasure_csr.cell_length_byte_width = cell_length / DATA_BYTE_WIDTH;
+	rs_erasure_csr.cell_length_byte_width = cell_length / CELL_BYTE_WIDTH;
 	
 	// Seed the PRNG
 	srand(prng_seed);
@@ -146,12 +146,12 @@ int main(int argc, char *argv[]) {
 	for ( unsigned int i = 0; i < RS_K; i++ ) {
 		for ( unsigned int l = 0; l < cell_length; l++ ) {
 			printf("%02x ", frag_ptrs[i][l]);
-			if ( ((l+1) % DATA_BYTE_WIDTH) == 0 ) {
+			if ( ((l+1) % CELL_BYTE_WIDTH) == 0 ) {
 				printf("\n");
 			}
 		}
 	}
-	printf("\n"); 
+	printf("\n");
 #endif
 
 	printf("%s:%d: Encoding parity cells for RS[%d:%d] cell_length=%d, using %s\n",
@@ -184,12 +184,12 @@ int main(int argc, char *argv[]) {
 		for ( unsigned int i = 0; i < RS_K; i++ ) {
 			for ( unsigned int l = 0; l < cell_length; l++ ) {
 				printf("%02x ", ((uint8_t(*)[cell_length])rs_erasure_input)[i][l]);
-				if ( ((l+1) % DATA_BYTE_WIDTH) == 0 ) {
+				if ( ((l+1) % CELL_BYTE_WIDTH) == 0 ) {
 					printf("\n");
 				}
 			}
 		}
-		printf("\n"); 
+		printf("\n");
 	#endif
 
 		// Encode fragments RS_K+1, RS_K+2, ..., RS_K+RS_P
@@ -222,16 +222,16 @@ int main(int argc, char *argv[]) {
 	for ( unsigned int i = 0; i < RS_K + RS_P; i++ ) {
 		for ( unsigned int l = 0; l < cell_length; l++ ) {
 			printf("%02x ", frag_ptrs[i][l]);
-			if ( ((l+1) % DATA_BYTE_WIDTH) == 0 ) {
+			if ( ((l+1) % CELL_BYTE_WIDTH) == 0 ) {
 				printf("\n");
 			}
 		}
-		printf("\n"); 
+		printf("\n");
 	}
-	printf("\n"); 
+	printf("\n");
 #endif
 
-	printf("%s:%d: Decoding/Reconstructing blocks RS[%d:%d] cell_length=%d, using %s\n", 
+	printf("%s:%d: Decoding/Reconstructing blocks RS[%d:%d] cell_length=%d, using %s\n",
 		 __FILE__, __LINE__, RS_K, RS_P, cell_length, (decode_isal) ? "ISA-L" : "HLS core");
 
 	int num_vectors_per_erasure_pattern = compute_num_vectors_per_erasure_pattern (RS_K, RS_P);
@@ -241,7 +241,7 @@ int main(int argc, char *argv[]) {
 		uint8_t* erasure_list = (uint8_t*)(permutations[ permutation_index * NUM_ERASURES ]);
 
 		for ( unsigned int survival_index = 0; survival_index < num_vectors_per_erasure_pattern; survival_index++ ) {
-			printf("%s:%d: Reconstructing cell %d [%d/%lu] with survival pattern [%d/%d]\n", 
+			printf("%s:%d: Reconstructing cell %d [%d/%lu] with survival pattern [%d/%d]\n",
 				__FILE__, __LINE__, permutation_index, permutation_index+1, max_permutations,
 					survival_index+1, num_vectors_per_erasure_pattern);
 
@@ -277,7 +277,7 @@ int main(int argc, char *argv[]) {
 				for ( unsigned int i = 0; i < NUM_ERASURES; i++ ) {
 					for ( int l = 0; l < cell_length; l++ ) {
 						printf("%02x ", recover_outp[i][l]);
-						if ( ((l+1) % DATA_BYTE_WIDTH) == 0 ) {
+						if ( ((l+1) % CELL_BYTE_WIDTH) == 0 ) {
 							printf("\n");
 						}
 					}
@@ -300,7 +300,7 @@ int main(int argc, char *argv[]) {
 				for ( unsigned int i = 0; i < RS_K; i++ ) {
 					for ( unsigned int l = 0; l < cell_length; l++ ) {
 						printf("%02x ", ((uint8_t(*)[cell_length])rs_erasure_input)[i][l]);
-						if ( ((l+1) % DATA_BYTE_WIDTH) == 0 ) {
+						if ( ((l+1) % CELL_BYTE_WIDTH) == 0 ) {
 							printf("\n");
 						}
 					}
@@ -311,7 +311,7 @@ int main(int argc, char *argv[]) {
 
 				// Write input
 				rs_erasure_csr.erasure_pattern	= permutations_pattern[permutation_index];
-				rs_erasure_csr.survived_cells	= decode_index_bitstring[permutation_index][survival_index]; 
+				rs_erasure_csr.survived_cells	= decode_index_bitstring[permutation_index][survival_index];
 
 				// Call to kernel
 				RunKernel (
@@ -327,7 +327,7 @@ int main(int argc, char *argv[]) {
 				for ( unsigned int i = 0; i < NUM_ERASURES; i++ ) {
 					for ( int l = 0; l < cell_length; l++ ) {
 						printf("%02x ", ((uint8_t(*)[cell_length])reconstructed_blocks_out)[i][l]);
-						if ( ((l+1) % DATA_BYTE_WIDTH) == 0 ) {
+						if ( ((l+1) % CELL_BYTE_WIDTH) == 0 ) {
 							printf("\n");
 						}
 					}
@@ -335,7 +335,7 @@ int main(int argc, char *argv[]) {
 				printf("\n");
 			#endif
 
-				// Read data 
+				// Read data
 				for ( unsigned int i = 0; i < RS_P; i++ ) {
 					for ( int l = 0; l < cell_length; l++ ) {
 						recover_outp[i][l] = ((uint8_t(*)[cell_length])reconstructed_blocks_out)[i][l];
@@ -354,7 +354,7 @@ int main(int argc, char *argv[]) {
 					for ( unsigned int i = 0; i < NUM_ERASURES; i++ ) {
 						for ( int l = 0; l < cell_length; l++ ) {
 							printf("%02x ", frag_ptrs[erasure_list[i]][l]);
-							if ( ((l+1) % DATA_BYTE_WIDTH) == 0 ) {
+							if ( ((l+1) % CELL_BYTE_WIDTH) == 0 ) {
 								printf("\n");
 							}
 						}
@@ -368,11 +368,11 @@ int main(int argc, char *argv[]) {
 	} // permutation_index over max_permutations
 
 	printf("%s:%d: Test passed\n RS[%d:%d]\n cell_length=%d,\n encodind with %s,\n decoding with %s,\n PRNG seed=%u\n",
-		 __FILE__, __LINE__, RS_K, RS_P, cell_length, 
-		 (encode_isal) ? "ISA-L" : "HLS core", 
+		 __FILE__, __LINE__, RS_K, RS_P, cell_length,
+		 (encode_isal) ? "ISA-L" : "HLS core",
 		 (decode_isal) ? "ISA-L" : "HLS core",
 		 prng_seed
-		 ); 
+		 );
 
 	return ret_val;
 }
@@ -388,7 +388,7 @@ void RunKernel(
 	// rs_erasure (
     //              rs_erasure_input,
     //              reconstructed_blocks_out,
-    //              rs_erasure_csr 
+    //              rs_erasure_csr
     //             );
 	// return;
 
@@ -426,9 +426,9 @@ void RunKernel(
 
 		// Run kernel
 		RunKernelLambda(
-						q, 
-						device_read, 
-						device_write, 
+						q,
+						device_read,
+						device_write,
 						rs_erasure_csr
 					);
 		
