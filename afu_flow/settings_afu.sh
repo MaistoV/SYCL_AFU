@@ -19,6 +19,11 @@ export AFU_SW_DIR=${AFU_DEF_DIR}/${AFU_NAME}/sw
 ####################################
 # AFU-specific working directories # 
 ####################################
-export AFU_SYNTH_DIR=${AFU_BUILD_DIR}/${AFU_NAME}_afu_synth
-export AFU_ASE_DIR=${AFU_BUILD_DIR}/${AFU_NAME}_afu_ase
+if [ "${RS_SCHEMA}" != "" ]; then
+    export AFU_SYNTH_DIR=${AFU_BUILD_DIR}/${AFU_NAME}_${RS_SCHEMA}_synth
+    export AFU_ASE_DIR=${AFU_BUILD_DIR}/${AFU_NAME}_${RS_SCHEMA}_ase
+else
+    export AFU_SYNTH_DIR=${AFU_BUILD_DIR}/${AFU_NAME}_synth
+    export AFU_ASE_DIR=${AFU_BUILD_DIR}/${AFU_NAME}_ase
+fi
 export ASE_WORKDIR=${AFU_ASE_DIR}/work

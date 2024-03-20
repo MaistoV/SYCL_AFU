@@ -6,20 +6,19 @@
 # Removing old directory, if any
 rm -rf ${AFU_ASE_DIR} 
 
+# In case of SYCL-imported IP, prepare Questa file list from kernel_system.qip, using the original ASP flow
 if [[ ${AFU_NAME} == *sycl* ]]; then
-    # In case of SYCL-imported IP, prepare Questa file list from kernel_system.qip, using the original ASP flow
-    SYCL_AFU_DIR=${AFU_FLOW_DIR}/afus/sycl_afu/hw/rtl/
-    if [ -d ${SYCL_AFU_DIR}/${SYCL_IP_NAME}_report.prj ]; then
+    if [ -d ${SYCL_IP_PRJ_AFU_EXPORT} ]; then
         # Move to where the kernel_system.qip file is
-        cd ${SYCL_AFU_DIR}/${SYCL_IP_NAME}_report.prj
+        cd ${SYCL_IP_PRJ_AFU_EXPORT}
         echo "[INFO] Launching ase-sim-compile.sh"
         # NOTE: this script is the same as for n6001
-        # NOTE: this script strictly relies on oneapi-asp's tag: ofs-2023.3-2
+        # NOTE: this script strictly relies on oneapi-asp's release tag: ofs-2023.3-2
         source ${OFS_ASP_ROOT}/hardware/ofs_nc220/build/scripts/ase-sim-compile.sh
         # Remove spurious output
         rm -rf ../../../../../../fpga.bin simulation.tar.gz
 
-        cd ${SYCL_AFU_DIR}
+        cd ${AFU_HW_DIR}
 
         # Generate new file for source list
         SIM_AFU_SOURCE_LIST=tmp_$(basename ${AFU_SOURCE_LIST} .txt )_sim.txt
@@ -55,6 +54,9 @@ if [[ ${AFU_NAME} == *sycl* ]]; then
 
         # Override old filename
         AFU_SOURCE_LIST=$(realpath ${SIM_AFU_SOURCE_LIST})
+    else
+        echo "[ERROR] Can't find ${SYCL_IP_PRJ_AFU_EXPORT} required by SYCL AFU flow, run make oneapi_ip" >&2
+        exit -1
     fi
 fi
 
