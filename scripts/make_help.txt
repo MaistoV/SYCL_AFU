@@ -6,18 +6,18 @@ FIM:
 	fim_update            Update flash images on the board (around 2m)
 	pac_powercycle_<page> Power cycle from page <user1|user2|factory>, necessary after FIM udpate (fim_update) (waits for 10s)
 	opae.io_bind          Bind all VFs to VFIO driver
-	opae.io_release       Release all VFs to VFIO driver
+	pac_hot_plug          Unplug and re-plug PAC from PCIe bus (virtually)
 
 OneAPI ASP flow (Altera OpenCL):
 	oneapi_asp_build_aocx Build bitstreaam for ASP
 	aocl_aocx_initalize   Program PAC with aocx (requires the right PR interface to be already flashed on the PAC)
 	aocl_bsp_build        Build PR-tree related BSP
 	aocl_bsp_[un]install  Install/uninstall BSP
-	oneapi_asp_<target>   Build oneapi design in ${ONEAPI_IP_DIR}, target in: {fpga_emu, fpga_sim, report, fpga}
+	oneapi_asp_<target>   Build oneapi design in ${SYCL_IP_DIR}, target in: {fpga_emu, fpga_sim, report, fpga}
 
 OneAPI IP flow:
-	oneapi_ip_emu         Build oneapi design in ${ONEAPI_IP_DIR}, target fpga_emu
-	oneapi_ip_report      Build oneapi design in ${ONEAPI_IP_DIR}, target report
+	oneapi_ip_emu         Build oneapi design in ${SYCL_IP_DIR}, target fpga_emu
+	oneapi_ip_report      Build oneapi design in ${SYCL_IP_DIR}, target report
 	oneapi_ip_report_open Open early report in browser 
 
 AFU flow:
@@ -26,13 +26,14 @@ AFU flow:
 	ase_launch            Subsequent launches of ASE simulator, if the source list of sim config has not changed {locks a terminal}
 	ase_waves             Open simulated waveforms in ${AFU_ASE_DIR}/work/vsim.wlf
 	gbs                   Build green bitstream (takes around 40 minutes)
-	gbs_configure         Configure GBS in PR-slot. On error, you must first release all VFs with opae.io_release
+	gbs_configure         Configure GBS in PR-slot. On error, you must first make pac_hot_plug
 	test_gbs              Run host application against hadware
 	test_ase              Run host application against ASE simulator (requires make ase_setup or make ase_launch in another terminal)
 
 Clean targets:
 	clean_oneapi_asp      Clean OneAPI ASP build
 	clean_oneapi_ip       Clean OneAPI IP build
+	clean_oneapi_ip_report Clean only generated and exported OneAPI IP 
 	clean_gbs             Clean gbs build
 	clean_ase             Clean ASE simulator setup
 	clean_sw              Clean software build

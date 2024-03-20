@@ -6,10 +6,10 @@ SRIOV_TOTVF=$(sudo find /sys/ -wholename "*/${PAC_PCIE_SBD}.0/sriov_totalvfs" | 
 echo "[INFO] Found $SRIOV_NUMVF sriov_numvfs"
 echo "[INFO] Found $SRIOV_TOTVF sriov_totalvfs"
 if [ $SRIOV_NUMVF -lt $SRIOV_TOTVF ]; then
-    echo "[INFO] Setting up ${FIM_NUM_PF0_VFS} VFs"
+    echo "[INFO] Setting up ${SRIOV_TOTVF} VFs"
     
     # Create new VFs
-    sudo pci_device ${PAC_PCIE_BD}.0 vf ${FIM_NUM_PF0_VFS}
+    sudo pci_device ${PAC_PCIE_BD}.0 vf ${SRIOV_TOTVF}
 
     # FIM and PR AFUs VFs
     # Exclude PF0.VF0 (B:00.0)

@@ -1,5 +1,4 @@
 # Default variables value
-RS_SCHEMA ?= RS_3_2
 TEST_ARGS ?=
 
 # NOTE: Most of this flow does rely on file timestamps, therefore, it is going to build most of the targets for every call
@@ -39,12 +38,17 @@ pac_powercycle_%:
 # 	Power cycle PAC
 	sudo rsu --debug fpga --page=$* ${PAC_PCIE_SBD}.0
 
-opae.io_bind: #gbs_configure
+opae.io_bind:
 	${ROOT_DIR}/scripts/opae.io_bind.sh
 
-opae.io_release:
-# 	NOTE: this should be done for each VF bound by opae.io init	
-	sudo opae.io release -d ${PAC_PCIE_SBD}.0
+opae.io_bind_one:
+	sudo pci_device ${PAC_PCIE_SBD}.0 vf 1
+	sudo opae.io -d ${PAC_PCIE_SBD}.0 init ${USER}:${USER}
+	opae.io ls
+
+pac_hot_plug:
+	sudo pci_device ${PAC_PCIE_SBD}.0 unplug
+	sudo pci_device ${PAC_PCIE_SBD}.0 plug
 
 ####################
 # ONE API ASP Flow #
@@ -73,8 +77,8 @@ aocl_aocx_initalize:
 	${ONEAPI_DEBUG_ENV} aocl initialize ${ACL_DEVICE} ${OFS_ASP_BOARD_VARIANT} 
 
 oneapi_asp_cmake: 
-	mkdir ${ONEAPI_IP_DIR}/build_asp;	\
-	cd ${ONEAPI_IP_DIR}/build_asp;		\
+	mkdir ${SYCL_IP_DIR}/build_asp;	\
+	cd ${SYCL_IP_DIR}/build_asp;		\
 	cmake .. -DFPGA_DEVICE=${OFS_ASP_FPGA_DEVICE} 
 
 oneapi_asp_fpga_emu:
@@ -82,21 +86,16 @@ oneapi_asp_fpga_sim:
 oneapi_asp_report:
 oneapi_asp_fpga:
 oneapi_asp_%: oneapi_asp_cmake
-	cd ${ONEAPI_IP_DIR}/build_asp; \
+	cd ${SYCL_IP_DIR}/build_asp; \
 	make $*
 
 #############################
 # ONE API IP Authoring Flow #
 #############################
-# Since we want to modify the RS_SCHEMA variable at this Makefile level, 
-# the following variables cannot be exported separately, e.g. in a bash file
-SYCL_IP_NAME = rs_sycl_ip_${RS_SCHEMA}
-SYCL_IP_WORKDIR = ${ONEAPI_IP_DIR}/build_ip_${RS_SCHEMA}
-SYCL_IP_PRJ = ${SYCL_IP_WORKDIR}/${SYCL_IP_NAME}_report.prj
 # Wrap these variables in a single list
 SYCL_IP_ENV += RS_SCHEMA=${RS_SCHEMA} \
 				SYCL_IP_NAME=${SYCL_IP_NAME} \
-				SYCL_IP_WORKDIR=${SYCL_IP_WORKDIR} \
+				SYCL_IP_BUILD_DIR=${SYCL_IP_BUILD_DIR} \
 				SYCL_IP_PRJ=${SYCL_IP_PRJ}
 
 SYCL_IP_DEBUG ?= 0
@@ -114,14 +113,15 @@ CMAKE_ENV = USER_HARDWARE_FLAGS=${USER_HARDWARE_FLAGS} \
 			${SYCL_IP_ENV} 
 
 CMAKE_FLAGS += -DFPGA_DEVICE=${AGILEX7_PART_NUMBER} 
-oneapi_ip_cmake: ${SYCL_IP_PRJ}
-${SYCL_IP_PRJ}: 
-	mkdir ${SYCL_IP_WORKDIR};	\
-	cd ${SYCL_IP_WORKDIR};		\
+oneapi_ip_cmake: ${SYCL_IP_BUILD_DIR}
+${SYCL_IP_BUILD_DIR}: 
+	mkdir ${SYCL_IP_BUILD_DIR};	\
+	cd ${SYCL_IP_BUILD_DIR};		\
 	${CMAKE_ENV} cmake .. ${CMAKE_FLAGS}
 
-oneapi_ip_report: oneapi_ip_cmake
-	cd ${SYCL_IP_WORKDIR}; \
+oneapi_ip_report: oneapi_ip_cmake ${SYCL_IP_PRJ}
+${SYCL_IP_PRJ}: 
+	cd ${SYCL_IP_BUILD_DIR}; \
 	make report ${SYCL_IP_ENV}
 
 oneapi_ip_report_open:
@@ -136,13 +136,12 @@ oneapi_ip: oneapi_ip_report
 #	Update SYCL IP CSR offset
 	make -C ${AFU_SW_DIR} register_map_offsets
 
-# TMP
-oneapi_ip_fpga_emu:
-	cd ${SYCL_IP_WORKDIR}; \
+oneapi_ip_fpga_emu: oneapi_ip_cmake
+	cd ${SYCL_IP_BUILD_DIR}; \
 	make fpga_emu
 
 oneapi_ip_emu:
-	cd ${SYCL_IP_WORKDIR}; ./${SYCL_IP_NAME}.fpga_emu ${TEST_ARGS}
+	cd ${SYCL_IP_BUILD_DIR}; ./${SYCL_IP_NAME}.fpga_emu ${TEST_ARGS}
 
 #######
 # AFU #
@@ -174,21 +173,20 @@ ase_waves: ${AFU_ASE_DIR}/work/vsim.wlf
 
 # Build Green Bitstream
 # This takes around 40 minutes...
-gbs: ${AFU_SYNTH_DIR} oneapi_ip
+gbs: ${AFU_SYNTH_DIR} #oneapi_ip
 ${AFU_SYNTH_DIR}: ${OPAE_PLATFORM_ROOT} clean_gbs
 	${SYCL_IP_ENV} ${AFU_FLOW_DIR}/afu_synth.sh
 
-GBS_FILE ?= ${AFU_SYNTH_DIR}/${AFU_NAME}.gbs
 gbs_configure:
 #	Configure PR slot with GBS
-# sudo fpgaconf ${GBS_FILE}
-	sudo fpgasupdate ${GBS_FILE} ${PAC_PCIE_SBD}.0
+# sudo fpgaconf ${AFU_GBS_FILE}
+	sudo fpgasupdate ${AFU_GBS_FILE} ${PAC_PCIE_SBD}.0
 
 # System Tests
 AFU_ELF_NAME ?= bin/${AFU_NAME}
 TEST_ARGS	 ?=
 
-test_gbs: afu_host gbs_configure ${GBS_FILE} 
+test_gbs: afu_host #gbs_configure ${AFU_GBS_FILE}
 #	Run host application
 	cd ${AFU_SW_DIR}; ./${AFU_ELF_NAME} ${TEST_ARGS}
 
@@ -211,11 +209,15 @@ clean_gbs:
 clean_sw:
 	${MAKE} -C ${AFU_SW_DIR} clean
 
-clean_oneapi_ip:
-#	Build directory
-	rm -rf ${SYCL_IP_WORKDIR}
+clean_oneapi_ip_report:
+#	SYCL IP
+	rm -rf ${SYCL_IP_PRJ}
 #	Exported SYCL IP
-	rm -rf ${AFU_HW_DIR}/${SYCL_IP_NAME}_report.prj
+	rm -rf ${SYCL_IP_PRJ_AFU_EXPORT}
+
+clean_oneapi_ip: clean_oneapi_ip_report
+#	Build directory
+	rm -rf ${SYCL_IP_BUILD_DIR}
 
 clean_oneapi_asp:
 	rm -rf ${ONEAPI_IP_DIR}/build_asp
