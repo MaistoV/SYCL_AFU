@@ -9,7 +9,7 @@
       "accelerator-clusters":
          [
             {
-               "name": "sycl_afu",
+               "name": "sycl_rs_erasure",
                "total-contexts": 1,
                "accelerator-type-uuid": "4ee779ff-6912-4556-9a5d-15f3788eb04e" 
             }

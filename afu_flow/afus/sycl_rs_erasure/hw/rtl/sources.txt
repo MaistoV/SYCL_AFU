@@ -1,0 +1,21 @@
+sycl_rs_erasure.json
+../../../sycl_afu_common/hw/rtl/avalon_interrupt_proxy.sv 
+../../../sycl_afu_common/hw/rtl/dfl_csr_avalon_proxy.sv 
+../../../sycl_afu_common/hw/rtl/kernel_dfl_wrapper.sv
+../../../sycl_afu_common/hw/rtl/ofs_plat_afu.sv
+
+# Include SYCL IP
+# Directories
++incdir+${SYCL_IP_NAME}_report.prj/
++incdir+${SYCL_IP_NAME}_report.prj/ip
+# Source files
+${SYCL_IP_NAME}_report.prj/opencl.ipx
+# Quartus only, Questa is not going to source this
+${SYCL_IP_NAME}_report.prj/kernel_system.qip
+${SYCL_IP_NAME}_report.prj/${SYCL_IP_NAME}_report_di.sv
+# TCL scripts
+${SYCL_IP_NAME}_report.prj/ip_include.tcl
+# ${SYCL_IP_NAME}_report.prj/${SYCL_IP_NAME}_report_di_hw.tcl
+
+# SYCL register map offset
++define+KERNEL_REGISTER_MAP_OFFSET_HEX=\'h${KERNEL_REGISTER_MAP_OFFSET_HEX}

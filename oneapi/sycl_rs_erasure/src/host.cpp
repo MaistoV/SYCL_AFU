@@ -403,14 +403,8 @@ void RunKernel(
 		std::cout << "Running on device: "
 							<< device.get_info<sycl::info::device::name>().c_str()
 							<< std::endl;
-
-		// For Functor
-		// Create the device buffers
-		// buffer device_read (vec_a);
-		// buffer device_write(vec_b);
-		// RunKernelFunctor(q, device_read, device_write, rs_erasure_csr);
 		
-		// For Lambda (Single mem interface)
+		// For Lambda
 		device_read_t  device_read  = sycl::malloc_shared<line_t>( RS_INPUT_SIZE(cell_length) , q);
 		device_write_t device_write = sycl::malloc_shared<line_t>( RS_OUTPUT_SIZE(cell_length), q);
 

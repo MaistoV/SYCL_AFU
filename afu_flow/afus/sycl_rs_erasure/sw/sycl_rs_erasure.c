@@ -110,22 +110,22 @@ connect_to_matching_accels(const char *accel_uuid,
 
         fpgaDestroyToken(&accel_tokens[i]);
 
+        // Map MMIO address space
+        res = fpgaMapMMIO(accel_handles[i], 0, NULL);
+        if (FPGA_OK != res) {
+            return res;
+        }
+
+        // Not supported by vfio plugin
+        // Reset AFC 
+        // res = fpgaReset( accel_handles[i] );
+        // if (FPGA_OK != res) {
+        //     return res;
+        // }
+
     }
     *num_handles = num_found;
     if (0 != num_found) res = FPGA_OK;
-
-    // Map MMIO address space
-    res = fpgaMapMMIO(accel_handles[0], 0, NULL);
-    if (FPGA_OK != res) {
-        return res;
-    }
-
-    // Not supported by vfio plugin
-	// Reset AFC 
-	// res = fpgaReset( accel_handles[0] );
-    // if (FPGA_OK != res) {
-    //     return res;
-    // }
 
   out_destroy:
     fpgaDestroyProperties(&filter);
@@ -186,41 +186,79 @@ int main(int argc, char *argv[]) {
 
     printf("Found %d instance(s) of AFU:\n\n", num_handles);
 
-    for (uint32_t i = 0; i < 10; i += 1) {
+    for ( uint32_t i = 0; i < num_handles; i += 1 ) { // i, num_handles
         printf("Handle %d\n", i);
 
         // Allocate MMIO buffers
-        rs_erasure_input         = (volatile uint8_t*)alloc_buffer(accel_handles[0], RS_INPUT_SIZE (cell_length_byte), &wsid_in , &buf_pa_in );
-        reconstructed_blocks_out = (volatile uint8_t*)alloc_buffer(accel_handles[0], RS_OUTPUT_SIZE(cell_length_byte), &wsid_out, &buf_pa_out);
-        // rs_erasure_input         = (volatile uint8_t*)alloc_buffer(accel_handles[0], getpagesize(), &wsid_in , &buf_pa_in );
-        // reconstructed_blocks_out = (volatile uint8_t*)alloc_buffer(accel_handles[0], getpagesize(), &wsid_out, &buf_pa_out);
+        rs_erasure_input         = (volatile uint8_t*)alloc_buffer(accel_handles[i], RS_INPUT_SIZE (cell_length_byte), &wsid_in , &buf_pa_in );
+        reconstructed_blocks_out = (volatile uint8_t*)alloc_buffer(accel_handles[i], RS_OUTPUT_SIZE(cell_length_byte), &wsid_out, &buf_pa_out);
+        // rs_erasure_input         = (volatile uint8_t*)alloc_buffer(accel_handles[i], getpagesize(), &wsid_in , &buf_pa_in );
+        // reconstructed_blocks_out = (volatile uint8_t*)alloc_buffer(accel_handles[i], getpagesize(), &wsid_out, &buf_pa_out);
 
         assert(NULL != rs_erasure_input);
         assert(NULL != reconstructed_blocks_out);
 
-        if ( accel_handles[0] == NULL ) {
+        if ( accel_handles[i] == NULL ) {
             return FPGA_INVALID_PARAM;
         }
+        
+        ///////////////////////////////
+        // Debug reads from DFL CSRs //
+        ///////////////////////////////
+        uint64_t data = 0;
+        
+        // DFL
+        res = fpgaReadMMIO64(accel_handles[i], 0, AFU_DFH_REG, &data);
+        ON_ERR_GOTO(res, out_exit, "Reading MMIO AFU_DFH_REG");
 
-        ////////////////////////////////
-        // Load AFU parameters
-        ////////////////////////////////
+        res = fpgaReadMMIO64(accel_handles[i], 0, AFU_ID_LO, &data);
+        ON_ERR_GOTO(res, out_exit, "Reading MMIO AFU_ID_LO");
+        printf("AFU ID LO = %08lx\n", data);
+
+        res = fpgaReadMMIO64(accel_handles[i], 0, AFU_ID_HI, &data);
+        ON_ERR_GOTO(res, out_exit, "Reading MMIO AFU_ID_HI");
+        printf("AFU ID HI = %08lx\n", data);
+
+        res = fpgaReadMMIO64(accel_handles[i], 0, AFU_NEXT, &data);
+        ON_ERR_GOTO(res, out_exit, "Reading MMIO AFU_NEXT");
+        printf("AFU NEXT = %08lx\n", data);
+
+        res = fpgaReadMMIO64(accel_handles[i], 0, AFU_RESERVED, &data);
+        ON_ERR_GOTO(res, out_exit, "Reading MMIO AFU_RESERVED");
+        printf("AFU RESERVED = %08lx\n", data);
+
+        // SYCL Kernel
+        res = fpgaReadMMIO64(accel_handles[i], 0, KERNEL_STATUS, &data);
+        ON_ERR_GOTO(res, out_exit, "Reading MMIO KERNEL_STATUS");
+        printf("AFU KERNEL_STATUS = %08lx\n", data);
+
+        res = fpgaReadMMIO64(accel_handles[i], 0, KERNEL_START, &data);
+        ON_ERR_GOTO(res, out_exit, "Reading MMIO KERNEL_START");
+        printf("AFU KERNEL_START = %08lx\n", data);
+
+        res = fpgaReadMMIO64(accel_handles[i], 0, KERNEL_START, &data);
+        ON_ERR_GOTO(res, out_exit, "Reading MMIO KERNEL_START");
+        printf("AFU KERNEL_START = %08lx\n", data);
+
+        /////////////////////////
+        // Load AFU parameters //
+        /////////////////////////
         // Write physical address to AFU CSR
-        res = fpgaWriteMMIO64(accel_handles[0], 0, KERNEL_ARG_DEVICE_READ_REG, buf_pa_in);
+        res = fpgaWriteMMIO64(accel_handles[i], 0, KERNEL_ARG_DEVICE_READ_REG, buf_pa_in);
         printf("%s:%d write @%x, value = %lx\n", __FILE__, __LINE__, KERNEL_ARG_DEVICE_READ_REG, buf_pa_in);
         // Write virtual address to AFU CSR
-        // res = fpgaWriteMMIO64(accel_handles[0], 0, KERNEL_ARG_DEVICE_READ_REG, rs_erasure_input);
-        // printf("%s:%d write @%x, value = %lx\n", __FILE__, __LINE__, KERNEL_ARG_DEVICE_READ_REG, rs_erasure_input);
+        res = fpgaWriteMMIO64(accel_handles[i], 0, KERNEL_ARG_DEVICE_READ_REG, (uint64_t)rs_erasure_input);
+        printf("%s:%d write @%x, value = %lx\n", __FILE__, __LINE__, KERNEL_ARG_DEVICE_READ_REG, rs_erasure_input);
         if ( res != FPGA_OK ) {
             printf("%s:%d res = %s\n", __FILE__, __LINE__, fpgaErrStr(res));
         }
 
         // Write physical address to AFU CSR
-        res = fpgaWriteMMIO64(accel_handles[0], 0, KERNEL_ARG_DEVICE_WRITE_REG, buf_pa_out);
+        res = fpgaWriteMMIO64(accel_handles[i], 0, KERNEL_ARG_DEVICE_WRITE_REG, buf_pa_out);
         printf("%s:%d write @%x, value = %lx\n", __FILE__, __LINE__, KERNEL_ARG_DEVICE_WRITE_REG, buf_pa_out);
         // Write virtual address to AFU CSR
-        // res = fpgaWriteMMIO64(accel_handles[0], 0, KERNEL_ARG_DEVICE_WRITE_REG, reconstructed_blocks_out);
-        // printf("%s:%d write @%x, value = %lx\n", __FILE__, __LINE__, KERNEL_ARG_DEVICE_WRITE_REG, reconstructed_blocks_out);
+        res = fpgaWriteMMIO64(accel_handles[i], 0, KERNEL_ARG_DEVICE_WRITE_REG, (uint64_t)reconstructed_blocks_out);
+        printf("%s:%d write @%x, value = %lx\n", __FILE__, __LINE__, KERNEL_ARG_DEVICE_WRITE_REG, reconstructed_blocks_out);
         if ( res != FPGA_OK ) {
             printf("%s:%d res = %s\n", __FILE__, __LINE__, fpgaErrStr(res));
         }
@@ -234,7 +272,7 @@ int main(int argc, char *argv[]) {
         rs_erasure_csrs |= survived_cells_64 	<< 16u;
         rs_erasure_csrs |= cell_length_64		<< 32u;
 
-        res = fpgaWriteMMIO64(accel_handles[0], 0, KERNEL_ARG_RS_ERASURE_CSR_REG, rs_erasure_csrs);
+        res = fpgaWriteMMIO64(accel_handles[i], 0, KERNEL_ARG_RS_ERASURE_CSR_REG, rs_erasure_csrs);
         printf("%s:%d write @%x, value = %lx\n", __FILE__, __LINE__, KERNEL_ARG_RS_ERASURE_CSR_REG, rs_erasure_csrs);
         if ( res != FPGA_OK ) {
             printf("%s:%d res = %s\n", __FILE__, __LINE__, fpgaErrStr(res));
@@ -248,21 +286,23 @@ int main(int argc, char *argv[]) {
         printf("\n");
         
         ////////////////////////////////
-        // Create event 
+        // Create event for interrupt //
         ////////////////////////////////
-        // res = fpgaCreateEventHandle(&fpgaInterruptEvent);
-        // if ( res != FPGA_OK ) {
-        //     printf("%s:%d res = %s\n", __FILE__, __LINE__, fpgaErrStr(res));
-        // }
-        // // Register user interrupt with event accel_handle
-        // uint32_t flags = 0; // uses IRQ bit 0, see instantiation of acmm_ccip_host_wr in afu.sv
-        // res = fpgaRegisterEvent(accel_handles[0], FPGA_EVENT_INTERRUPT, fpgaInterruptEvent, flags);
-        // if ( res != FPGA_OK ) {
-        //     printf("%s:%d res = %s\n", __FILE__, __LINE__, fpgaErrStr(res));
-        // }
+    #ifdef INTERRUPT_EVENTS
+        res = fpgaCreateEventHandle(&fpgaInterruptEvent);
+        if ( res != FPGA_OK ) {
+            printf("%s:%d res = %s\n", __FILE__, __LINE__, fpgaErrStr(res));
+        }
+        // Register user interrupt with event accel_handle
+        uint32_t flags = 0; // uses IRQ bit 0, see instantiation of acmm_ccip_host_wr in afu.sv
+        res = fpgaRegisterEvent(accel_handles[i], FPGA_EVENT_INTERRUPT, fpgaInterruptEvent, flags);
+        if ( res != FPGA_OK ) {
+            printf("%s:%d res = %s\n", __FILE__, __LINE__, fpgaErrStr(res));
+        }
+    #endif // INTERRUPT_EVENTS
 
         ////////////////////////////////
-        // Wait for AF to be ready
+        // Wait for AFU to be ready
         ////////////////////////////////
         // Poll on busy register
         // TODO: is there a cleaner way?
@@ -270,55 +310,62 @@ int main(int argc, char *argv[]) {
         #define SLEEP_TIME_US 10000
         do {
             usleep( SLEEP_TIME_US );
-            res = fpgaReadMMIO64(accel_handles[0], 0, KERNEL_STATUS, &status_val);
+            res = fpgaReadMMIO64(accel_handles[i], 0, KERNEL_STATUS, &status_val);
             if ( res != FPGA_OK ) {
                 printf("%s:%d res = %s\n", __FILE__, __LINE__, fpgaErrStr(res));
             }
             printf("%s:%d status_val = %0lx\n", __FILE__, __LINE__, status_val);
         } while ( status_val & KERNEL_REGISTER_MAP_BUSY_MASK );
 
-        // struct pollfd pfd;
-        // pfd.events = POLLIN;
-        // res = fpgaGetOSObjectFromEventHandle(fpgaInterruptEvent, &pfd.fd);
-        // if ( res != FPGA_OK ) {
-        //     printf("%s:%d res = %s\n", __FILE__, __LINE__, fpgaErrStr(res));
-        // }
-
-        // Start and wait AFU
+        ////////////////////////
+        // Start and wait AFU //
+        ////////////////////////
         // fpga_result start_and_wait_afu(fpga_handle afc_handle, struct pollfd *pfd, int *poll_res)
+    #ifdef INTERRUPT_EVENTS
         #define POLL_TIMEOUT_MS 1000
-        // Start the AFU by writing a '1' into the valid_in bit
-        res = fpgaWriteMMIO64(accel_handles[0], 0, KERNEL_START, KERNEL_START_VALUE);
+        struct pollfd pfd;
+        pfd.events = POLLIN;
+        res = fpgaGetOSObjectFromEventHandle(fpgaInterruptEvent, &pfd.fd);
+        if ( res != FPGA_OK ) {
+            printf("%s:%d res = %s\n", __FILE__, __LINE__, fpgaErrStr(res));
+        }
+    #endif // INTERRUPT_EVENTS
+
+        // Start the AFU by writing a '1' into the start register
+        res = fpgaWriteMMIO64(accel_handles[i], 0, KERNEL_START, KERNEL_START_VALUE);
         if ( res != FPGA_OK ) {
             printf("%s:%d res = %s\n", __FILE__, __LINE__, fpgaErrStr(res));
             return res;
         }
 
+    #ifndef INTERRUPT_EVENTS
         // Active polling on AFU
-        // TODO: switch to events
         do {
             usleep( SLEEP_TIME_US );
             // Compiler fence
-            res = fpgaReadMMIO64(accel_handles[0], 0, KERNEL_STATUS, &status_val);
+            res = fpgaReadMMIO64(accel_handles[i], 0, KERNEL_STATUS, &status_val);
             if ( res != FPGA_OK ) {
                 printf("%s:%d res = %s\n", __FILE__, __LINE__, fpgaErrStr(res));
             }
             printf("%s:%d status_val = %0lx\n", __FILE__, __LINE__, status_val);
         } while ( !(status_val & KERNEL_REGISTER_MAP_DONE_MASK) );
+    #endif // !INTERRUPT_EVENTS
 
-        // // Wait for interrupt with poll()
-        // int poll_res = poll(&pfd, 1, POLL_TIMEOUT_MS);
-        // printf("%s:%d poll_res = %d\n", __FILE__, __LINE__, poll_res);
-        // // Check poll errors
-        // if ( poll_res <= 0 ) {
-        //     printf("Poll error errno = %s\n", strerror(errno));
-        // }
-        // else if ( poll_res == 0 ) {
-        //     printf("Error: Poll timeout \n");
-        // }
-        // else {
-        //     printf("Poll success. Return = %d\n", poll_res);
-	    // }
+    #ifdef INTERRUPT_EVENTS
+        // Wait for interrupt with poll()
+        int poll_res = poll(&pfd, 1, POLL_TIMEOUT_MS);
+        printf("%s:%d poll_res = %d\n", __FILE__, __LINE__, poll_res);
+        // Check poll errors
+        if ( poll_res <= 0 ) {
+            printf("Poll error errno = %s\n", strerror(errno));
+        }
+        else if ( poll_res == 0 ) {
+            printf("Error: Poll timeout \n");
+        }
+        else {
+            printf("Poll success. Return = %d\n", poll_res);
+	    }
+    #endif // INTERRUPT_EVENTS
 
         // Check output buffer
 		printf("%s:%d: reconstructed_blocks_out\n", __FILE__, __LINE__);
@@ -327,23 +374,26 @@ int main(int argc, char *argv[]) {
         }
         printf("\n");
 
-    }
+        //////////////
+        // Clean up //
+        //////////////
 
-    //////////////
-    // Clean up //
-    //////////////
+    #ifdef INTERRUPT_EVENTS
+        // Cleanup event accel_handle			
+        if ( fpgaInterruptEvent != NULL ) {									
+            res = fpgaUnregisterEvent(accel_handles[i], FPGA_EVENT_INTERRUPT, fpgaInterruptEvent);
+            res = fpgaDestroyEventHandle(fpgaInterruptEvent);
+        }
+    #endif // !INTERRUPT_EVENTS
 
-	// Cleanup event accel_handle			
-	if ( fpgaInterruptEvent != NULL ) {									
-		res = fpgaUnregisterEvent(accel_handles[0], FPGA_EVENT_INTERRUPT, fpgaInterruptEvent);
-		res = fpgaDestroyEventHandle(fpgaInterruptEvent);
-	}
-	// Release I/O buffers
-    fpgaReleaseBuffer(accel_handles[0], wsid_in);
-    fpgaReleaseBuffer(accel_handles[0], wsid_out);
-    // Unmap MMIO space
-    fpgaUnmapMMIO(accel_handles[0], 0);
-    fpgaClose(accel_handles[0]);
+        // Release I/O buffers
+        fpgaReleaseBuffer(accel_handles[i], wsid_in);
+        fpgaReleaseBuffer(accel_handles[i], wsid_out);
+        // Unmap MMIO space
+        fpgaUnmapMMIO(accel_handles[i], 0);
+        fpgaClose(accel_handles[i]);
+
+    } // i, num_handles
 
     return 0;
 
