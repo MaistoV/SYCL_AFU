@@ -1,0 +1,81 @@
+//==============================================================
+// Copyright Intel Corporation
+//
+// SPDX-License-Identifier: MIT
+// =============================================================
+#include <sycl/sycl.hpp>
+
+#ifndef _RS_KENREL_H_
+#define _RS_KENREL_H_
+
+// SYCL header
+#include <sycl/sycl.hpp>
+#include <sycl/ext/intel/ac_types/ac_int.hpp>
+
+//////////////
+// Typedefs //
+//////////////
+
+// Compatible interfaces for top-level component
+#define ADDR_SPACE_READ 1
+#define ADDR_SPACE_WRITE 2
+
+// Byte/bit width of interfaces
+#define CELL_BIT_WIDTH 512
+#define CELL_BYTE_WIDTH (CELL_BIT_WIDTH/8)
+
+// Custom AC types
+typedef ac_int<CELL_BIT_WIDTH, false> line_t;
+
+// Definitions for memory interfaces
+#define BUFFER_LOCATION_READ 1
+#define BUFFER_LOCATION_WRITE 2
+// Match Avalon MM hostchan parameters
+// see ofs_plat_if_top_config.vh and ofs_plat_avalon_mem_rdwr_if.sv
+#define ADDR_WIDTH  41                  // This should match ofs_plat_if_top_config.vh and ofs_plat_avalon_mem_rdwr_if.sv
+#define DATA_WIDTH  (sizeof(line_t)*8)  // This should match ofs_plat_if_top_config.vh and ofs_plat_avalon_mem_rdwr_if.sv
+#define ALIGN       (DATA_WIDTH/8)      // This should match ofs_plat_if_top_config.vh and ofs_plat_avalon_mem_rdwr_if.sv
+#define MAX_BURST   64                  // This should match ofs_plat_if_top_config.vh and ofs_plat_avalon_mem_rdwr_if.sv
+
+// Read interface
+typedef decltype(sycl::ext::oneapi::experimental::properties{
+  sycl::ext::intel::experimental::buffer_location<BUFFER_LOCATION_READ>,
+  sycl::ext::intel::experimental::awidth<ADDR_WIDTH>,
+  sycl::ext::intel::experimental::dwidth<DATA_WIDTH>,
+  sycl::ext::intel::experimental::latency<0>,
+  sycl::ext::oneapi::experimental::alignment<ALIGN>,
+  sycl::ext::intel::experimental::read_write_mode_read, // Read-only
+  sycl::ext::intel::experimental::maxburst<MAX_BURST>
+}) read_properties;
+
+// Write interface
+typedef decltype(sycl::ext::oneapi::experimental::properties{
+  sycl::ext::intel::experimental::buffer_location<BUFFER_LOCATION_WRITE>,
+  sycl::ext::intel::experimental::awidth<ADDR_WIDTH>,
+  sycl::ext::intel::experimental::dwidth<DATA_WIDTH>,
+  sycl::ext::intel::experimental::latency<0>,
+  sycl::ext::oneapi::experimental::alignment<ALIGN>,
+  sycl::ext::intel::experimental::read_write_mode_write, // Write-only
+  sycl::ext::intel::experimental::maxburst<MAX_BURST>
+}) write_properties;
+
+// Interface typedefs
+typedef sycl::ext::oneapi::experimental::annotated_arg<line_t*, read_properties > device_read_t;
+typedef sycl::ext::oneapi::experimental::annotated_arg<line_t*, write_properties> device_write_t;
+
+using namespace sycl;
+
+//////////////////////////
+// Invocation functions //
+//////////////////////////
+
+// Lambda
+void RunKernelLambda(
+                sycl::queue&   q,
+                device_read_t  master_read,
+                device_write_t master_write,
+                uint64_t       length_lines
+              );
+
+
+#endif // _RS_KENREL_H_

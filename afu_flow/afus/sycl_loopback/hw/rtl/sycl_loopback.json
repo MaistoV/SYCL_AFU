@@ -1,0 +1,18 @@
+{
+   "version": 1,
+   "afu-image": {
+      "power": 0,
+      "afu-top-interface":
+         {
+            "name": "ofs_plat_afu"
+         },
+      "accelerator-clusters":
+         [
+            {
+               "name": "sycl_loopback",
+               "total-contexts": 1,
+               "accelerator-type-uuid": "c6e99792-3163-4339-92e8-d40d16c21eb7" 
+            }
+         ]
+   }
+}

@@ -71,4 +71,6 @@ $ make oneapi_ip
 ``` 
 The AFU flow will take care of integrating the necessary sources for simulation and synthesis.
 
-The SYCL IP integration needs to be performed by hand, see the example  [SYCL AFU](afus/sycl_afu).
+The SYCL IP integration needs to be performed by hand, see the examples:
+* [afus/sycl_loopback](afus/sycl_loopback)
+* [afus/sycl_rs_erasure](afus/sycl_rs_erasure).
