@@ -2,12 +2,12 @@
 // SPDX-License-Identifier: MIT
 
 #include <stdint.h>
-#include <stdio.h>
+#include <stdio.h> // for printf()
 #include <stdlib.h>
 #include <unistd.h>
-#include <assert.h>
-#include <uuid/uuid.h>
-#include <poll.h> // For poll()
+#include <assert.h>     // for assert()
+#include <uuid/uuid.h>  // for uuid_parse
+#include <poll.h>       // for poll()
 #include <errno.h>
 
 #include <opae/fpga.h>
@@ -16,189 +16,15 @@
 #include "afu_json_info.h"
 
 // Register map emitted for DFL
-#include "afu_dfl_regmap.h"
+#include "afu_regmap.h"
+
+// Utility functions
+#include "sycl_afu_utils.h"
 
 // Macros
 #define CACHELINE_BYTES         64                              // Number of bytes of a cache line
 #define CL_ALIGN(phy_addr)      (phy_addr / CACHELINE_BYTES)    // Cache-line aligned physical address
 #define SIZE_BUFFERS(n)         (CACHELINE_BYTES * (n))         // Size of I/O buffers in cache lines
-
-// Debug reads from DFL and Kernel CSRs
-void debugReadMMIO( fpga_handle accel_handle ) {
-    fpga_result res = FPGA_OK;
-    uint64_t data = 0;
-    // DFL
-    res = fpgaReadMMIO64(accel_handle, 0, AFU_DFH_REG, &data);
-    printf("AFU_DFH_REG = %016lx\n", data);
-    res = fpgaReadMMIO64(accel_handle, 0, AFU_ID_LO, &data);
-    printf("AFU ID LO = %016lx\n", data);
-    res = fpgaReadMMIO64(accel_handle, 0, AFU_ID_HI, &data);
-    printf("AFU ID HI = %016lx\n", data);
-    res = fpgaReadMMIO64(accel_handle, 0, AFU_NEXT, &data);
-    printf("AFU NEXT = %016lx\n", data);
-    res = fpgaReadMMIO64(accel_handle, 0, AFU_RESERVED, &data);
-    printf("AFU RESERVED = %016lx\n", data);
-    // SYCL Kernel
-    res = fpgaReadMMIO64(accel_handle, 0, KERNEL_STATUS, &data);
-    printf("AFU KERNEL_STATUS = %016lx\n", data);
-    // res = fpgaReadMMIO32(accel_handle, 0, KERNEL_START, &data);
-    // printf("AFU KERNEL_START = %016lx\n", data);
-    res = fpgaReadMMIO64(accel_handle, 0, KERNEL_FINISH_COUNTER, &data);
-    printf("AFU KERNEL_FINISH_COUNTER = %016lx\n", data);
-    res = fpgaReadMMIO64(accel_handle, 0, KERNEL_ARG_DEVICE_READ_REG, &data);
-    printf("AFU KERNEL_ARG_DEVICE_READ_REG = %016lx\n", data);
-    res = fpgaReadMMIO64(accel_handle, 0, KERNEL_ARG_DEVICE_WRITE_REG, &data);
-    printf("AFU KERNEL_ARG_DEVICE_WRITE_REG = %016lx\n", data);
-    res = fpgaReadMMIO64(accel_handle, 0, KERNEL_ARG_RS_LENGTH_LINES_REG, &data);
-    printf("AFU KERNEL_ARG_RS_LENGTH_LINES_REG = %016lx\n", data);
-}
-
-/*
- * macro to check return codes, print error message, and goto cleanup label
- * NOTE: this changes the program flow (uses goto)!
- */
-int s_error_count = 0;
-void print_err(const char *s, fpga_result res) {
-	fprintf(stderr, "%s:%d: Error %s: %s\n", __FILE__, __LINE__, s, fpgaErrStr(res));
-}
-#define ON_ERR_GOTO(res, label, desc) \
-	do                                \
-	{                                 \
-		if ((res) != FPGA_OK)         \
-		{                             \
-			print_err((desc), (res)); \
-			s_error_count += 1;       \
-			goto label;               \
-		}                             \
-	} while (0)
-
-//
-// Search for all accelerators matching the requested properties and
-// connect to them. The input value of *num_handles is the maximum
-// number of connections allowed. (The size of accel_handles.) The
-// output value of *num_handles is the actual number of connections.
-//
-static fpga_result
-connect_to_matching_accels(const char *accel_uuid,
-                           uint32_t *num_handles,
-                           fpga_handle *accel_handles,
-                           bool *is_ase_sim) {
-    fpga_properties filter = NULL;
-    fpga_guid guid;
-    const uint32_t max_tokens = 32;
-    fpga_token accel_tokens[max_tokens];
-    uint32_t num_matches;
-    fpga_result res;
-
-    assert(num_handles && *num_handles);
-    assert(accel_handles);
-
-    // Limit num_handles to max_tokens. We could be smarter and dynamically
-    // allocate accel_tokens.
-    if (*num_handles > max_tokens)
-        *num_handles = max_tokens;
-
-    // Don't print verbose messages in ASE by default
-    // setenv("ASE_LOG", "0", 0);
-    *is_ase_sim = false;
-
-    // Set up a filter that will search for an accelerator
-    fpgaGetProperties(NULL, &filter);
-    fpgaPropertiesSetObjectType(filter, FPGA_ACCELERATOR);
-
-    // Add the desired UUID to the filter
-    uuid_parse(accel_uuid, guid);
-    fpgaPropertiesSetGUID(filter, guid);
-
-    // Do the search across the available FPGA contexts
-    res = fpgaEnumerate(&filter, 1, accel_tokens, *num_handles, &num_matches);
-    if (*num_handles > num_matches)
-        *num_handles = num_matches;
-
-    if ((FPGA_OK != res) || (num_matches < 1))
-    {
-        fprintf(stderr, "Accelerator %s not found!\n", accel_uuid);
-        goto out_destroy;
-    }
-
-    // Open accelerators
-    uint32_t num_found = 0;
-    for (uint32_t i = 0; i < *num_handles; i += 1) {
-        res = fpgaOpen(accel_tokens[i], &accel_handles[num_found], 0);
-        if (FPGA_OK == res) {
-            num_found += 1;
-
-            // While the token is available, check whether it is for HW
-            // or for ASE simulation, recording it so probeForASE() below
-            // doesn't have to run through the device list again.
-            fpga_properties accel_props;
-            uint16_t vendor_id, dev_id;
-            fpgaGetProperties(accel_tokens[i], &accel_props);
-            fpgaPropertiesGetVendorID(accel_props, &vendor_id);
-            fpgaPropertiesGetDeviceID(accel_props, &dev_id);
-            *is_ase_sim = (vendor_id == 0x8086) && (dev_id == 0xa5e);
-        }
-
-        fpgaDestroyToken(&accel_tokens[i]);
-
-        // Map MMIO address space
-        uint64_t* ptr;
-        // res = fpgaMapMMIO(accel_handles[i], 0, NULL); // Deprecated without a pointer
-        if ( ! is_ase_sim ) {
-            res = fpgaMapMMIO(accel_handles[i], 0, &ptr); // Not supported by ASE
-            assert(ptr);
-            assert(FPGA_OK == res);
-        } 
-
-        // Not supported by vfio plugin
-        // Reset AFC 
-        // res = fpgaReset( accel_handles[i] );
-        // assert(FPGA_OK == res);
-        
-        ////////////////////////////////
-        // Debug reads from DFL CSRs
-        ////////////////////////////////
-        debugReadMMIO( accel_handles[i] );
-    }
-    *num_handles = num_found;
-    if (0 != num_found) res = FPGA_OK;
-
-  out_destroy:
-    fpgaDestroyProperties(&filter);
-
-    return res;
-}
-
-
-//
-// Allocate a buffer in I/O memory, shared with the FPGA.
-//
-static volatile void* alloc_buffer(fpga_handle accel_handle,
-                                   ssize_t size,
-                                   uint64_t *wsid,
-                                   uint64_t *io_addr) {
-    fpga_result res;
-    volatile void* buf;
-
-    res = fpgaPrepareBuffer(accel_handle, size, (void*)&buf, wsid, 0);
-    assert(FPGA_OK == res);
-
-    // Get the physical address of the buffer in the accelerator
-    res = fpgaGetIOAddress(accel_handle, *wsid, io_addr);
-    assert(FPGA_OK == res);
-
-    return buf;
-}
-
-void print_kernel_status ( uint64_t status_val, uint8_t* file, uint32_t line) {
-    printf("%s:%d status_val = %0lx\n" , file, line, status_val);
-    printf("\t.done    = %lx\n", (status_val & KERNEL_REGISTER_MAP_DONE_MASK    ) >> KERNEL_REGISTER_MAP_DONE_OFFSET      );
-    printf("\t.busy    = %lx\n", (status_val & KERNEL_REGISTER_MAP_BUSY_MASK    ) >> KERNEL_REGISTER_MAP_BUSY_OFFSET      );
-    printf("\t.stalled = %lx\n", (status_val & KERNEL_REGISTER_MAP_STALLED_MASK ) >> KERNEL_REGISTER_MAP_STALLED_OFFSET   );
-    printf("\t.unstall = %lx\n", (status_val & KERNEL_REGISTER_MAP_UNSTALL_MASK ) >> KERNEL_REGISTER_MAP_UNSTALL_OFFSET   );
-    printf("\t.valid   = %lx\n", (status_val & KERNEL_REGISTER_MAP_VALID_IN_MASK) >> KERNEL_REGISTER_MAP_VALID_IN_OFFSET  );
-    printf("\t.started = %lx\n", (status_val & KERNEL_REGISTER_MAP_STARTED_MASK ) >> KERNEL_REGISTER_MAP_STARTED_OFFSET   );
-}
 
 int main(int argc, char *argv[]) {
     static const uint32_t max_handles = 32;
@@ -243,8 +69,8 @@ int main(int argc, char *argv[]) {
 
         // Check addresses are 41 bits
         #define BIT_MASK_41 ((uint64_t)0x01fffffffffful)
-        assert ( (CL_ALIGN(buf_pa_in ) & (~BIT_MASK_41)) == (uint64_t)0 );
-        assert ( (CL_ALIGN(buf_pa_out) & (~BIT_MASK_41)) == (uint64_t)0 );
+        assert ( (buf_pa_in  & (~BIT_MASK_41)) == (uint64_t)0 );
+        assert ( (buf_pa_out & (~BIT_MASK_41)) == (uint64_t)0 );
 
         assert(NULL != device_read);
         assert(NULL != device_write);
@@ -254,7 +80,7 @@ int main(int argc, char *argv[]) {
             // "SYCL" = 0x4c435953
             ((uint32_t*)device_read)[j] = (uint32_t)0x4c435953u;
         }   
-        device_read[SIZE_BUFFERS(length_lines)-1] = "\0";
+        device_read[SIZE_BUFFERS(length_lines)-1] = '\0';
 
         // Init output buffer
         for ( unsigned int j = 0; j < SIZE_BUFFERS(length_lines)/sizeof(uint32_t); j++ ) {
@@ -301,7 +127,7 @@ int main(int argc, char *argv[]) {
             usleep( SLEEP_TIME_US );
             res = fpgaReadMMIO64(accel_handles[i], 0, KERNEL_STATUS, &status_val);
             assert(FPGA_OK == res);
-            print_kernel_status(status_val, __FILE__, __LINE__);
+            print_kernel_status(status_val);
         } while ( status_val & KERNEL_REGISTER_MAP_BUSY_MASK );
 
         // Start kernel
@@ -317,7 +143,7 @@ int main(int argc, char *argv[]) {
             // Compiler fence
             res = fpgaReadMMIO64(accel_handles[i], 0, KERNEL_STATUS, &status_val);
             assert(FPGA_OK == res);
-            print_kernel_status(status_val, __FILE__, __LINE__);
+            print_kernel_status(status_val);
         } while ( !(status_val & KERNEL_REGISTER_MAP_DONE_MASK) );
 
 

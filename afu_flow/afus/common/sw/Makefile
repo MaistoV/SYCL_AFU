@@ -4,6 +4,9 @@
 # 	ASE_LIBS = -lopae-c-ase
 include ${EXAMPLES_AFU}/tutorial/afu_types/01_pim_ifc/common/sw/common_include.mk
 
+# Utility software
+SYCL_AFU_COMMON_SW := ../../sycl_afu_common/sw
+
 # Primary test name
 TEST = $(AFU_NAME)
 
@@ -13,8 +16,8 @@ TEST = $(AFU_NAME)
 # Build directory
 OBJDIR = obj
 BINDIR = bin
-CFLAGS += -I./$(OBJDIR)
-CPPFLAGS += -I./$(OBJDIR)
+CFLAGS += -I./$(OBJDIR) -I$(SYCL_AFU_COMMON_SW)
+CPPFLAGS += -I./$(OBJDIR) -I$(SYCL_AFU_COMMON_SW)
 
 # Files and folders
 SRCS = $(TEST).c
@@ -28,7 +31,13 @@ $(AFU_JSON_INFO): ../hw/rtl/${TEST}.json | objdir
 	afu_json_mgr json-info --afu-json=$^ --c-hdr=$@
 $(OBJS): $(AFU_JSON_INFO)
 
-$(BINDIR)/$(TEST): $(OBJS) | bindir
+# Build utility functions
+# NOTE: the current software build is going to overshoot by building and linking sycl_afu_utils.o also for non-SYCL AFUs, this could be addressed easily
+sycl_afu_utils.o: $(SYCL_AFU_COMMON_SW)/sycl_afu_utils.o
+$(SYCL_AFU_COMMON_SW)/sycl_afu_utils.o: $(SYCL_AFU_COMMON_SW)/sycl_afu_utils.c
+	$(CC) $(CFLAGS) -c $< -o $@
+
+$(BINDIR)/$(TEST): $(OBJS) $(SYCL_AFU_COMMON_SW)/sycl_afu_utils.o | bindir
 	$(CC) -o $@ $^ $(LDFLAGS) $(FPGA_LIBS) -lrt
 
 $(OBJDIR)/%.o: %.c | objdir

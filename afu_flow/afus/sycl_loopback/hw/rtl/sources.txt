@@ -1,8 +1,8 @@
 sycl_loopback.json
-../../../sycl_afu_common/avalon_interrupt_proxy.sv 
-../../../sycl_afu_common/dfl_csr_avalon_proxy.sv 
-../../../sycl_afu_common/kernel_dfl_wrapper.sv
-../../../sycl_afu_common/ofs_plat_afu.sv
+../../../sycl_afu_common/hw/rtl/avalon_interrupt_proxy.sv 
+../../../sycl_afu_common/hw/rtl/dfl_csr_avalon_proxy.sv 
+../../../sycl_afu_common/hw/rtl/kernel_dfl_wrapper.sv
+../../../sycl_afu_common/hw/rtl/ofs_plat_afu.sv
 
 # Include SYCL IP
 # Directories
