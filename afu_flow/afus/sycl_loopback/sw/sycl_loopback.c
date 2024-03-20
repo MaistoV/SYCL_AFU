@@ -26,6 +26,8 @@
 #define CL_ALIGN(phy_addr)      (phy_addr / CACHELINE_BYTES)    // Cache-line aligned physical address
 #define SIZE_BUFFERS(n)         (CACHELINE_BYTES * (n))         // Size of I/O buffers in cache lines
 
+#define INTERRUPT_EVENTS
+
 int main(int argc, char *argv[]) {
     static const uint32_t max_handles = 32;
     fpga_handle accel_handles[max_handles];
@@ -100,26 +102,46 @@ int main(int argc, char *argv[]) {
         printf("\n");
 
         printf("%s:%d Write argument CSRs...\n", __FILE__, __LINE__);
-        #ifdef KERNEL_VIRT_ADDR
-            // Write virtual addresses to AFU CSR
-            res = fpgaWriteMMIO64(accel_handles[i], 0, KERNEL_ARG_DEVICE_READ_REG, (uint64_t)device_write);
-            printf("%s:%d write @%08lx, value = %016lx\n", __FILE__, __LINE__, KERNEL_ARG_DEVICE_READ_REG, (uint64_t)device_write);
-            res = fpgaWriteMMIO64(accel_handles[i], 0, KERNEL_ARG_DEVICE_WRITE_REG, (uint64_t)device_write);
-            printf("%s:%d write @%08lx, value = %016lx\n", __FILE__, __LINE__, KERNEL_ARG_DEVICE_WRITE_REG, (uint64_t)device_write);
-        #else // ! KERNEL_VIRT_ADDR
-            // Write physical addresses to AFU CSR
-            res = fpgaWriteMMIO64(accel_handles[i], 0, KERNEL_ARG_DEVICE_READ_REG, buf_pa_in);
-            printf("%s:%d write @%08x, value = %016lx\n", __FILE__, __LINE__, KERNEL_ARG_DEVICE_READ_REG, buf_pa_in);
-            res = fpgaWriteMMIO64(accel_handles[i], 0, KERNEL_ARG_DEVICE_WRITE_REG, buf_pa_out);
-            printf("%s:%d write @%08x, value = %016lx\n", __FILE__, __LINE__, KERNEL_ARG_DEVICE_WRITE_REG, buf_pa_out);
-        #endif // KERNEL_VIRT_ADDR
+        // Write physical addresses to AFU CSR
+        res = fpgaWriteMMIO64(accel_handles[i], 0, KERNEL_ARG_DEVICE_READ_REG, buf_pa_in);
         assert(FPGA_OK == res);
+        printf("%s:%d write @%08x, value = %016lx\n", __FILE__, __LINE__, KERNEL_ARG_DEVICE_READ_REG, buf_pa_in);
+        res = fpgaWriteMMIO64(accel_handles[i], 0, KERNEL_ARG_DEVICE_WRITE_REG, buf_pa_out);
+        assert(FPGA_OK == res);
+        printf("%s:%d write @%08x, value = %016lx\n", __FILE__, __LINE__, KERNEL_ARG_DEVICE_WRITE_REG, buf_pa_out);
 
         // Write number of lines to loopback
         res = fpgaWriteMMIO64(accel_handles[i], 0, KERNEL_ARG_RS_LENGTH_LINES_REG, length_lines);
         printf("%s:%d write @%08x, value = %016lx\n", __FILE__, __LINE__, KERNEL_ARG_RS_LENGTH_LINES_REG, length_lines);
 
-        // Wait for kernel to be ready
+    #ifdef INTERRUPT_EVENTS
+        ////////////////////////////////
+        // Create event for interrupt //
+        ////////////////////////////////
+
+        res = fpgaCreateEventHandle(&fpgaInterruptEvent);
+        if ( res != FPGA_OK ) {
+            printf("%s:%d res = %s\n", __FILE__, __LINE__, fpgaErrStr(res));
+        }
+        // Register user interrupt with event accel_handle
+        uint32_t flags = 0; // uses IRQ bit 0, see instantiation of acmm_ccip_host_wr in afu.sv
+        res = fpgaRegisterEvent(accel_handles[i], FPGA_EVENT_INTERRUPT, fpgaInterruptEvent, flags);
+        assert(FPGA_OK == res);
+
+        #define POLL_TIMEOUT_MS 1000
+        // Pass the poll file descriptor
+        struct pollfd pfd;
+        pfd.events = POLLIN;
+        res = fpgaGetOSObjectFromEventHandle(fpgaInterruptEvent, &pfd.fd);
+        assert(FPGA_OK == res);
+
+    #endif // INTERRUPT_EVENTS
+
+        //////////////////////////////
+        // Wait for AFU to be ready //
+        //////////////////////////////
+        // Poll on status register
+        // TODO: is there a cleaner way?
         uint64_t status_val;
         #define SLEEP_TIME_US 1000000
         printf("%s:%d Wait for !BUSY...\n", __FILE__, __LINE__);
@@ -130,13 +152,31 @@ int main(int argc, char *argv[]) {
             print_kernel_status(status_val);
         } while ( status_val & KERNEL_REGISTER_MAP_BUSY_MASK );
 
-        // Start kernel
+        ////////////////////////
+        // Start and wait AFU //
+        ////////////////////////
         // Writing a '1' into the start register
         printf("%s:%d Write to START...\n", __FILE__, __LINE__);
         res = fpgaWriteMMIO32(accel_handles[i], 0, KERNEL_START, KERNEL_START_VALUE);
         assert(FPGA_OK == res);
 
-        // Wait for kernel to complete
+    #ifdef INTERRUPT_EVENTS
+        printf("%s:%d Calling poll()...\n", __FILE__, __LINE__);
+        // Wait for interrupt with poll()
+        int poll_res = poll(&pfd, 1, POLL_TIMEOUT_MS);
+        printf("%s:%d poll_res = %d\n", __FILE__, __LINE__, poll_res);
+        // Check poll errors
+        if ( poll_res <= 0 ) {
+            printf("Poll error errno = %s\n", strerror(errno));
+        }
+        else if ( poll_res == 0 ) {
+            printf("Error: Poll timeout \n");
+        }
+        else {
+            printf("Poll success. Return = %d\n", poll_res);
+	    }
+    #else // !INTERRUPT_EVENTS
+        // Active polling on AFU
         printf("%s:%d Wait for DONE...\n", __FILE__, __LINE__);
         do {
             usleep( SLEEP_TIME_US );
@@ -145,7 +185,7 @@ int main(int argc, char *argv[]) {
             assert(FPGA_OK == res);
             print_kernel_status(status_val);
         } while ( !(status_val & KERNEL_REGISTER_MAP_DONE_MASK) );
-
+    #endif // !INTERRUPT_EVENTS
 
         // Print-out buffers content
         printf("%s:%d: device_read:\n", __FILE__, __LINE__);
@@ -161,6 +201,17 @@ int main(int argc, char *argv[]) {
 
         // Print the string written by the FPGA
         printf("%s:%d: FPGA says: %s\n", __FILE__, __LINE__, (uint8_t*)device_write);
+
+        // Clean-up
+    #ifdef INTERRUPT_EVENTS
+        // Cleanup event accel_handle			
+        if ( fpgaInterruptEvent != NULL ) {			
+            res = fpgaUnregisterEvent(accel_handles[i], FPGA_EVENT_INTERRUPT, fpgaInterruptEvent);
+            assert(FPGA_OK == res);
+            res = fpgaDestroyEventHandle(&fpgaInterruptEvent);
+            assert(FPGA_OK == res);
+        }
+    #endif // !INTERRUPT_EVENTS
 
         // Release I/O buffers
         res = fpgaReleaseBuffer(accel_handles[i], wsid_in);

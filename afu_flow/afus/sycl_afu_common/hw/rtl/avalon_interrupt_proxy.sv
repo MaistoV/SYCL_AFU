@@ -13,9 +13,24 @@ module avalon_interrupt_proxy (
     );
     
     // dummy pass-throguh for now
-    ofs_plat_avalon_mem_rdwr_if_connect pass_through_interfaces_inst (
-        .mem_sink   ( host_mem_plat   ),
-        .mem_source ( host_mem_kernel )
+    // ofs_plat_avalon_mem_rdwr_if_connect pass_through_interfaces_inst (
+    //     .mem_sink   ( host_mem_plat   ),
+    //     .mem_source ( host_mem_kernel )
+    // );
+
+    bsp_host_mem_if_mux bsp_host_mem_if_mux_inst (
+        .clk           ( clock_i         ),
+        .reset         ( ~reset_ni       ),
+        .bsp_irq       ( kernel_irq_i    ),
+        .host_mem_if   ( host_mem_plat   ), // to_sink
+        .bsp_mem_if    ( host_mem_kernel ), // to_source
+        .wr_fence_flag ( 1'b0            )  // Tie to zero
     );
 
+    always_comb begin : throw_warning
+        if ( kernel_irq_i ) begin
+            $warning ("Injecting interrupts assuming no wr_fence_flag");
+        end
+    end : throw_warning
+    
 endmodule : avalon_interrupt_proxy

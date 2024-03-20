@@ -1,5 +1,6 @@
 sycl_loopback.json
 ../../../sycl_afu_common/hw/rtl/avalon_interrupt_proxy.sv 
+../../../sycl_afu_common/hw/rtl/bsp_host_mem_if_mux.sv 
 ../../../sycl_afu_common/hw/rtl/dfl_csr_avalon_proxy.sv 
 ../../../sycl_afu_common/hw/rtl/kernel_dfl_wrapper.sv
 ../../../sycl_afu_common/hw/rtl/ofs_plat_afu.sv
