@@ -1,8 +1,8 @@
 sycl_afu.json
-avalon_interrupt_proxy.sv 
-dfl_csr_avalon_proxy.sv 
-kernel_dfl_wrapper.sv
-ofs_plat_afu.sv
+../../../sycl_afu_common/avalon_interrupt_proxy.sv 
+../../../sycl_afu_common/dfl_csr_avalon_proxy.sv 
+../../../sycl_afu_common/kernel_dfl_wrapper.sv
+../../../sycl_afu_common/ofs_plat_afu.sv
 
 # Include SYCL IP
 # Directories
@@ -16,3 +16,6 @@ ${SYCL_IP_NAME}_report.prj/${SYCL_IP_NAME}_report_di.sv
 # TCL scripts
 ${SYCL_IP_NAME}_report.prj/ip_include.tcl
 # ${SYCL_IP_NAME}_report.prj/${SYCL_IP_NAME}_report_di_hw.tcl
+
+# SYCL register map offset
++define+KERNEL_REGISTER_MAP_OFFSET_HEX=\'h${KERNEL_REGISTER_MAP_OFFSET_HEX}

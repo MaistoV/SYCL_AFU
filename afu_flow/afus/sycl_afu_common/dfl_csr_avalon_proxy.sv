@@ -11,7 +11,6 @@ module dfl_csr_avalon_proxy #(
     ) (
     input  logic                     clock_i, 
     input  logic                     reset_ni,
-    // output logic                     kernel_cra_enable_o,   // Enable signal for kernel CSR interface
     ofs_plat_avalon_mem_if.to_source  csr_mmio64_to_afu,     // to ofs_plat_afu      
     ofs_plat_avalon_mem_if.to_sink  csr_mmio64_to_kernel   // to kernel
     );
@@ -37,16 +36,24 @@ module dfl_csr_avalon_proxy #(
     localparam DFL_ADDR_MASK_ONES = ofs_plat_host_chan_pkg::ADDR_WIDTH_LINES - DFL_ADDR_MASK_ZEROS;
     logic [ofs_plat_host_chan_pkg::ADDR_WIDTH_LINES -1 : 0] DFL_ADDR_MASK;
     assign DFL_ADDR_MASK = {{(DFL_ADDR_MASK_ONES){1'b1}}, {(DFL_ADDR_MASK_ZEROS){1'b0}}};
-    // The stack looses 3 bits along the way
-    assign is_dfl_kernel_n = ( (csr_mmio64_to_afu.address << 3) & DFL_ADDR_MASK ) == '0;
+    // The kernel needs to loose 3 bits since words are 8-bytes long
+    assign is_dfl_kernel_n = ( {csr_mmio64_to_afu.address, 3'b000} & DFL_ADDR_MASK ) == '0;
 
-    // Disable kernel's CSR interface if the requests falls in DFL address range
-    // assign kernel_cra_enable_o = ~is_dfl_kernel_n;
-    // assign kernel_cra_enable_o = 1'b1;
-
+    // Pass through and mux the interface, except for the address field
+    // We can't just use ofs_plat_avalon_mem_rdwr_if_connect here    
     always_comb begin : kernel_interface
-        // Pass through the whole interface, except for the address field
-        // We can't use ofs_plat_avalon_mem_rdwr_if_connect here
+
+        // Pass-through clock and reset
+        // csr_mmio64_to_kernel.clk     = clock_i;
+        csr_mmio64_to_kernel.reset_n = reset_ni;
+        csr_mmio64_local.reset_n = reset_ni;
+        
+        // Tie-off unimplemented signals
+        // TODO: should we implement these...?
+        csr_mmio64_to_kernel.readresponseuser   = '0;
+        csr_mmio64_to_kernel.writeresponsevalid = '0;
+        csr_mmio64_to_kernel.writeresponse      = '0;
+        csr_mmio64_to_kernel.writeresponseuser  = '0;
 
         // Input
         // We need to:
@@ -167,18 +174,8 @@ module dfl_csr_avalon_proxy #(
         end
     end : mmio_read
 
-
-    //
-    // CSR write handling. Host software must tell the AFU the memory address
-    // to which it should be writing. The address is set by writing a CSR.
-    //
-
-/*
- * NOTE: This logic used to belong to hello_world
- * TODO: figure out if we need it at all
- *         this address space is read-only or write-ignored?
-*/
     // Write response
+    // This address space is write-ignored
     always_ff @(posedge clock_i) begin : mmio_write_resp
         csr_mmio64_local.writeresponsevalid <= is_csr_write;
         csr_mmio64_local.writeresponse <= '0;
@@ -189,26 +186,4 @@ module dfl_csr_avalon_proxy #(
         end
     end : mmio_write_resp
 
-/**
- * NOTE: This logic sed to belong to hello_world
- * TODO: remove it
-    // We use MMIO address 0 to set the memory address.  The read and
-    // write MMIO spaces are logically separate so we are free to use
-    // whatever we like.  This may not be good practice for cleanly
-    // organizing the MMIO address space, but it is legal.
-    logic is_mem_addr_csr_write;
-    assign is_mem_addr_csr_write = is_csr_write && (csr_mmio64_local.address == '0);
-
-    // DMA address to which this AFU will write.
-    localparam MEM_ADDR_WIDTH = ofs_plat_host_chan_pkg::ADDR_WIDTH_LINES;
-    typedef logic [MEM_ADDR_WIDTH-1 : 0] t_mem_addr;
-    t_mem_addr mem_addr;
-
-    always_ff @(posedge clock_i) begin
-        if (is_mem_addr_csr_write) begin
-            // The host passes in a line address.
-            mem_addr <= t_mem_addr'(csr_mmio64_local.writedata);
-        end
-    end
-*/
 endmodule : dfl_csr_avalon_proxy
