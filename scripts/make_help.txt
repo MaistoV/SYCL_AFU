@@ -34,6 +34,7 @@ Clean targets:
 	clean_oneapi_asp      Clean OneAPI ASP build
 	clean_oneapi_ip       Clean OneAPI IP build
 	clean_oneapi_ip_report Clean only generated and exported OneAPI IP 
+	clean_afu_host        Clean AFU host software
 	clean_gbs             Clean gbs build
 	clean_ase             Clean ASE simulator setup
 	clean_sw              Clean software build

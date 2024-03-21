@@ -156,21 +156,6 @@ export LIBOPAE_C_ROOT=/usr
 # Setup OneAPI Base Toolkit, force re-execution
 source ${ONEAPI_ROOT}/setvars.sh --force
 
-##############
-# OneAPI ASP #
-##############
-export OFS_ASP_ROOT="$HTS_RELEASE/oneapi/oneapi-asp_agf014/nc220"
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$OFS_ASP_ROOT/linux64/lib
-
-# ASP variant, from tree $OFS_ASP_ROOT/hardware/
-# export OFS_ASP_BOARD_VARIANT=ofs_nc220
-# export OFS_ASP_BOARD_VARIANT=ofs_nc220_iopipes
-export OFS_ASP_BOARD_VARIANT=ofs_nc220_usm
-# export OFS_ASP_BOARD_VARIANT=ofs_nc220_usm_iopip
-
-# ASP BSP OneAPI compilation flag
-export OFS_ASP_FPGA_DEVICE=$OFS_ASP_ROOT:$OFS_ASP_BOARD_VARIANT
-
 ############################
 # OneAPI FPGA IP Authoring #  
 ############################
@@ -198,6 +183,22 @@ export SYCL_IP_PRJ_AFU_EXPORT=${AFU_HW_DIR}/${SYCL_IP_NAME}_report.prj
 export AGILEX7_PART_NUMBER=AGFB014R24C2E2V # C220 part number
 # Offset of the SYCL kernel CSR space
 export KERNEL_REGISTER_MAP_OFFSET_HEX=40
+
+##############
+# OneAPI ASP #
+##############
+export SYCL_ASP_BUILD_DIR=${SYCL_IP_DIR}/build_asp
+export OFS_ASP_ROOT="$HTS_RELEASE/oneapi/oneapi-asp_agf014/nc220"
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$OFS_ASP_ROOT/linux64/lib
+
+# ASP variant, from tree $OFS_ASP_ROOT/hardware/
+export OFS_ASP_BOARD_VARIANT=${OFS_ASP_BOARD_VARIANT=ofs_nc220}
+# export OFS_ASP_BOARD_VARIANT=ofs_nc220_iopipes
+# export OFS_ASP_BOARD_VARIANT=ofs_nc220_usm
+# export OFS_ASP_BOARD_VARIANT=ofs_nc220_usm_iopip
+
+# ASP BSP OneAPI compilation flag
+export OFS_ASP_FPGA_DEVICE=$OFS_ASP_ROOT:$OFS_ASP_BOARD_VARIANT
 
 ########################
 # Print out enviroment #  

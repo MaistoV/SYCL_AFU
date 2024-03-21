@@ -77,8 +77,8 @@ aocl_aocx_initalize:
 	${ONEAPI_DEBUG_ENV} aocl initialize ${ACL_DEVICE} ${OFS_ASP_BOARD_VARIANT} 
 
 oneapi_asp_cmake: 
-	mkdir ${SYCL_IP_DIR}/build_asp;	\
-	cd ${SYCL_IP_DIR}/build_asp;		\
+	mkdir ${SYCL_ASP_BUILD_DIR};	\
+	cd ${SYCL_ASP_BUILD_DIR};		\
 	cmake .. -DFPGA_DEVICE=${OFS_ASP_FPGA_DEVICE} 
 
 oneapi_asp_fpga_emu:
@@ -198,6 +198,9 @@ test_ase: afu_host
 ############
 # clean_fim:
 # 	rm -rf ${FIM_BUILD_DIR}/
+
+clean_afu_host:
+	${MAKE} -C ${AFU_SW_DIR} clean
 
 clean_ase:
 	rm -rf ${AFU_ASE_DIR}
