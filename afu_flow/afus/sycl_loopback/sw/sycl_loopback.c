@@ -66,16 +66,16 @@ int main(int argc, char *argv[]) {
         printf("Handle %d\n", i);
 
         // Allocate MMIO buffers
-        device_read  = (volatile uint8_t*)alloc_buffer(accel_handles[i], SIZE_BUFFERS(length_lines), &wsid_in , &buf_pa_in );
+        device_read = (volatile uint8_t*)alloc_buffer(accel_handles[i], SIZE_BUFFERS(length_lines), &wsid_in , &buf_pa_in );
         device_write = (volatile uint8_t*)alloc_buffer(accel_handles[i], SIZE_BUFFERS(length_lines), &wsid_out, &buf_pa_out);
+
+        assert(NULL != device_read);
+        assert(NULL != device_write);
 
         // Check addresses are 41 bits
         #define BIT_MASK_41 ((uint64_t)0x01fffffffffful)
         assert ( (buf_pa_in  & (~BIT_MASK_41)) == (uint64_t)0 );
         assert ( (buf_pa_out & (~BIT_MASK_41)) == (uint64_t)0 );
-
-        assert(NULL != device_read);
-        assert(NULL != device_write);
 
         // Init input buffer
         for ( unsigned int j = 0; j < SIZE_BUFFERS(length_lines)/sizeof(uint32_t); j++ ) {
@@ -101,6 +101,7 @@ int main(int argc, char *argv[]) {
         }   
         printf("\n");
 
+        // Load AFU parameters
         printf("%s:%d Write argument CSRs...\n", __FILE__, __LINE__);
         // Write physical addresses to AFU CSR
         res = fpgaWriteMMIO64(accel_handles[i], 0, KERNEL_ARG_DEVICE_READ_REG, buf_pa_in);

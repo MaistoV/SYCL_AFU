@@ -7,9 +7,9 @@
 // ---> host_mem_plat ------->| avalon_interrupt_proxy |---> host_mem_kernel ------>|    |               |
 //                            |________________________|                             \-->| mem2_w        |
 //                                                                                       |               |
-//                                                                                       |               |
-//                             ______________________                                    |               |
-//                            |                      |                                   |               |
+// ---> reset_n -----------------------------------------------------------------\       |               |
+//                             ______________________                            AND --->| reset_n       |
+//                            |                      |---> reset_n_kernel_csr ---/       |               |
 // ---> csr_mmio64_to_afu --->| dfl_csr_avalon_proxy |---> csr_mmio64_to_kernel -------->| cra           |
 //                            |______________________|                                   |_______________|
 //
@@ -28,7 +28,8 @@ module kernel_dfl_wrapper (
     ///////////////////
 
     // kernel_system_inst <--> dfl_csr_avalon_proxy_inst
-    // logic kernel_cra_enable;
+    logic reset_n_kernel;
+    logic reset_n_kernel_csr;
     // kernel_system_inst <--> avalon_interrupt_proxy_inst
     logic kernel_irq;
 
@@ -56,6 +57,7 @@ module kernel_dfl_wrapper (
     ) dfl_csr_avalon_proxy_inst (
         .clock_i              ( clock_i              ),
         .reset_ni             ( reset_ni             ),
+        .reset_n_kernel_o     ( reset_n_kernel_csr   ),
         .csr_mmio64_to_kernel ( csr_mmio64_to_kernel ), // to_sink
         .csr_mmio64_to_afu    ( csr_mmio64_to_afu    )  // to_source
     );
@@ -118,9 +120,12 @@ module kernel_dfl_wrapper (
     assign host_mem_kernel.rd_user = '0;
     assign host_mem_kernel.wr_user = '0;
 
+    // Kernel reset
+    assign reset_n_kernel = reset_ni & reset_n_kernel_csr;
+
     kernel_system kernel_system_inst (
         .clock_reset_clk           ( clock_i                                  ),  // input logic
-        .clock_reset_reset_reset_n ( reset_ni                                 ),  // input logic
+        .clock_reset_reset_reset_n ( reset_n_kernel                           ),  // input logic
         .cc_snoop_clk_clk          ( /* Unused */                             ),  // input logic
         // AVM mem1_r
         .mem1_r_enable             ( /* TBD: keep open? */                    ),  // output logic 

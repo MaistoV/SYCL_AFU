@@ -67,15 +67,22 @@ fpga_result connect_to_matching_accels(
         uint64_t* ptr;
         // res = fpgaMapMMIO(accel_handles[i], 0, NULL); // Deprecated without a pointer
         if ( ! is_ase_sim ) {
+            printf("%s:%d Mapping MMIO space\n", __FILE__, __LINE__);
             res = fpgaMapMMIO(accel_handles[i], 0, &ptr); // Not supported by ASE
             assert(ptr);
             assert(FPGA_OK == res);
         } 
 
+        // Reset AFU
         // Not supported by vfio plugin
-        // Reset AFC 
         // res = fpgaReset( accel_handles[i] );
         // assert(FPGA_OK == res);
+
+        // AFU reset via CSR
+        printf("%s:%d Reset AFU via CSR write...\n", __FILE__, __LINE__);
+        res = fpgaWriteMMIO64(accel_handles[i], 0, AFU_RESET, AFU_RESET_VALUE);
+        assert(FPGA_OK == res);
+        printf("%s:%d write @%08x, value = %016lx\n", __FILE__, __LINE__, AFU_RESET, AFU_RESET_VALUE);
         
         ////////////////////////////////
         // Debug reads from DFL CSRs
@@ -105,6 +112,9 @@ volatile void* alloc_buffer(fpga_handle accel_handle,
     // Get the physical address of the buffer in the accelerator
     res = fpgaGetIOAddress(accel_handle, *wsid, io_addr);
     assert(FPGA_OK == res);
+    
+    printf("%s:%d io_addr %016p:\n", __FILE__, __LINE__, *io_addr );
+    printf("%s:%d buf %016p:\n", __FILE__, __LINE__, buf );
 
     return buf;
 }

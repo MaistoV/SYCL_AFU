@@ -11,9 +11,23 @@ module dfl_csr_avalon_proxy #(
     ) (
     input  logic                     clock_i, 
     input  logic                     reset_ni,
+    output logic                     reset_n_kernel_o,
     ofs_plat_avalon_mem_if.to_source  csr_mmio64_to_afu,     // to ofs_plat_afu      
     ofs_plat_avalon_mem_if.to_sink  csr_mmio64_to_kernel   // to kernel
     );
+
+    // =========================================================================
+    //
+    //   CSR address space
+    //
+    // =========================================================================
+
+    localparam AFU_DFH      =  0;
+    localparam AFU_ID_L     =  1;
+    localparam AFU_ID_H     =  2;
+    localparam DFH_RSVD0    =  3;
+    localparam DFH_RSVD1    =  4;
+    localparam AFU_RESET    =  5;
 
     // =========================================================================
     //
@@ -142,8 +156,8 @@ module dfl_csr_avalon_proxy #(
         csr_mmio64_local.readresponseuser <= csr_mmio64_local.user;
 
         // Avalon addresses are in the space of the data bus width.
-        case ( csr_mmio64_local.address[2:0] ) // rd_eff_address[2:0] 
-          0: // AFU DFH (device feature header)
+        case ( csr_mmio64_local.address[3:0] ) // csr_mmio64_local.address[3:0]
+          AFU_DFH: // AFU DFH (device feature header)
             begin
                 // Here we define a trivial feature list.  In this
                 // example, our AFU is the only entry in this list.
@@ -155,19 +169,22 @@ module dfl_csr_avalon_proxy #(
             end
 
           // AFU_ID_L
-          1: csr_mmio64_local.readdata <= afu_id[63:0];
+          AFU_ID_L: csr_mmio64_local.readdata <= afu_id[63:0];
 
           // AFU_ID_H
-          2: csr_mmio64_local.readdata <= afu_id[127:64];
+          AFU_ID_H: csr_mmio64_local.readdata <= afu_id[127:64];
 
           // DFH_RSVD0
-          3: csr_mmio64_local.readdata <= '0;
+          DFH_RSVD0: csr_mmio64_local.readdata <= '0;
 
           // DFH_RSVD1
-          4: csr_mmio64_local.readdata <= '0;
+          DFH_RSVD1: csr_mmio64_local.readdata <= '0;
+
+          // AFU_RESET
+          AFU_RESET: csr_mmio64_local.readdata <= '0;
 
           default: csr_mmio64_local.readdata <= '0;
-        endcase // rd_eff_address[2:0] 
+        endcase // csr_mmio64_local.address[3:0]
 
         if (!reset_ni) begin
             csr_mmio64_local.readdatavalid <= 1'b0;
@@ -176,14 +193,33 @@ module dfl_csr_avalon_proxy #(
 
     // Write response
     // This address space is write-ignored
-    always_ff @(posedge clock_i) begin : mmio_write_resp
+    always_ff @(posedge clock_i) begin : mmio_write
         csr_mmio64_local.writeresponsevalid <= is_csr_write;
         csr_mmio64_local.writeresponse <= '0;
         csr_mmio64_local.writeresponseuser <= csr_mmio64_local.user;
 
+        reset_n_kernel_o = 1'b1;
+
+        if ( is_csr_write ) begin : is_csr_write
+            case ( csr_mmio64_local.address[3:0] ) // csr_mmio64_local.address[32:0]
+                // AFU_DFH     : // write-ignore
+                // AFU_ID_L    : // write-ignore
+                // AFU_ID_H    : // write-ignore
+                // DFH_RSVD0   : // write-ignore
+                // DFH_RSVD1   : // write-ignore
+                AFU_RESET   : begin
+                    if ( csr_mmio64_local.writedata[0] == 1'b1 ) begin
+                        reset_n_kernel_o = 1'b0;
+                    end
+                end
+                // default     : // write-ignore
+            endcase // csr_mmio64_local.address[3:0]
+        end : is_csr_write
+
         if (!reset_ni) begin
             csr_mmio64_local.writeresponsevalid <= 1'b0;
+            reset_n_kernel_o = 1'b1;
         end
-    end : mmio_write_resp
+    end : mmio_write
 
 endmodule : dfl_csr_avalon_proxy
