@@ -97,9 +97,7 @@ $ make oneapi_asp_<target>
 $ make oneapi_asp_report_open # Uses firefox, not fpga_report, for convenience
 ``` 
 
-# IP Authoring Flow
-TBD
-
+# IP Authoring Flow, SYCL AFUs
 Following the [install guide](https://www.intel.com/content/www/us/en/docs/programmable/749869/22-4/installing-the-ip-authoring-development.html).
 
 From OneAPI base toolkit, just:
@@ -109,14 +107,20 @@ From OneAPI base toolkit, just:
 * Intel® oneAPI DPC++/C++ Compiler
 * Intel® VTune™ Profiler
 
-Build the SYCL IP and import it in FIM project:
+In [afu_flow/afus](afu_flow/afus), create an AFU tree with the same name as your SYCL IP, in [oneapi](oneapi). Note that the name of the IP must include the string `sycl` for the flow to work properly.
+
+Build the SYCL IP and export it in the AFU project:
 ``` console 
-$ make oneapi_ip # WIP
+$ make oneapi_ip
 ``` 
 
 Utility make targets are provided in the top level Makefile:
 ``` console 
-$ make oneapi_ip_<target>
-$ make oneapi_ip_report_open # Uses firefox, not fpga_report, for convenience
+$ make oneapi_ip_fpga_emu # Builds emulation binary $(AFU_NAME)_fpga_emu
+$ make oneapi_ip_emu      # Runs emualtion bianty
+$ make oneapi_ip_report   # Build IP sources and generate HLD report
+$ make clean_oneapi_ip_report # Clean only report and exported project
+$ make clean_oneapi_ip    # Clean all IP-related artifacts
+$ make oneapi_ip_report_open # View HLD report (uses firefox, not fpga_report, for convenience)
 ``` 
 

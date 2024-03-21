@@ -65,7 +65,7 @@ $ make test_gbs # Configure GBS and software against FPGA hardware
 ```
 
 ## SYCL AFUs
-Using an AFU name including the substring `"sycl"`, an AFU can be defined in [OneAPI flow](../oneapi/) and exported in AFU flow with:
+Using an AFU name including the substring `sycl`, an AFU can be defined in [OneAPI flow](../oneapi/README.md) and exported in AFU flow with:
 ``` console 
 $ make oneapi_ip
 ``` 
