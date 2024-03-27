@@ -17,6 +17,11 @@
     printf("\t.valid   = %lx\n", (status_val & KERNEL_REGISTER_MAP_VALID_IN_MASK) >> KERNEL_REGISTER_MAP_VALID_IN_OFFSET  ); \
     printf("\t.started = %lx\n", (status_val & KERNEL_REGISTER_MAP_STARTED_MASK ) >> KERNEL_REGISTER_MAP_STARTED_OFFSET   );
 
+#define fpga_assert(res) if (FPGA_OK != (res)) { \
+                            printf("%s:%d %s\n", __FILE__, __LINE__, fpgaErrStr((res))); \
+                            exit((res)); \
+                        }
+
 // Utility functions
 
 // Search for all accelerators matching the requested properties and
@@ -27,7 +32,9 @@ fpga_result connect_to_matching_accels(
                            const char *accel_uuid,
                            uint32_t *num_handles,
                            fpga_handle *accel_handles,
-                           bool *is_ase_sim);
+                           bool *is_ase_sim,
+                           uint64_t** ptr_mmio
+                           );
 
 // Allocate a buffer in I/O memory, shared with the FPGA.
 volatile void* alloc_buffer(fpga_handle accel_handle,

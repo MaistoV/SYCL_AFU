@@ -23,7 +23,7 @@ CPPFLAGS += -I./$(OBJDIR) -I$(SYCL_AFU_COMMON_SW)
 SRCS = $(TEST).c
 OBJS = $(addprefix $(OBJDIR)/,$(patsubst %.c,%.o,$(SRCS)))
 
-all: bin/$(TEST)
+all: $(BINDIR)/$(TEST)
 
 # AFU info from JSON file, including AFU UUID
 AFU_JSON_INFO = $(OBJDIR)/afu_json_info.h
@@ -34,7 +34,7 @@ $(OBJS): $(AFU_JSON_INFO)
 # Build utility functions
 # NOTE: the current software build is going to overshoot by building and linking sycl_afu_utils.o also for non-SYCL AFUs, this could be addressed easily
 sycl_afu_utils.o: $(SYCL_AFU_COMMON_SW)/sycl_afu_utils.o
-$(SYCL_AFU_COMMON_SW)/sycl_afu_utils.o: $(SYCL_AFU_COMMON_SW)/sycl_afu_utils.c
+$(SYCL_AFU_COMMON_SW)/sycl_afu_utils.o: $(SYCL_AFU_COMMON_SW)/sycl_afu_utils.c $(SYCL_AFU_COMMON_SW)/sycl_afu_utils.h
 	$(CC) $(CFLAGS) -c $< -o $@
 
 $(BINDIR)/$(TEST): $(OBJS) $(SYCL_AFU_COMMON_SW)/sycl_afu_utils.o | bindir
@@ -44,7 +44,7 @@ $(OBJDIR)/%.o: %.c | objdir
 	$(CC) $(CFLAGS) -c $< -o $@
 
 clean:
-	rm -rf $(TEST) $(OBJDIR) $(BINDIR)
+	rm -rf $(TEST) $(OBJDIR) $(BINDIR) $(SYCL_AFU_COMMON_SW)/sycl_afu_utils.o
 
 objdir:
 	@mkdir -p $(OBJDIR)

@@ -11,9 +11,10 @@ module dfl_csr_avalon_proxy #(
     ) (
     input  logic                     clock_i, 
     input  logic                     reset_ni,
-    output logic                     reset_n_kernel_o,
-    ofs_plat_avalon_mem_if.to_source  csr_mmio64_to_afu,     // to ofs_plat_afu      
-    ofs_plat_avalon_mem_if.to_sink  csr_mmio64_to_kernel   // to kernel
+    output logic                     reset_n_kernel_o, 
+    output logic                     enable_kernel_irq_o, 
+    ofs_plat_avalon_mem_if.to_source csr_mmio64_to_afu,     // to ofs_plat_afu      
+    ofs_plat_avalon_mem_if.to_sink   csr_mmio64_to_kernel   // to kernel
     );
 
     // =========================================================================
@@ -22,12 +23,23 @@ module dfl_csr_avalon_proxy #(
     //
     // =========================================================================
 
+    //
+    // A valid AFU must implement a device feature list, starting at MMIO
+    // address 0.  Every entry in the feature list begins with 5 64-bit
+    // words: a device feature header, two AFU UUID words and two reserved
+    // words.
+    //
+
+    // Device feature list
     localparam AFU_DFH      =  0;
     localparam AFU_ID_L     =  1;
     localparam AFU_ID_H     =  2;
     localparam DFH_RSVD0    =  3;
     localparam DFH_RSVD1    =  4;
-    localparam AFU_RESET    =  5;
+
+    // Non-DFL entries for kernel control
+    localparam AFU_RESET    =  5;   // Reset kernel AFU
+    localparam AFU_IRQ_EN   =  6;   // Enable interrupt injectionin AVMM write interface
 
     // =========================================================================
     //
@@ -46,8 +58,8 @@ module dfl_csr_avalon_proxy #(
     logic is_dfl_kernel_n;
 
     // Compose address mask    
-    localparam DFL_ADDR_MASK_ZEROS = $clog2(REGISTER_MAP_OFFSET);
-    localparam DFL_ADDR_MASK_ONES = ofs_plat_host_chan_pkg::ADDR_WIDTH_LINES - DFL_ADDR_MASK_ZEROS;
+    localparam unsigned DFL_ADDR_MASK_ZEROS = $clog2(REGISTER_MAP_OFFSET);
+    localparam unsigned DFL_ADDR_MASK_ONES = ofs_plat_host_chan_pkg::ADDR_WIDTH_LINES - DFL_ADDR_MASK_ZEROS;
     logic [ofs_plat_host_chan_pkg::ADDR_WIDTH_LINES -1 : 0] DFL_ADDR_MASK;
     assign DFL_ADDR_MASK = {{(DFL_ADDR_MASK_ONES){1'b1}}, {(DFL_ADDR_MASK_ZEROS){1'b0}}};
     // The kernel needs to loose 3 bits since words are 8-bytes long
@@ -56,18 +68,17 @@ module dfl_csr_avalon_proxy #(
     // Pass through and mux the interface, except for the address field
     // We can't just use ofs_plat_avalon_mem_rdwr_if_connect here    
     always_comb begin : kernel_interface
-
-        // Pass-through clock and reset
-        // csr_mmio64_to_kernel.clk     = clock_i;
+        // Pass-through reset
         csr_mmio64_to_kernel.reset_n = reset_ni;
         csr_mmio64_local.reset_n = reset_ni;
         
-        // Tie-off unimplemented signals
+        // Tie-off unimplemented output signals
         // TODO: should we implement these...?
         csr_mmio64_to_kernel.readresponseuser   = '0;
         csr_mmio64_to_kernel.writeresponsevalid = '0;
         csr_mmio64_to_kernel.writeresponse      = '0;
         csr_mmio64_to_kernel.writeresponseuser  = '0;
+        csr_mmio64_to_kernel.user               = '0;
 
         // Input
         // We need to:
@@ -103,7 +114,6 @@ module dfl_csr_avalon_proxy #(
         csr_mmio64_to_afu.writeresponsevalid = ( is_dfl_kernel_n ) ? csr_mmio64_local.writeresponsevalid : csr_mmio64_to_kernel.writeresponsevalid;
         csr_mmio64_to_afu.writeresponse      = ( is_dfl_kernel_n ) ? csr_mmio64_local.writeresponse      : csr_mmio64_to_kernel.writeresponse;
         csr_mmio64_to_afu.writeresponseuser  = ( is_dfl_kernel_n ) ? csr_mmio64_local.writeresponseuser  : csr_mmio64_to_kernel.writeresponseuser;
-
     end : kernel_interface
     
     // =========================================================================
@@ -112,23 +122,15 @@ module dfl_csr_avalon_proxy #(
     //
     // =========================================================================
 
-    //
-    // The Avalon interface is defined in
-    // $OPAE_PLATFORM_ROOT/hw/lib/build/platform/ofs_plat_if/rtl/base_ifcs/avalon/ofs_plat_avalon_mem_if.sv.
-    //
+    // Registers
+    logic enable_kernel_irq_d, enable_kernel_irq_q;
+    logic reset_n_kernel_d   , reset_n_kernel_q;
 
     // The AFU ID is a unique ID for a given program.  Here we generated
     // one with the "uuidgen" program and stored it in the AFU's JSON file.
     // ASE and synthesis setup scripts automatically invoke afu_json_mgr
     // to extract the UUID into afu_json_info.vh.
     logic [127:0] afu_id = `AFU_ACCEL_UUID;
-
-    //
-    // A valid AFU must implement a device feature list, starting at MMIO
-    // address 0.  Every entry in the feature list begins with 5 64-bit
-    // words: a device feature header, two AFU UUID words and two reserved
-    // words.
-    //
 
     // Is a CSR read request active this cycle?
     logic is_csr_read;
@@ -156,9 +158,8 @@ module dfl_csr_avalon_proxy #(
         csr_mmio64_local.readresponseuser <= csr_mmio64_local.user;
 
         // Avalon addresses are in the space of the data bus width.
-        case ( csr_mmio64_local.address[3:0] ) // csr_mmio64_local.address[3:0]
-          AFU_DFH: // AFU DFH (device feature header)
-            begin
+        case ( csr_mmio64_local.address ) // csr_mmio64_local.address
+          AFU_DFH: begin
                 // Here we define a trivial feature list.  In this
                 // example, our AFU is the only entry in this list.
                 csr_mmio64_local.readdata <= '0;
@@ -167,24 +168,14 @@ module dfl_csr_avalon_proxy #(
                 // End of list (last entry in list)
                 csr_mmio64_local.readdata[40] <= 1'b1;
             end
-
-          // AFU_ID_L
           AFU_ID_L: csr_mmio64_local.readdata <= afu_id[63:0];
-
-          // AFU_ID_H
           AFU_ID_H: csr_mmio64_local.readdata <= afu_id[127:64];
-
-          // DFH_RSVD0
           DFH_RSVD0: csr_mmio64_local.readdata <= '0;
-
-          // DFH_RSVD1
           DFH_RSVD1: csr_mmio64_local.readdata <= '0;
-
-          // AFU_RESET
           AFU_RESET: csr_mmio64_local.readdata <= '0;
-
+          AFU_IRQ_EN: csr_mmio64_local.readdata <= '0;
           default: csr_mmio64_local.readdata <= '0;
-        endcase // csr_mmio64_local.address[3:0]
+        endcase // csr_mmio64_local.address
 
         if (!reset_ni) begin
             csr_mmio64_local.readdatavalid <= 1'b0;
@@ -192,34 +183,46 @@ module dfl_csr_avalon_proxy #(
     end : mmio_read
 
     // Write response
-    // This address space is write-ignored
-    always_ff @(posedge clock_i) begin : mmio_write
-        csr_mmio64_local.writeresponsevalid <= is_csr_write;
-        csr_mmio64_local.writeresponse <= '0;
-        csr_mmio64_local.writeresponseuser <= csr_mmio64_local.user;
+    logic [$bits(csr_mmio64_local.writeresponse     ) -1 : 0 ] writeresponse_q;
+    logic [$bits(csr_mmio64_local.writeresponseuser ) -1 : 0 ] user_q;
+    logic [$bits(csr_mmio64_local.writeresponsevalid) -1 : 0 ] writeresponsevalid_q;
 
-        reset_n_kernel_o = 1'b1;
+    // Output assignments
+    assign enable_kernel_irq_o = enable_kernel_irq_q;
+    assign reset_n_kernel_o    = reset_n_kernel_q;
+    assign csr_mmio64_local.writeresponse      = writeresponse_q;
+    assign csr_mmio64_local.writeresponseuser  = user_q;
+    assign csr_mmio64_local.writeresponsevalid = writeresponsevalid_q;
 
-        if ( is_csr_write ) begin : is_csr_write
-            case ( csr_mmio64_local.address[3:0] ) // csr_mmio64_local.address[32:0]
-                // AFU_DFH     : // write-ignore
-                // AFU_ID_L    : // write-ignore
-                // AFU_ID_H    : // write-ignore
-                // DFH_RSVD0   : // write-ignore
-                // DFH_RSVD1   : // write-ignore
-                AFU_RESET   : begin
-                    if ( csr_mmio64_local.writedata[0] == 1'b1 ) begin
-                        reset_n_kernel_o = 1'b0;
-                    end
-                end
-                // default     : // write-ignore
-            endcase // csr_mmio64_local.address[3:0]
-        end : is_csr_write
+    always_comb begin : mmio_write
+        // Default values
+        reset_n_kernel_d    = 1'b1; // Don't keep state, just one cycle reset
+        enable_kernel_irq_d = enable_kernel_irq_q;
+
+        if ( is_csr_write ) begin : case_is_csr_write
+            case ( csr_mmio64_local.address ) // csr_mmio64_local.address
+                AFU_RESET   : reset_n_kernel_d    = csr_mmio64_local.writedata[0];
+                AFU_IRQ_EN  : enable_kernel_irq_d = ~csr_mmio64_local.writedata[0];
+                // write-ignore
+                default     : $warning("This CSR address %d is write-ignored", csr_mmio64_local.address);
+            endcase // csr_mmio64_local.address
+        end : case_is_csr_write
+    end : mmio_write
+
+    always_ff @(posedge clock_i) begin : regs
+        writeresponse_q <= '0;
+        user_q          <= csr_mmio64_local.user;
 
         if (!reset_ni) begin
-            csr_mmio64_local.writeresponsevalid <= 1'b0;
-            reset_n_kernel_o = 1'b1;
+            reset_n_kernel_q     <= 1'b1;
+            writeresponsevalid_q <= 1'b0;
+            enable_kernel_irq_q  <= 1'b0;
         end
-    end : mmio_write
+        else begin
+            reset_n_kernel_q     <= reset_n_kernel_d;
+            writeresponsevalid_q <= is_csr_write;
+            enable_kernel_irq_q  <= enable_kernel_irq_d;
+        end
+    end : regs
 
 endmodule : dfl_csr_avalon_proxy

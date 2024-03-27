@@ -32,8 +32,17 @@ if [[ ${AFU_NAME} == *sycl* ]]; then
         # Append new list, inject compile order
         SIM_FILES_DIR=${SYCL_IP_NAME}_report.prj/sim_files
 
+        # Add simlation-only defines
+        echo "# Simlation-only defines"
+        echo "+define+DISABLE_AVMM_INTERRUPT=1" >> ${SIM_AFU_SOURCE_LIST}
+
         # NOTE: Injecting the compile order is a dirty workaround, but this is just a PoC
         # TODO: there is some redundancy here, remove replicates
+
+        # acl_avalon_mm_bridge_s10
+        echo "# acl_avalon_mm_bridge_s10 verilog source" >> ${SIM_AFU_SOURCE_LIST}
+        echo  ${INTELFPGAOCLSDKROOT}/ip/board/acl_avalon_mm_bridge_s10/acl_avalon_mm_bridge_s10.v >> ${SIM_AFU_SOURCE_LIST}
+
         echo "# Fist acl_* primitives" >> ${SIM_AFU_SOURCE_LIST}
         find ${SIM_FILES_DIR} -type f -name "acl_ecc_pkg.sv" | sort >> ${SIM_AFU_SOURCE_LIST}
         find ${SIM_FILES_DIR} -type f -name "acl_*" | grep -v acl_ecc_pkg | sort >> ${SIM_AFU_SOURCE_LIST}

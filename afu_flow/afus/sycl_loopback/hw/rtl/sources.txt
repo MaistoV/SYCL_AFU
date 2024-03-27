@@ -3,12 +3,19 @@ sycl_loopback.json
 ../../../sycl_afu_common/hw/rtl/bsp_host_mem_if_mux.sv 
 ../../../sycl_afu_common/hw/rtl/dfl_csr_avalon_proxy.sv 
 ../../../sycl_afu_common/hw/rtl/kernel_dfl_wrapper.sv
+# ../../../sycl_afu_common/hw/rtl/kernel_dfl_wrapper.sdc
 ../../../sycl_afu_common/hw/rtl/ofs_plat_afu.sv
+
+# In QIP for acl_avalon_mm_bridge_s10_0
+# NOTE: this is a dirty workaround, since this file should be built and exported autonomously,
+#       instead it is taken from a previous ASP build
+../../../../../hitek_release/AG_C220_NC220_OFS_Release_v1_0_2024-01-22/htk_ofs_nc220/oneapi/oneapi-asp_agf014/nc220/build/bringup/ofs_nc220/fim_platform/build/syn/board/htk-nc220-agf014/syn_top/ip/ddr_board/acl_avalon_mm_bridge_s10_0/acl_avalon_mm_bridge_s10_0.qip
 
 # Include SYCL IP
 # Directories
 +incdir+${SYCL_IP_NAME}_report.prj/
 +incdir+${SYCL_IP_NAME}_report.prj/ip
++incdir+${SYCL_IP_NAME}_report.prj/kernel_hdl
 # Source files
 ${SYCL_IP_NAME}_report.prj/opencl.ipx
 # Quartus only, Questa is not going to source this
@@ -16,8 +23,10 @@ ${SYCL_IP_NAME}_report.prj/kernel_system.qip
 ${SYCL_IP_NAME}_report.prj/${SYCL_IP_NAME}_report_di.sv
 # TCL scripts
 ${SYCL_IP_NAME}_report.prj/ip_include.tcl
-# ${SYCL_IP_NAME}_report.prj/${SYCL_IP_NAME}_report_di_hw.tcl
+${SYCL_IP_NAME}_report.prj/${SYCL_IP_NAME}_report_di_hw.tcl
+${SYCL_IP_NAME}_report.prj/kernel_report.tcl
 
-# SYCL register map offset
+
+# Defines for SYCL register map offset
 +define+KERNEL_REGISTER_MAP_OFFSET_HEX=\'h${KERNEL_REGISTER_MAP_OFFSET_HEX}
-
++define+DISABLE_AVMM_INTERRUPT=${DISABLE_AVMM_INTERRUPT}

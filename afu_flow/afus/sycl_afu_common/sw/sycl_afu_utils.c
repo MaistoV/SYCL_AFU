@@ -4,7 +4,9 @@ fpga_result connect_to_matching_accels(
                            const char *accel_uuid,
                            uint32_t *num_handles,
                            fpga_handle *accel_handles,
-                           bool *is_ase_sim) {
+                           bool *is_ase_sim,
+                           uint64_t** ptr_mmio
+                           ) {
     fpga_properties filter = NULL;
     fpga_guid guid;
     const uint32_t max_tokens = 32;
@@ -25,15 +27,19 @@ fpga_result connect_to_matching_accels(
     *is_ase_sim = false;
 
     // Set up a filter that will search for an accelerator
-    fpgaGetProperties(NULL, &filter);
-    fpgaPropertiesSetObjectType(filter, FPGA_ACCELERATOR);
+    res = fpgaGetProperties(NULL, &filter);
+    fpga_assert(res);
+    res = fpgaPropertiesSetObjectType(filter, FPGA_ACCELERATOR);
+    fpga_assert(res);
 
     // Add the desired UUID to the filter
     uuid_parse(accel_uuid, guid);
-    fpgaPropertiesSetGUID(filter, guid);
+    res = fpgaPropertiesSetGUID(filter, guid);
+    fpga_assert(res);
 
     // Do the search across the available FPGA contexts
     res = fpgaEnumerate(&filter, 1, accel_tokens, *num_handles, &num_matches);
+    fpga_assert(res);
     if (*num_handles > num_matches)
         *num_handles = num_matches;
 
@@ -55,34 +61,45 @@ fpga_result connect_to_matching_accels(
             // doesn't have to run through the device list again.
             fpga_properties accel_props;
             uint16_t vendor_id, dev_id;
-            fpgaGetProperties(accel_tokens[i], &accel_props);
-            fpgaPropertiesGetVendorID(accel_props, &vendor_id);
-            fpgaPropertiesGetDeviceID(accel_props, &dev_id);
+            res = fpgaGetProperties(accel_tokens[i], &accel_props);
+            fpga_assert(res);
+            res = fpgaPropertiesGetVendorID(accel_props, &vendor_id);
+            fpga_assert(res);
+            res = fpgaPropertiesGetDeviceID(accel_props, &dev_id);
+            fpga_assert(res);
             *is_ase_sim = (vendor_id == 0x8086) && (dev_id == 0xa5e);
         }
 
-        fpgaDestroyToken(&accel_tokens[i]);
+        res = fpgaDestroyToken(&accel_tokens[i]);
+        fpga_assert(res);
 
         // Map MMIO address space
-        uint64_t* ptr;
         // res = fpgaMapMMIO(accel_handles[i], 0, NULL); // Deprecated without a pointer
-        if ( ! is_ase_sim ) {
-            printf("%s:%d Mapping MMIO space\n", __FILE__, __LINE__);
-            res = fpgaMapMMIO(accel_handles[i], 0, &ptr); // Not supported by ASE
-            assert(ptr);
-            assert(FPGA_OK == res);
+        if ( !( *is_ase_sim ) ) {
+            // printf("%s:%d Mapping MMIO space\n", __FILE__, __LINE__);
+            // uint64_t *tmp_ptr;
+            // res = fpgaMapMMIO(accel_handles[i], 0, &tmp_ptr);
+            // fpga_assert(res);
+            // assert(tmp_ptr != NULL);
+            // *ptr_mmio = tmp_ptr;
         } 
 
         // Reset AFU
         // Not supported by vfio plugin
         // res = fpgaReset( accel_handles[i] );
-        // assert(FPGA_OK == res);
+        // fpga_assert(res);
 
         // AFU reset via CSR
         printf("%s:%d Reset AFU via CSR write...\n", __FILE__, __LINE__);
         res = fpgaWriteMMIO64(accel_handles[i], 0, AFU_RESET, AFU_RESET_VALUE);
-        assert(FPGA_OK == res);
+        fpga_assert(res);
         printf("%s:%d write @%08x, value = %016lx\n", __FILE__, __LINE__, AFU_RESET, AFU_RESET_VALUE);
+        
+        // Enable AFU interrupts via CSR
+        printf("%s:%d Enable AFU interrupts via CSR write...\n", __FILE__, __LINE__);
+        res = fpgaWriteMMIO64(accel_handles[i], 0, AFU_IRQ_EN, AFU_IRQ_EN_VALUE);
+        fpga_assert(res);
+        printf("%s:%d write @%08x, value = %016lx\n", __FILE__, __LINE__, AFU_IRQ_EN, AFU_IRQ_EN_VALUE);
         
         ////////////////////////////////
         // Debug reads from DFL CSRs
@@ -93,11 +110,11 @@ fpga_result connect_to_matching_accels(
     if (0 != num_found) res = FPGA_OK;
 
   out_destroy:
-    fpgaDestroyProperties(&filter);
+    res = fpgaDestroyProperties(&filter);
+    fpga_assert(res);
 
     return res;
 }
-
 
 volatile void* alloc_buffer(fpga_handle accel_handle,
                                    ssize_t size,
@@ -106,15 +123,20 @@ volatile void* alloc_buffer(fpga_handle accel_handle,
     fpga_result res;
     volatile void* buf;
 
-    res = fpgaPrepareBuffer(accel_handle, size, (void*)&buf, wsid, 0);
-    assert(FPGA_OK == res);
+    // buf = (void*)malloc( size );
+    // assert ( buf != NULL );
+    // int flags = FPGA_BUF_PREALLOCATED;
 
-    // Get the physical address of the buffer in the accelerator
+    int flags = 0;
+    res = fpgaPrepareBuffer(accel_handle, size, (void*)&buf, wsid, flags);
+    fpga_assert(res);
+
+    // Get the physical address of the buffer for the accelerator
     res = fpgaGetIOAddress(accel_handle, *wsid, io_addr);
-    assert(FPGA_OK == res);
+    fpga_assert(res);
     
-    printf("%s:%d io_addr %016p:\n", __FILE__, __LINE__, *io_addr );
-    printf("%s:%d buf %016p:\n", __FILE__, __LINE__, buf );
+    printf("%s:%d io_addr %016lx:\n", __FILE__, __LINE__, *io_addr );
+    printf("%s:%d buf %p:\n", __FILE__, __LINE__, buf );
 
     return buf;
 }
@@ -124,13 +146,18 @@ void debug_read_dfl( fpga_handle accel_handle ) {
     uint64_t data = 0;
     // DFL
     res = fpgaReadMMIO64(accel_handle, 0, AFU_DFH_REG, &data);
+    fpga_assert(res);
     printf("AFU_DFH_REG = %016lx\n", data);
     res = fpgaReadMMIO64(accel_handle, 0, AFU_ID_LO, &data);
+    fpga_assert(res);
     printf("AFU ID LO = %016lx\n", data);
     res = fpgaReadMMIO64(accel_handle, 0, AFU_ID_HI, &data);
+    fpga_assert(res);
     printf("AFU ID HI = %016lx\n", data);
     res = fpgaReadMMIO64(accel_handle, 0, AFU_NEXT, &data);
+    fpga_assert(res);
     printf("AFU NEXT = %016lx\n", data);
     res = fpgaReadMMIO64(accel_handle, 0, AFU_RESERVED, &data);
+    fpga_assert(res);
     printf("AFU RESERVED = %016lx\n", data);
 }

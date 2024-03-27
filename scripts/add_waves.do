@@ -24,11 +24,22 @@ add wave -group kernel_dfl_wrapper -group kernel_system -group SYCL_IP  vsim:$RO
 add wave -group kernel_dfl_wrapper -group kernel_system -group mem1_r   vsim:$ROOT_KERNEL_DFL_WRAPPER/kernel_system_inst/mem1_r_*
 add wave -group kernel_dfl_wrapper -group kernel_system -group mem2_w   vsim:$ROOT_KERNEL_DFL_WRAPPER/kernel_system_inst/mem2_w_*
 add wave -group kernel_dfl_wrapper -group kernel_system -group cra      vsim:$ROOT_KERNEL_DFL_WRAPPER/kernel_system_inst/kernel_cra_*
+
+# AVMM bridges
+add wave -group kernel_dfl_wrapper -group avmm_bridges  -group csr_mmio64_to_afu_bridge  vsim:$ROOT_KERNEL_DFL_WRAPPER/csr_mmio64_to_afu_bridge/*
+add wave -group kernel_dfl_wrapper -group avmm_bridges  -group host_mem_plat_bridge      vsim:$ROOT_KERNEL_DFL_WRAPPER/host_mem_plat_bridge/*
+add wave -group kernel_dfl_wrapper -group avmm_bridges  -group kernel_rd_bridge_inst     vsim:$ROOT_KERNEL_DFL_WRAPPER/kernel_rd_bridge_inst/*
+add wave -group kernel_dfl_wrapper -group avmm_bridges  -group kernel_wr_bridge_inst     vsim:$ROOT_KERNEL_DFL_WRAPPER/kernel_rd_bridge_inst/*
+add wave -group kernel_dfl_wrapper -group avmm_bridges  -group kernel_cra_bridge_inst    vsim:$ROOT_KERNEL_DFL_WRAPPER/kernel_rd_bridge_inst/*
+
 # AVMM interrupt proxy
 add wave -group kernel_dfl_wrapper -group AVMM_intr                                     vsim:$ROOT_KERNEL_DFL_WRAPPER/avalon_interrupt_proxy_inst/*
-add wave -group kernel_dfl_wrapper -group AVMM_intr     -group bsp_host_mem_if_mux      vsim:$ROOT_KERNEL_DFL_WRAPPER/avalon_interrupt_proxy_inst/bsp_host_mem_if_mux_inst/*
+catch {
+    add wave -group kernel_dfl_wrapper -group AVMM_intr     -group bsp_host_mem_if_mux      vsim:$ROOT_KERNEL_DFL_WRAPPER/avalon_interrupt_proxy_inst/bsp_host_mem_if_mux_inst/*
+}
 add wave -group kernel_dfl_wrapper -group AVMM_intr     -group host_mem_plat            vsim:$ROOT_KERNEL_DFL_WRAPPER/avalon_interrupt_proxy_inst/host_mem_plat/*
 add wave -group kernel_dfl_wrapper -group AVMM_intr     -group host_mem_kernel          vsim:$ROOT_KERNEL_DFL_WRAPPER/avalon_interrupt_proxy_inst/host_mem_kernel/*
+
 # DFL CSR proxy 
 add wave -group kernel_dfl_wrapper -group DFL_CSR                                   vsim:$ROOT_KERNEL_DFL_WRAPPER/dfl_csr_avalon_proxy_inst/*
 add wave -group kernel_dfl_wrapper -group DFL_CSR       -group csr_mmio64_to_afu    vsim:$ROOT_KERNEL_DFL_WRAPPER/dfl_csr_avalon_proxy_inst/csr_mmio64_to_afu/*
