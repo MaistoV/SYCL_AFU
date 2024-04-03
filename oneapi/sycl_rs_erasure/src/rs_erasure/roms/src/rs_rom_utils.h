@@ -7,6 +7,7 @@
 #include <string.h>
 #include <getopt.h>
 #include <isa-l.h>	// linking against installed
+#include <assert.h>
 
 #define NUM_BASE_PATTERNS_10_1 11
 #define NUM_BASE_PATTERNS_6_3 10
@@ -33,13 +34,24 @@ int gf_gen_decode_matrix(
 				int k, int m);
 void print_matrix_1d(FILE* fd, int num_rows, int num_cols, unsigned char *s, const char *msg);
 void print_matrix_2d(FILE* fd, int num_rows, int num_cols, unsigned char *s, const char *msg);
-unsigned long compute_max_erasure_patterns( int k, int p );
+unsigned long compute_max_erasure_patterns( int k, int p , unsigned int num_erasures);
 unsigned long compute_max_survival_vectors( int k, int p );
 unsigned long compute_num_vectors_per_erasure_pattern( int k, int p );
-int gen_p_erasure_patterns ( int k, int p, uint8_t* erasure_patterns );
+unsigned long compute_p_erasure_patterns( int k, int p);
 int gen_1_erasure_patterns ( int k, int p, uint8_t* erasure_patterns );
-int gen_survival_patterns (  const int k, const int p, const uint8_t* erasure_patterns, uint8_t* survival_patterns );
+int gen_erasure_patterns   ( const int k, const int p, uint8_t* erasure_patterns );
+int gen_survival_patterns  ( const int k, const int p, uint8_t* survival_patterns );
 void erasures_to_bitstring ( int k, int p, int num_errors, uint8_t* erasure_pattern, uint8_t* return_buffer );
+void convert_binary_permutations_to_array ( const int rs_k, const int rs_p, 
+											const int survival_vectors_per_erasure, 
+											const uint8_t* permutations, uint8_t* survival_pattern );
+void convert_bitstring_to_array ( 
+									const int len_single_string, 
+									const int num_substrings, 
+									const int high_bits, 
+									const uint8_t* bitstring,
+									uint8_t* int_array 
+									);
 
 #define _1d_print
 #ifdef _1d_print

@@ -1,6 +1,5 @@
 #include "rs_rom_utils.h"
 
-
 void gen_err_list(
 			unsigned char *src_err_list, // index of blocks with erasures
 			unsigned char *src_in_err, 	 // index of data blocks with erasures
@@ -231,9 +230,18 @@ unsigned long binom ( int n, int m ) {
 	return ( factorial( n ) / factorial(m) / factorial(n-m) );
 }
 
-// Compute ( m + k )! / ( p! * k! )
-unsigned long compute_max_erasure_patterns( int k, int p ) {
-	return ( factorial( k + p ) / factorial(k) / factorial(p) );
+// Compute sum(l=1:p,binom(k+p, l)): maximum number of erasure patterns from 1 to P erasures
+unsigned long compute_max_erasure_patterns( int k, int p , unsigned int num_erasures){
+	unsigned long sum = 0;
+	for ( unsigned int l = 1; l <= num_erasures; l++ ) {
+		sum += binom(k+p,l);
+	}
+	return sum;
+}
+
+// Compute binom(k+p, p): number of erasure patterns for P erasures
+unsigned long compute_p_erasure_patterns( int k, int p) {
+	return binom(k+p,p);;
 }
 
 // Compute ( ( k + p ) * binom( k+p-1, k ) * k )
@@ -247,7 +255,7 @@ unsigned long compute_num_vectors_per_erasure_pattern( int k, int p ) {
 }
 
 // NOTE: caller must allocate space for return buffer
-void erasures_to_bitstring ( int k, int p, int num_errors, uint8_t* erasure_pattern, uint8_t* return_buffer ) {
+void erasures_to_bitstring ( int k, int p, int num_errors, uint8_t* pattern, uint8_t* return_buffer ) {
 	// Use chars (bytes) as bits
 	int rs_length = k + p;
 
@@ -260,7 +268,7 @@ void erasures_to_bitstring ( int k, int p, int num_errors, uint8_t* erasure_patt
 	
 	// Set only the bytes corresponding to the target bit
 	for ( unsigned int i = 0; i < num_errors; i++ ){
-		return_buffer[ rs_length -1 - erasure_pattern[i] ] = '1'; 
+		return_buffer[ rs_length -1 - pattern[i] ] = '1'; 
 	}
 
 }
@@ -273,151 +281,6 @@ int comp (const void * a, const void * b) {
 	if (f < s) return -1;
 	return 0;
 }
-
-// NOTE: this does not need to be efficient
-// NOTE: only some codes are implemented for now
-// TODO: implement base HDFS RS schemas: RS-3-2-1024k, RS-6-3-1024k, RS-10-4-1024k.
-int gen_p_erasure_erasure_patterns ( int k, int p, uint8_t* erasure_patterns ) {
-	// Check inputs
-	if ( !(	( k == 6 && p == 3 ) ||
-			( k == 3 && p == 2 ) ||
-			( k == 10 && p == 1 )	
-			)
-		) {
-		printf("%s: k:p = %d:%d, only 10:1, 6:3 and 3:2 are implemented for now, returning...\n", __func__, k, p );
-		return -1;
-	}	
-	if ( NULL == erasure_patterns ){
-		printf("%s: erasure_patterns NULL pointer\n", __func__ );
-		return -1;
-	}
-
-	uint8_t base_patterns_3_2 [NUM_BASE_PATTERNS_3_2][2] = {{1, 0}, {2, 0}};
-	// uint8_t base_patterns_6_1	[6+1] 	= {6, 5, 4, 3, 2, 1, 0};
-	// uint8_t base_patterns_6_2	[4][2] 	= { {1, 0}, {2, 0}, {3,0}, {4,0} };
-	uint8_t base_patterns_6_3 [NUM_BASE_PATTERNS_6_3][3] = {	{2, 1, 0},
-														{3, 2, 0},		
-														{3, 4, 0},       
-														{4, 5, 0},      
-														{5, 6, 0},       
-														{6, 7, 0},       
-														{4, 2, 0},       
-														{5, 3, 0},       
-														{5, 2, 0},       
-														{6, 3, 0}	// This will show periodic redundancy over the shifts				
-													};
-	// uint8_t base_patterns_10_1 [NUM_BASE_PATTERNS_10_4][4]  = { ... }
-	uint8_t base_patterns_10_1 [NUM_BASE_PATTERNS_10_1][1]  = { {0}, {1}, {2}, {3}, {4}, {5}, 
-																{6}, {7}, {8}, {9}, {10} };
-
-	// Mux target 
-	uint8_t* target_base_pattern;
-	int num_base_patterns;
-	#define K_P_CONCAT(k,p)  (unsigned long)k << 32 | (unsigned long)p
-	unsigned long k_p =	K_P_CONCAT(k,p);
-	switch ( k_p ) {
-	case K_P_CONCAT(3, 2):
-		target_base_pattern = (uint8_t*) base_patterns_3_2;
-		num_base_patterns = NUM_BASE_PATTERNS_3_2;
-		break;
-	case K_P_CONCAT(6, 3):
-		target_base_pattern = (uint8_t*) base_patterns_6_3;
-		num_base_patterns = NUM_BASE_PATTERNS_6_3;
-		break;
-	// case K_P_CONCAT(10, 4):
-		// target_base_pattern = (uint8_t*) base_patterns_10_4;
-		// num_base_patterns = NUM_BASE_PATTERNS_10_4;
-		// break;
-	case K_P_CONCAT(10, 1):
-		target_base_pattern = (uint8_t*) base_patterns_10_1;
-		num_base_patterns = NUM_BASE_PATTERNS_10_1;
-		break;
-	default:
-		return -1;
-		break;
-	}
-
-	// For each base pattern
-	for ( unsigned int base_pattern_index = 0; base_pattern_index < num_base_patterns; base_pattern_index++ ) {
-		
-		// Skip shifts in trivial case of p == 1
-		if ( p == 1 ) {
-			// printf("{ ");
-			erasure_patterns[base_pattern_index] = target_base_pattern[base_pattern_index];
-			// printf("%hhu ", erasure_patterns[base_pattern_index]);
-			// printf("} ");
-		}
-		else{
-			// Shift the base pattern k+p times
-			#define NUM_SHIFTS ( k + p )
-			for ( unsigned int shift_amount = 0; shift_amount < NUM_SHIFTS; shift_amount++ ){
-				// Skip redundant shifts for last periodic pattern
-				// NOTE: in case of 6:3 only one pattern is periodic, with larger codes there will be probably more
-				// NOTE: There is no periodic pattern for 3:2
-				if ( k == 6 && p == 3 && 
-						base_pattern_index == ( num_base_patterns -1 ) && 
-						shift_amount > 2 
-					){
-					break;
-				}
-					
-				// Shifting of l positions corresponds to addding l to each element
-				for ( unsigned int j = 0; j < p; j++ ) {
-					erasure_patterns[((base_pattern_index * NUM_SHIFTS + shift_amount) * p) + j] = 
-						( target_base_pattern[(base_pattern_index * p) + j] + shift_amount ) % NUM_SHIFTS;
-				}
-				
-				qsort (&(erasure_patterns[((base_pattern_index * NUM_SHIFTS + shift_amount) * p) ]), 
-						p, sizeof(uint8_t), comp);
-
-				// printf("{ ");
-				// for ( unsigned int j = 0; j < p; j++ ) {
-				// 	printf("%hhu ", erasure_patterns[((base_pattern_index * NUM_SHIFTS + shift_amount) * p) + j]);
-				// }
-				// printf("} ");
-			}
-		}	
-		// printf("\n");
-
-	}
-
-	return 0;
-}
-/*
-int gen_2_erasure_erasure_patterns ( int k, int p, uint8_t erasure_patterns [][2] ) {
-	
-	// unsigned int num_base_patterns;
-	// unsigned long max_erasure_patterns = compute_max_erasure_patterns( k, p );
-	
-	if ( k != 6 || p != 3 ) {
-		printf("%s: only k:p = 6:3 is implemented for now, returning\n", __func__ );
-		return -1;
-	}
-
-	// uint8_t base_patterns_1_erasure  [6+1] 	= {6, 5, 4, 3, 2, 1, 0};
-	uint8_t base_patterns_2_erasures [4][2] 	= { {1, 0}, {2, 0}, {3,0}, {4,0} };
-	#define NUM_BASE_PATTERNS 4 
-	// For each base pattern
-	for ( int base_pattern_index = 0; base_pattern_index < NUM_BASE_PATTERNS; base_pattern_index++ ) {
-		// Shift the base pattern k+p-1 times
-		#define NUM_SHIFTS ( k+p-1 )
-		for ( int shift_amount = 0; shift_amount < NUM_SHIFTS; shift_amount++ ){
-			// Shifting of l positions corresponds to addding l to each element
-			for ( int j = 0; j < 2; j++ ) {
-				erasure_patterns[base_pattern_index * NUM_SHIFTS][j] = 
-					( base_patterns_2_erasures[base_pattern_index][j] + shift_amount ) % (k+p+1);
-			}
-			printf("{%hu, %hu} ",  erasure_patterns[base_pattern_index * NUM_SHIFTS][0],
-										erasure_patterns[base_pattern_index * NUM_SHIFTS][1]
-				);
-		}
-		printf("\n");
-
-	}
-
-	return 0;
-}
-*/
 
 // In case of a single erasure, the erasure pattern is very simple
 int gen_1_erasure_patterns ( int k, int p, uint8_t* erasure_patterns ) {
@@ -437,8 +300,69 @@ int gen_1_erasure_patterns ( int k, int p, uint8_t* erasure_patterns ) {
 	return 0;
 }
 
+// Generate all the possible erasure patterns
+int gen_erasure_patterns ( int rs_k, int rs_p, uint8_t* erasure_patterns ) {
+	FILE* fd_pattern;
+	int ret_val = 0;
+	int rs_m = rs_k + rs_p;
 
-void convert_binary_permutations_to_array ( const int rs_k, const int rs_p, const int survival_vectors_per_erasure, 
+	// Check inputs
+	if ( NULL == erasure_patterns ){
+		printf("%s: erasure_patterns NULL pointer\n", __func__ );
+		return -1;
+	}
+	if ( !((rs_k == 3) && (rs_p == 2))
+			&& !((rs_k == 6) && (rs_p == 3))
+			&& !((rs_k == 10) && (rs_p == 4))
+			 ){
+		fprintf(stderr, "%s:%d: K=%d and P=%d not supported\n", __FILE__, __LINE__, rs_k, rs_p);
+		return -1;
+	}
+
+	// Open permutation file
+	// NOTE: permutations are generated in a C++ program to avoid the use of C++ here
+	char filename[38] = "erasure_patterns_X_X.txt";
+	sprintf(filename, "erasure_patterns_%d_%d.txt", rs_k, rs_p);
+	fd_pattern = fopen(filename, "r");
+	if ( fd_pattern == NULL ) {
+		fprintf(stderr, "%s:%d: Can't open file %s\n", __FILE__, __LINE__, filename);
+		return -1;
+	}
+
+	// Allocate memory
+	unsigned int tot_lines = compute_max_erasure_patterns( rs_k, rs_p, rs_p );
+	unsigned int size_of_erasure_strings	= sizeof(uint8_t) * tot_lines * rs_m;
+	unsigned int size_of_erasure_patterns	= sizeof(uint8_t) * tot_lines * size_of_erasure_strings;
+
+	uint8_t* erasure_strings			= (uint8_t*)malloc( size_of_erasure_strings );
+	uint8_t* erasure_patterns_local 	= (uint8_t*)malloc( size_of_erasure_patterns );
+	
+	// read lines from file
+	for ( int i = 0; i < tot_lines; i++ ){
+		ret_val = fscanf( fd_pattern, "%s", &(erasure_strings[i*rs_m]) );
+		if ( ret_val == 0 ) {
+			fprintf(stderr, "%s:%d: Error reading from %s\n", __FILE__, __LINE__, filename);
+			return -1;
+		}
+	}
+
+	// convert_binary_permutations_to_array ( rs_k, rs_p, 
+	// 										survival_vectors_per_erasure, 
+	// 										(uint8_t*)erasure_strings, 
+	// 										(uint8_t*)erasure_patterns_local );		
+
+
+	for ( unsigned int i = 0; i < size_of_erasure_patterns; i++ ) {
+		erasure_patterns[i] = erasure_patterns_local[i];
+	}
+
+    fclose(fd_pattern);
+
+	return 0;
+}
+
+void convert_binary_permutations_to_array ( const int rs_k, const int rs_p, 
+											const int survival_vectors_per_erasure, 
 											const uint8_t* permutations, uint8_t* survival_pattern ){
 
 	int survival_pattern_length, rs_m;
@@ -480,8 +404,41 @@ void convert_binary_permutations_to_array ( const int rs_k, const int rs_p, cons
 
 }
 
+// Convent an input bitstring in a array of integers
+void convert_bitstring_to_array ( 
+									const int len_single_string, 
+									const int num_substrings, 
+									const int expected_high_bits, 
+									const uint8_t* bitstring,
+									uint8_t* int_array 
+									) {
+	// Check inputs
+	assert ( int_array );
+	assert ( bitstring );
+	assert ( expected_high_bits < len_single_string);
 
-int gen_survival_patterns (  const int rs_k, const int rs_p, const uint8_t* erasure_patterns, uint8_t* survival_patterns ){
+	// For each substring
+	for ( unsigned int i = 0; i < num_substrings; i++ ) {
+		// For each char in substring
+		unsigned int int_array_index = 0;
+		for ( unsigned int j = 0; j < len_single_string; j++ ) {
+			if ( bitstring[ (i * len_single_string) + j] == '1') {
+				// These indexes are flipped, and must also include the string terminator
+				unsigned int value = (len_single_string-2) -j;
+				// Set this value
+				int_array[ (i * expected_high_bits) + int_array_index ] = value; 
+				printf("-- %u %u %hhu %s\n", j, value, int_array_index, &(bitstring[i * len_single_string]));
+				// Increment index
+				int_array_index++;
+			}
+			// Check we are not setting more bits than expected
+			assert ( int_array_index <= expected_high_bits );
+		} // i < len_single_string
+	} // i < num_substrings
+} // convert_bitstring_to_array
+
+
+int gen_survival_patterns (  const int rs_k, const int rs_p, uint8_t* survival_patterns ){
 	int survival_vectors_per_erasure;
 	FILE* fd_pattern;
 	int rs_m = rs_k+rs_p;
@@ -497,8 +454,8 @@ int gen_survival_patterns (  const int rs_k, const int rs_p, const uint8_t* eras
 
 	// Open permutation file
 	// NOTE: permutations are generated in a C++ program to avoid the use of C++ here
-	char filename[37] = "src/roms/survival_patterns_X_X.txt";
-	sprintf(filename, "src/roms/survival_patterns_%d_%d.txt", rs_k, rs_p);
+	char filename[37] = "survival_patterns_X_X.txt";
+	sprintf(filename, "survival_patterns_%d_%d.txt", rs_k, rs_p);
 	fd_pattern = fopen(filename, "r");
 	if ( fd_pattern == NULL ) {
 		fprintf(stderr, "%s:%d: Can't open file %s\n", __FILE__, __LINE__, filename);
