@@ -9,10 +9,16 @@ class RSErasureID;
 
 // Lambda
 void RunKernelLambda( sycl::queue& q,
+				unsigned int num_erasures,
                 device_read_t device_read,
                 device_write_t device_write,
                 rs_erasure_csr_t rs_erasure_csr
               ){
+
+
+// If building in NO_SYCL mode, this function is a null macro
+#ifndef NO_SYCL
+
     // submit the kernel
     q.submit([&](sycl::handler &h) {
 		// Use kernel_args_restrict to specify that pointers do not alias.
@@ -26,18 +32,9 @@ void RunKernelLambda( sycl::queue& q,
     })
 	.wait();
 
-}
+#endif // ! NO_SYCL
 
-// Functor
-// void RunKernelFunctor( sycl::queue& q,
-//                 line_t* device_read,
-//                 line_t* device_write,
-//                 rs_erasure_csr_t csr
-//               ){
-//     // Submit the kernel
-//     q.single_task( rs_erasure_functor{device_read, device_write, csr} )
-//       .wait();
-// }
+}
 
 // Mux ROM values among RS codes
 #ifdef RS_3_2
@@ -53,26 +50,29 @@ void RunKernelLambda( sycl::queue& q,
 	#define rs_rom_lookup rs_10_4_rom_lookup
 #endif
 
-// Undefine DEBUG macros for latency in reports
-#ifndef FPGA_EMULATOR
-	#undef DEBUG
-	#undef DEBUG0
-#endif
+///////////////////////
+// Utility functions //
+///////////////////////
 
-// Utility function
-// Return 1 if the input pattern is n-hot
-int is_n_hot ( int n, uint16_t pattern ) {
+// Count the number of high bits in pattern
+uint8_t popcount ( uint16_t pattern ) {
 	uint16 pattern_acint = pattern;
 	int count = 0;
+	#pragma unroll
 	for ( int bit_index = 0; bit_index < 16; bit_index++ ) {
 		if ( pattern_acint[bit_index] ) {
 			count++;
 		}
 	}
-#ifdef DEBUG
-	// printf("%s:%d: count=%d\n", __FILE__, __LINE__, count );
-#endif
-	return ( count == n );
+#ifdef NO_SYCL
+	printf("%s:%d: count=%d\n", __FILE__, __LINE__, count );
+#endif // NO_SYCL
+	return count;
+}
+
+// Return 1 if the input pattern is n-hot
+int is_n_hot ( int n, uint16_t pattern ) {
+	return ( popcount( pattern ) == n );
 }
 
 // Function implementing the Reed-Solomon logic
@@ -81,12 +81,11 @@ void rs_erasure (
                 device_write_t device_write,
                 rs_erasure_csr_t rs_erasure_csr
                 ){
-#ifdef DEBUG0
-    // // printf("%s:%d: code_id		: 0x%02x\n"		, __FILE__, __LINE__, rs_erasure_csr.code_id			);
-	// printf("%s:%d: cell_length_byte_width		: 0x%02x\n"	, __FILE__, __LINE__, rs_erasure_csr.cell_length_byte_width		);
-    // printf("%s:%d: erasure_pattern	: 0x%04x\n"	, __FILE__, __LINE__, rs_erasure_csr.erasure_pattern	);
-    // printf("%s:%d: survived_cells	: 0x%04x\n"	, __FILE__, __LINE__, rs_erasure_csr.survived_cells	);
-#endif
+#ifdef NO_SYCL
+	// printf("%s:%d: cell_length_byte_width	: 0x%02x\n"	, __FILE__, __LINE__, rs_erasure_csr.cell_length_byte_width	);
+    printf("%s:%d: erasure_pattern			: 0x%04x\n"	, __FILE__, __LINE__, rs_erasure_csr.erasure_pattern		);
+    printf("%s:%d: survived_cells			: 0x%04x\n"	, __FILE__, __LINE__, rs_erasure_csr.survived_cells			);
+#endif // NO_SYCL
 
 	/////////////////////////////////////////
 	// Input read
@@ -95,135 +94,157 @@ void rs_erasure (
     // uint8_t     code_id			= rs_erasure_csr.code_id		 ;
     uint16_t    erasure_pattern	= rs_erasure_csr.erasure_pattern;
     uint16_t    survived_cells	= rs_erasure_csr.survived_cells ;
-	uint32_t    cell_length		= rs_erasure_csr.cell_length_byte_width << LOG2_CELL_BYTE_WIDTH ;
+	uint32_t    cell_length		= rs_erasure_csr.cell_length_byte_width << LOG2_LINE_BYTE_WIDTH ;
 
-#ifdef DEBUG
-	// printf("%s:%d: device_read:\n", __FILE__, __LINE__);
+	// Number of erasures (<= P)
+	uint8_t		num_erasures	= popcount(erasure_pattern);
+
+#ifdef NO_SYCL
+	printf("%s:%d: device_read:\n", __FILE__, __LINE__);
 	for ( unsigned int i = 0; i < cell_length*RS_K; i++ ) {
-		// printf("%02x ", ((uint8_t*)device_read)[i]);
-		if ( ((i+1) % CELL_BYTE_WIDTH) == 0 ) {
-			// printf("\n");
+		printf("%02x ", ((uint8_t*)device_read)[i]);
+		if ( ((i+1) % LINE_BYTE_WIDTH) == 0 ) {
+			printf("\n");
 		}
 	}
-	// printf("\n");
-#endif
+	printf("\n");
+#endif // NO_SYCL
 
-	// Subset of posisble values for now
+	// Check input values
 #ifdef FPGA_EMULATOR
-	assert( is_n_hot	( 1, erasure_pattern )	);
-	assert( is_n_hot 	( RS_K, survived_cells & PERMUTATION_PATTERN_MASK )	);
-	assert( cell_length >= CELL_LENGTH_MIN 		);
-	assert( (cell_length % CELL_BYTE_WIDTH) == 0 ); // Must be an integer multiple
-#endif
-	// Schratchpad memory buffering ROM data
-	// Force it as register [[intel::fpga_register]]
-	uint8_t scratchpad_register	[SCRATCHPAD_DEPTH];
-
-	// ROM address
-	uint16_t decmat_idx = rs_rom_lookup( erasure_pattern, survived_cells );
-
-LOOP_WRITE_SCHRATCHPAD:
-	// Read decoding matrix from the right ROM address
-	#pragma unroll
-	for ( unsigned int j = 0; j < RS_K; j++ ) {
-		scratchpad_register[j] = decode_matrix_rom[decmat_idx][j];
-	}
-
-#ifdef DEBUG
-	// printf("%s:%d: decmat_idx=%hu\n", __FILE__, __LINE__, decmat_idx);
-	// printf("%s:%d: scratchpad_register: ", __FILE__, __LINE__ );
-	for ( unsigned int j = 0; j < RS_K; j++ ) {
-		// printf("%hhu ", scratchpad_register[j]);
-	}
-	// printf("\n");
+	assert( ( num_erasures <= MAX_ERASURES )	); // Maximum supported erasures
+	assert( is_n_hot ( RS_K, survived_cells & PERMUTATION_PATTERN_MASK ) );
+	assert( cell_length >= CELL_LENGTH_MIN 		 );
+	assert( (cell_length % LINE_BYTE_WIDTH) == 0 ); // Must be an integer multiple
 #endif
 
-	/////////////////////////////////////////
-	// Logic from mat_mult_gf
-	/////////////////////////////////////////
-LOOP_LINES:
-	// Loop over CCI lines in a cell
-	#define NUM_LINES	(cell_length / CELL_BYTE_WIDTH)
-	for ( unsigned int line_index = 0; line_index < NUM_LINES; line_index++ ) {
-		// Array of k survived cell lines
-		line_t survived_cell_lines[RS_K];
-	
-LOOP_CELLS:
-		// Read a single CCI line for each input cell
-		// Strided memory read
-		#pragma unroll
-		for ( unsigned int cell_index = 0; cell_index < RS_K; cell_index++ ){
-			survived_cell_lines[cell_index] = device_read[ (cell_index * NUM_LINES) + line_index ];
-		}
+	uint8_t recontruction_counter = 0;
+LOOP_ERASURES:
+	#pragma unroll 1 // No unroll
+	for ( unsigned int erasure_pattern_bit_index = 0; erasure_pattern_bit_index < RS_M; erasure_pattern_bit_index++ ) {
+		
+		// If we get a high bit
+		uint16 erasure_pattern_uint16 = erasure_pattern;
+		if ( erasure_pattern_uint16[erasure_pattern_bit_index] ) {
 
-	#ifdef DEBUG
-		for ( unsigned int cell_index = 0; cell_index < RS_K; cell_index++ ){
-			// printf("%s:%d: survived_cell_lines[%d] for line_index=%d:\n", __FILE__, __LINE__, cell_index, line_index);
-			for ( int byte_index = 0; byte_index < CELL_BYTE_WIDTH; byte_index++ ) {
-				// printf("%02x ", ((uint8_t (*)[CELL_BYTE_WIDTH])survived_cell_lines)[cell_index][byte_index] );
-			}
-			// printf("\n");
-		}
-		// printf("\n");
-	#endif
+			// Extract the one-hot erasure patterns for the next erasure
+			#define ERASURE_ONEHOT_MASK (erasure_pattern & (0x1u << erasure_pattern_bit_index))
+			// ROM index of reconstruction vector
+			uint16_t vector_index = rs_rom_lookup( ERASURE_ONEHOT_MASK, survived_cells );
 
-		// Reset all the parity bits
-		line_t reconstructed_cell_line;
-		// #pragma unroll
-		reconstructed_cell_line = (line_t)0u;
+			// Schratchpad memory buffering ROM data
+			// If necessary, force it as register [[intel::fpga_register]]
+			uint8_t reconstruction_vector	[SCRATCHPAD_DEPTH];
 
-		// Loop over bytes in a cell
-LOOP_BYTES:
-		#pragma unroll
-		for ( unsigned int cell_byte_index = 0; cell_byte_index < CELL_BYTE_WIDTH; cell_byte_index++ ) {
-LOOP_READ_SCHRATCHPAD:
-			// Loop over bytes in schratchpad
-			// NOTE: This loop is serial but shows some pipelining parallelism
+		LOOP_WRITE_SCHRATCHPAD:
+			// Read decoding matrix from the right ROM address
 			#pragma unroll
-			for ( uint8_t scratchpad_register_byte_idx = 0; scratchpad_register_byte_idx < RS_K; scratchpad_register_byte_idx++ ) {
-				// Read from Scratchpad Memory
-				// NOTE: this is a contiguous access pattern, let the compiler coalesce it
-				uint8 tmp_byte = scratchpad_register[scratchpad_register_byte_idx];
+			for ( unsigned int j = 0; j < RS_K; j++ ) {
+				reconstruction_vector[j] = decode_matrix_rom[vector_index][j];
+			}
 
-				uint8_t reconstructed_byte = (uint8_t)0u;
-LOOP_BITS:
-				// loop for all the bits of the input data
-				#pragma unroll
-				for ( uint8_t bit_idx = 0; bit_idx < GF_ORDER; bit_idx++ ) {
-						// Perform (AND or mux) multiplication and (XOR) accumulation (addition in GF(2^8))
-						uint8 survived_byte = ((uint8 (*)[CELL_BYTE_WIDTH])survived_cell_lines)[scratchpad_register_byte_idx][cell_byte_index];
-						reconstructed_byte ^= ( survived_byte[bit_idx] ) // Multiplication
-																		? tmp_byte 		// +1
-																		: (uint8)0u;	// +0
+		#ifdef NO_SYCL
+			printf("%s:%d: vector_index=%hu\n", __FILE__, __LINE__, vector_index);
+			printf("%s:%d: reconstruction_vector: ", __FILE__, __LINE__ );
+			for ( unsigned int j = 0; j < RS_K; j++ ) {
+				printf("%hhu ", reconstruction_vector[j]);
+			}
+			printf("\n");
+		#endif // NO_SYCL
 
-						// Save MSB before shifting it out
-						uint1 msb_tmp_byte = tmp_byte[7];
-						// Multiply in GF(2^8) (shift and reduce)
-						tmp_byte <<= 1u;
-						if ( msb_tmp_byte ){
-							tmp_byte = tmp_byte ^ GF_POLY;
-						}
+		LOOP_LINES:
+			// Loop over interface lines in a cell
+			#define NUM_LINES (cell_length / LINE_BYTE_WIDTH)
+			#pragma unroll 1 // No unroll
+			for ( unsigned int line_index = 0; line_index < NUM_LINES; line_index++ ) {
+				// Array of k survived cell lines
+				line_t survived_cell_lines[RS_K];
+			
+		LOOP_READ_CELLS:
+				// Read RS_K lines for each input cell
+				// Strided memory read
+				#pragma unroll LOOP_READ_CELLS_UNROLL
+				for ( unsigned int cell_index = 0; cell_index < RS_K; cell_index++ ){
+					survived_cell_lines[cell_index] = device_read[ (cell_index * NUM_LINES) + line_index ];
 				}
 
-				// Accumulate new value
-				((uint8*)&reconstructed_cell_line)[cell_byte_index] ^= reconstructed_byte;
-			}
+			#ifdef NO_SYCL
+				for ( unsigned int cell_index = 0; cell_index < RS_K; cell_index++ ){
+					printf("%s:%d: survived_cell_lines[%d] for line_index=%d:\n", __FILE__, __LINE__, cell_index, line_index);
+					for ( int byte_index = 0; byte_index < LINE_BYTE_WIDTH; byte_index++ ) {
+						printf("%02x ", ((uint8_t (*)[LINE_BYTE_WIDTH])survived_cell_lines)[cell_index][byte_index] );
+					}
+					printf("\n");
+				}
+				printf("\n");
+			#endif // NO_SYCL
 
-		} // cell_byte_index
+				// Reset all the recontructing bits
+				line_t reconstructed_cell_line;
+				reconstructed_cell_line = (line_t)0u;
 
-		/////////////////////////////////////////
-		// Write out to CCI-P master
-		/////////////////////////////////////////
-		device_write[ line_index ] = reconstructed_cell_line;
+				// Loop over bytes in a cell
+		LOOP_BYTES:
+				#pragma unroll // full unroll
+				for ( unsigned int cell_byte_index = 0; cell_byte_index < LINE_BYTE_WIDTH; cell_byte_index++ ) {
+		LOOP_READ_SCHRATCHPAD:
+					// Loop over bytes in scratchpad
+					#pragma unroll // full unroll
+					for ( uint8_t reconstruction_vector_byte_index = 0; reconstruction_vector_byte_index < RS_K; reconstruction_vector_byte_index++ ) {
+						// Read from Scratchpad Memory
+						// NOTE: this is a contiguous access pattern, let the compiler coalesce it
+						uint8 tmp_byte = reconstruction_vector[reconstruction_vector_byte_index];
 
-	#ifdef DEBUG
-		// printf("%s:%d: Output data on line_index %d: \n", __FILE__, __LINE__, line_index );
-		for ( unsigned int byte_index = 0; byte_index < sizeof(reconstructed_cell_line); byte_index++ ) {
-			// printf("%02x ", ((uint8_t*)&reconstructed_cell_line)[byte_index]);
-		}
-		// printf("\n\n");
-	#endif
+						uint8_t reconstructed_byte = (uint8_t)0u;
+		LOOP_BITS:
+						// Loop over bits in each byte
+						#pragma unroll // full unroll
+						for ( uint8_t bit_index = 0; bit_index < GF_ORDER; bit_index++ ) {
+								// Perform (AND or mux) multiplication and (XOR) accumulation (addition in GF(2^8))
+								uint8 survived_byte = ((uint8 (*)[LINE_BYTE_WIDTH])survived_cell_lines)[reconstruction_vector_byte_index][cell_byte_index];
+								reconstructed_byte ^= ( survived_byte[bit_index] ) // Multiplication
+																				? tmp_byte 		// +1
+																				: (uint8)0u;	// +0
 
-	} // line_index
-}	
+								// Save MSB before shifting it out
+								uint1 msb_tmp_byte = tmp_byte[7];
+								// Multiply in GF(2^8) (shift and reduce)
+								tmp_byte <<= 1u;
+								if ( msb_tmp_byte ){
+									tmp_byte = tmp_byte ^ GF_POLY;
+								}
+						}
+
+						// Accumulate new value
+						((uint8*)&reconstructed_cell_line)[cell_byte_index] ^= reconstructed_byte;
+					}
+
+				} // cell_byte_index
+
+				////////////////////////////
+				// Write out to interface //
+				////////////////////////////
+				device_write[ line_index + recontruction_counter ] = reconstructed_cell_line;
+			
+			#ifdef NO_SYCL
+				printf("%s:%d: recontruction_counter %d: \n", __FILE__, __LINE__, recontruction_counter );
+			#endif // NO_SYCL
+				// Increment counter
+				recontruction_counter++;
+
+			#ifdef NO_SYCL
+				printf("%s:%d: Output data on line_index %d: \n", __FILE__, __LINE__, line_index );
+				for ( unsigned int byte_index = 0; byte_index < sizeof(reconstructed_cell_line); byte_index++ ) {
+					printf("%02x ", ((uint8_t*)&reconstructed_cell_line)[byte_index]);
+				}
+				printf("\n\n");
+			#endif // NO_SYCL
+
+			} // line_index
+
+		} // erasure_pattern_uint16[erasure_pattern_bit_index]
+
+	} // erasure_pattern_bit_index
+
+} // rs_erasure
 

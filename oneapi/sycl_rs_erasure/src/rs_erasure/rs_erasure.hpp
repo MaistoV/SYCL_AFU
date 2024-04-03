@@ -13,9 +13,9 @@
 
 // Match Native Avalon MM hostchan parameters
 // see ofs_plat_if_top_config.vh and ofs_plat_avalon_mem_rdwr_if.sv
-#define CELL_BIT_WIDTH 				512U // Width of interface in bits
-#define CELL_BYTE_WIDTH 			(CELL_BIT_WIDTH/8) // Width of interface in bytes
-#define LOG2_CELL_BYTE_WIDTH		6u	// log2(CELL_BYTE_WIDTH)
+#define LINE_BIT_WIDTH 				512U				// Width of interface in bits
+#define LINE_BYTE_WIDTH 			(LINE_BIT_WIDTH/8) 	// Width of interface in bytes
+#define LOG2_LINE_BYTE_WIDTH		6u					// log2(CELL_BYTE_WIDTH) = log2(64)
 
 // Utility macros for cell length
 #define _1B						(1			 	)	// 1 Byte
@@ -23,24 +23,23 @@
 #define _1MB					(1024 * 1024 	)	// 1Megabyte
 #define _2MB					(2 * 1024 * 1024)	// 2Megabytes
 #define CELL_LENGTH_MAX			(_1MB) 				// With huge pages 2MB
-#define CELL_LENGTH_MIN 		(CELL_BYTE_WIDTH)	// MIN (by design)
+#define CELL_LENGTH_MIN 		(LINE_BYTE_WIDTH)	// MIN (by design)
 #ifndef CELL_LENGTH_DEFAULT
 	// #warning CELL_LENGTH_DEFAULT undefined, defaulting to CELL_BYTE_WIDTH*2=128
-	#define CELL_LENGTH_DEFAULT (CELL_BYTE_WIDTH*2)	// Length of RS cell in bytes
+	#define CELL_LENGTH_DEFAULT (CELL_LENGTH_MIN*2)	// Length of RS cell in bytes
 #endif
 
 // Utility macros for input and output buffer size
-#define NUM_ERASURES 		1	// Number of supported paraller erasures/reconstructions
-#define RS_INPUT_SIZE(cell_length)	( cell_length * RS_K 		)	// Size of input buffer
-#define RS_OUTPUT_SIZE(cell_length)	( cell_length * NUM_ERASURES 	)	// Size of output buffer
+#define MAX_ERASURES 								(RS_P)								// Number of supported paraller erasures/reconstructions
+#define RS_INPUT_SIZE(cell_length)					( cell_length * RS_K 			)	// Size of input buffer
+#define RS_OUTPUT_SIZE(cell_length,num_erasures)	( cell_length * num_erasures 	)	// Size of output buffer
 
 // Control and Status Register layout for rs_erasure
+// NOTE: this layout requires K+P <= 16
 typedef struct rs_erasure_csr {
-	//  uint8_t	 code_id;				// RS schema (Constant RS6:3 for now)
-	//  uint8_t	 cell_length_id;	  	// Length of each cell (Constant for now)
-	 uint16_t	erasure_pattern;	 	// Which cells were erased (1-hot for now)
+	 uint16_t	erasure_pattern;	 	// Which cells were erased (1-hot to p-hot)
 	 uint16_t	survived_cells;	  		// Which k cells of the k+p are provided for reconstruction
-	 uint32_t	cell_length_byte_width;			// Cell length in multiples of CELL_BYTE_WIDTH
+	 uint32_t	cell_length_byte_width;	// Cell length in multiples of CELL_BYTE_WIDTH
 } rs_erasure_csr_t;
 
 // Mux ROM values among RS codes

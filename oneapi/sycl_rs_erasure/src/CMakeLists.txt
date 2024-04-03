@@ -5,10 +5,15 @@ set(HOST_SOURCE_FILE host.cpp)
 set(ROM_UTILS_SOURCE_FILE rs_erasure/roms/src/rs_rom_utils.cpp)
 set(ROM_UTILS_HEADER_FILE rs_erasure/roms/src/rs_rom_utils.h)
 set(TARGET_NAME $ENV{SYCL_IP_NAME})
+set(PLAIN_C_TARGET ${TARGET_NAME}.plain_c)
 set(EMULATOR_TARGET ${TARGET_NAME}.fpga_emu)
 set(SIMULATOR_TARGET ${TARGET_NAME}.fpga_sim)
 set(FPGA_TARGET ${TARGET_NAME}.fpga)
 set(ISA_L_LINK_FLAG "-lisal")
+
+if($ENV{SYCL_IP_DEBUG})
+    set(DEBUG_FLAGS "-DDEBUG")
+endif()
 
 # FPGA board selection
 if(NOT DEFINED FPGA_DEVICE)
@@ -23,10 +28,6 @@ endif()
 # This is a Windows-specific flag that enables exception handling in host code
 if(WIN32)
     set(WIN_FLAG "/EHsc")
-endif()
-
-if($ENV{SYCL_IP_DEBUG})
-    set(DEBUG_FLAGS "-DDEBUG")
 endif()
 
 # A SYCL ahead-of-time (AoT) compile processes the device code in two stages.
@@ -46,6 +47,16 @@ set(SIMULATOR_LINK_FLAGS "${COMMON_LINK_FLAGS} -Xssimulation -Xsghdl -Xstarget=$
 set(HARDWARE_COMPILE_FLAGS "${COMMON_COMPILE_FLAGS} -DFPGA_HARDWARE")
 set(HARDWARE_LINK_FLAGS "${COMMON_LINK_FLAGS} -Xshardware -Xstarget=${FPGA_DEVICE} ${USER_HARDWARE_FLAGS}")
 # use cmake -D USER_HARDWARE_FLAGS=<flags> to set extra flags for FPGA backend compilation
+
+###############################################################################
+### Plain C
+###############################################################################
+add_executable(${PLAIN_C_TARGET} ${HOST_SOURCE_FILE} ${ROM_UTILS_SOURCE_FILE} ${DEVICE_SOURCE_FILE})
+target_include_directories(${PLAIN_C_TARGET} PRIVATE $ENV{ONEAPI_SAMPLES_INCLUDE} )
+set_target_properties(${PLAIN_C_TARGET} PROPERTIES COMPILE_FLAGS "${COMMON_COMPILE_FLAGS} -DNO_SYCL")
+set_target_properties(${PLAIN_C_TARGET} PROPERTIES LINK_FLAGS "${COMMON_LINK_FLAGS}")
+add_custom_target(plain_c DEPENDS ${PLAIN_C_TARGET})
+
 
 ###############################################################################
 ### FPGA Emulator

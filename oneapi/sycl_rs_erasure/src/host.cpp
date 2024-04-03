@@ -5,12 +5,13 @@
 // =============================================================
 
 #include <iostream>
-// #include <vector>
 
-#include <sycl/sycl.hpp>
-#include <sycl/ext/intel/fpga_extensions.hpp>
+#ifndef NO_SYCL
+	#include <sycl/sycl.hpp>
+	#include <sycl/ext/intel/fpga_extensions.hpp>
+	#include "exception_handler.hpp"
+#endif // !NO_SYCL
 
-#include "exception_handler.hpp"
 
 // Header for device code.
 #include "rs_erasure/rs_erasure_sycl.hpp"
@@ -28,8 +29,9 @@ using namespace sycl;
 void RunKernel(
 		// sycl::device_selector selector,
 		unsigned int cell_length,
-		line_t* rs_erasure_input,
-		line_t* reconstructed_blocks_out,
+		unsigned int num_erasures,
+		device_read_t rs_erasure_input,
+		device_write_t reconstructed_blocks_out,
 		rs_erasure_csr_t rs_erasure_csr
 	);
 
@@ -40,14 +42,16 @@ int usage( char** argv ) {
 		"  -r <seed>	Seed for PRNG for randomized data\n"
 		"  -e <0|1>		Perform encoding with ISA-L\n"
 		"  -d <0|1>		Perform decoding with ISA-L\n"
-		"  -l <value>	Cell length in bytes (positive multiple of 64B)\n",
+		"  -l <value>	Cell length in bytes (positive multiple of 64B)\n"
+		"  -n <value>	Number of erased cells (<= RS_P)\n",
 		argv[0]
 	);
 	exit(0);
 }
 
 // DEBUG: make selector global for now
-	// Select either the FPGA emulator, FPGA simulator or FPGA device
+// Select either the FPGA emulator, FPGA simulator or FPGA device
+#ifndef NO_SYCL
 #if FPGA_SIMULATOR
 	auto selector = sycl::ext::intel::fpga_simulator_selector_v;
 #elif FPGA_HARDWARE
@@ -55,6 +59,7 @@ int usage( char** argv ) {
 #else	// #if FPGA_EMULATOR
 	auto selector = sycl::ext::intel::fpga_emulator_selector_v;
 #endif
+#endif // ! NO_SYCL
 
 int main(int argc, char *argv[]) {
 	int ret_val = 0;
@@ -63,18 +68,12 @@ int main(int argc, char *argv[]) {
 	int encode_isal = 0;
 	int decode_isal = 0;
 	unsigned int cell_length = CELL_LENGTH_DEFAULT;
-
+	unsigned int num_erasures = 1;
 	unsigned long max_permutations;
-	if ( NUM_ERASURES == RS_P ) {
-		max_permutations = compute_max_erasure_patterns( RS_K, RS_P );
-	}
-	else if ( NUM_ERASURES == 1 ) {
-		max_permutations = RS_K + RS_P;
-	}
 
 	// Permutation buffers
 	int c;
-	while ( ( c = getopt(argc, argv, "r:e:d:l:h") ) != -1 ) {
+	while ( ( c = getopt(argc, argv, "r:e:d:l:n:h") ) != -1 ) {
 		switch (c) {
 		case 'r':
 			prng_seed = atoi(optarg);
@@ -87,7 +86,14 @@ int main(int argc, char *argv[]) {
 			break;
 		case 'l':
 			cell_length = atoi(optarg);
-			if ( (cell_length <= 0) || ((cell_length % CELL_BYTE_WIDTH) != 0) ) {
+			if ( (cell_length <= 0) || ((cell_length % LINE_BYTE_WIDTH) != 0) ) {
+				usage( argv );
+			}
+			break;
+		case 'n':
+			num_erasures = atoi(optarg);
+			if ( num_erasures > RS_P ) {
+				fprintf(stderr, "Unsupported num_erasures value (%d > %d)\n", num_erasures, RS_P);
 				usage( argv );
 			}
 			break;
@@ -97,16 +103,19 @@ int main(int argc, char *argv[]) {
 			break;
 		}
 	}
-	
+
+
+	max_permutations = compute_max_erasure_patterns( RS_K, RS_P, num_erasures );
+
 	// Interface arguments for IP
-	line_t* rs_erasure_input		 = (line_t*)malloc( RS_INPUT_SIZE(cell_length)	);
-	line_t* reconstructed_blocks_out = (line_t*)malloc( RS_OUTPUT_SIZE(cell_length)	);
+	line_t* rs_erasure_input		 = (line_t*)malloc( RS_INPUT_SIZE(cell_length)					);
+	line_t* reconstructed_blocks_out = (line_t*)malloc( RS_OUTPUT_SIZE(cell_length, num_erasures)	);
 
 	// CSR input to IP under test
 	rs_erasure_csr_t rs_erasure_csr;
 	rs_erasure_csr.erasure_pattern	= -1;
 	rs_erasure_csr.survived_cells	= -1;
-	rs_erasure_csr.cell_length_byte_width = cell_length / CELL_BYTE_WIDTH;
+	rs_erasure_csr.cell_length_byte_width = cell_length / LINE_BYTE_WIDTH;
 	
 	// Seed the PRNG
 	srand(prng_seed);
@@ -146,7 +155,7 @@ int main(int argc, char *argv[]) {
 	for ( unsigned int i = 0; i < RS_K; i++ ) {
 		for ( unsigned int l = 0; l < cell_length; l++ ) {
 			printf("%02x ", frag_ptrs[i][l]);
-			if ( ((l+1) % CELL_BYTE_WIDTH) == 0 ) {
+			if ( ((l+1) % LINE_BYTE_WIDTH) == 0 ) {
 				printf("\n");
 			}
 		}
@@ -155,7 +164,7 @@ int main(int argc, char *argv[]) {
 #endif
 
 	printf("%s:%d: Encoding parity cells for RS[%d:%d] cell_length=%d, using %s\n",
-		 __FILE__, __LINE__, RS_K, RS_P, cell_length, (encode_isal) ? "ISA-L" : "HLS core");
+		 __FILE__, __LINE__, RS_K, RS_P, cell_length, (encode_isal) ? "ISA-L" : "SYCL kernel");
 	
 	// Encode with ISA-L
 	if ( encode_isal ) {
@@ -184,7 +193,7 @@ int main(int argc, char *argv[]) {
 		for ( unsigned int i = 0; i < RS_K; i++ ) {
 			for ( unsigned int l = 0; l < cell_length; l++ ) {
 				printf("%02x ", ((uint8_t(*)[cell_length])rs_erasure_input)[i][l]);
-				if ( ((l+1) % CELL_BYTE_WIDTH) == 0 ) {
+				if ( ((l+1) % LINE_BYTE_WIDTH) == 0 ) {
 					printf("\n");
 				}
 			}
@@ -193,36 +202,36 @@ int main(int argc, char *argv[]) {
 	#endif
 
 		// Encode fragments RS_K+1, RS_K+2, ..., RS_K+RS_P
-		for ( unsigned int i = 0; i < RS_P; i++ ){
-			printf("%s:%d: Encoding parity cell %d [%d/%d] with HLS\n", __FILE__, __LINE__, i, i+1, RS_P);
+		// for ( unsigned int i = 0; i < RS_P; i++ ){
+			// printf("%s:%d: Encoding parity cell %d [%d/%d] with HLS\n", __FILE__, __LINE__, i, i+1, RS_P);
 
 			// Write input
-			rs_erasure_csr.erasure_pattern	= permutations_pattern[RS_K + i];
-			rs_erasure_csr.survived_cells	= (~rs_erasure_csr.erasure_pattern) & ((1 << RS_K) -1); // Bitmask for first k blocks
+			rs_erasure_csr.survived_cells	= PERMUTATION_PATTERN_MASK & ((1 << RS_K) -1); // Bitmask for first k blocks
+			rs_erasure_csr.erasure_pattern	= PERMUTATION_PATTERN_MASK & ~((1 << RS_K) -1); // Bitmask for last p blocks
 
 			// Call to kernel
 			RunKernel (
 					// selector,
 					cell_length,
+					num_erasures,
 					rs_erasure_input,
 					reconstructed_blocks_out,
 					rs_erasure_csr
 				);
 
 			// Pack results in fragments buffer
-			for ( unsigned int e = 0; e < NUM_ERASURES; e++ ) {
+			for ( unsigned int e = 0; e < num_erasures; e++ ) {
 				for ( int l = 0; l < cell_length; l++ ) {
-					frag_ptrs[i + RS_K][l] = ((uint8_t(*)[cell_length])reconstructed_blocks_out)[e][l];
+					frag_ptrs[e + RS_K][l] = ((uint8_t(*)[cell_length])reconstructed_blocks_out)[e][l];
 				}
 			}
-		}
 	} // !encode_isal
 #ifdef DEBUG
 	printf("%s:%d: Complete cell array:\n", __FILE__, __LINE__);
 	for ( unsigned int i = 0; i < RS_K + RS_P; i++ ) {
 		for ( unsigned int l = 0; l < cell_length; l++ ) {
 			printf("%02x ", frag_ptrs[i][l]);
-			if ( ((l+1) % CELL_BYTE_WIDTH) == 0 ) {
+			if ( ((l+1) % LINE_BYTE_WIDTH) == 0 ) {
 				printf("\n");
 			}
 		}
@@ -231,14 +240,21 @@ int main(int argc, char *argv[]) {
 	printf("\n");
 #endif
 
+// return 0; // DEBUG
+
 	printf("%s:%d: Decoding/Reconstructing blocks RS[%d:%d] cell_length=%d, using %s\n",
-		 __FILE__, __LINE__, RS_K, RS_P, cell_length, (decode_isal) ? "ISA-L" : "HLS core");
+		 __FILE__, __LINE__, RS_K, RS_P, cell_length, (decode_isal) ? "ISA-L" : "SYCL kernel");
 
 	int num_vectors_per_erasure_pattern = compute_num_vectors_per_erasure_pattern (RS_K, RS_P);
 
+	// The code below relies on this being =1
+	num_erasures = 1;
+	max_permutations = compute_max_erasure_patterns( RS_K, RS_P, num_erasures );
+
+
 	// Loop over all possible RS_K:RS_P permutations
 	for ( unsigned int permutation_index = 0; permutation_index < max_permutations; permutation_index++ ) {
-		uint8_t* erasure_list = (uint8_t*)(permutations[ permutation_index * NUM_ERASURES ]);
+		uint8_t* erasure_list = (uint8_t*)(permutations[ permutation_index * num_erasures ]);
 
 		for ( unsigned int survival_index = 0; survival_index < num_vectors_per_erasure_pattern; survival_index++ ) {
 			printf("%s:%d: Reconstructing cell %d [%d/%lu] with survival pattern [%d/%d]\n",
@@ -253,13 +269,13 @@ int main(int argc, char *argv[]) {
 				// Find a decode matrix to regenerate all erasures from remaining frags
 				// ret_val = gf_gen_decode_matrix_simple(encode_matrix, decode_matrix,
 				// 				invert_matrix, temp_matrix, decode_index,
-				// 				erasure_list, NUM_ERASURES, RS_K, RS_M);
+				// 				erasure_list, num_erasures, RS_K, RS_M);
 				// if ( ret_val != 0 ) {
 				// 	printf("%s:%d: Fail on generating decode matrix\n", __FILE__, __LINE__);
 				// 	return -1;
 				// }
 			#ifdef DEBUG	
-				print_matrix_2d(stdout, NUM_ERASURES, RS_K, (uint8_t*)(decode_matrix_rom[permutation_index]), "decode_matrix_rom ");
+				print_matrix_2d(stdout, num_erasures, RS_K, (uint8_t*)(decode_matrix_rom[permutation_index]), "decode_matrix_rom ");
 				print_matrix_2d(stdout, 1, RS_K, (uint8_t*)decode_index[permutation_index][survival_index], "decode_index[permutation_index]");
 			#endif
 
@@ -269,15 +285,15 @@ int main(int argc, char *argv[]) {
 				}
 				// Recover data
 				uint8_t* decode_matrix = (uint8_t*)decode_matrix_rom[permutation_index*num_vectors_per_erasure_pattern + survival_index];
-				ec_init_tables(RS_K, NUM_ERASURES, decode_matrix, g_tbls);
-				ec_encode_data(cell_length, RS_K, NUM_ERASURES, g_tbls, (unsigned char **)recover_srcs, (unsigned char **)recover_outp);
+				ec_init_tables(RS_K, num_erasures, decode_matrix, g_tbls);
+				ec_encode_data(cell_length, RS_K, num_erasures, g_tbls, (unsigned char **)recover_srcs, (unsigned char **)recover_outp);
 				
 			#ifdef DEBUG			
 				printf("%s:%d: reconstructed_blocks_out:\n", __FILE__, __LINE__);
-				for ( unsigned int i = 0; i < NUM_ERASURES; i++ ) {
+				for ( unsigned int i = 0; i < num_erasures; i++ ) {
 					for ( int l = 0; l < cell_length; l++ ) {
 						printf("%02x ", recover_outp[i][l]);
-						if ( ((l+1) % CELL_BYTE_WIDTH) == 0 ) {
+						if ( ((l+1) % LINE_BYTE_WIDTH) == 0 ) {
 							printf("\n");
 						}
 					}
@@ -300,7 +316,7 @@ int main(int argc, char *argv[]) {
 				for ( unsigned int i = 0; i < RS_K; i++ ) {
 					for ( unsigned int l = 0; l < cell_length; l++ ) {
 						printf("%02x ", ((uint8_t(*)[cell_length])rs_erasure_input)[i][l]);
-						if ( ((l+1) % CELL_BYTE_WIDTH) == 0 ) {
+						if ( ((l+1) % LINE_BYTE_WIDTH) == 0 ) {
 							printf("\n");
 						}
 					}
@@ -312,11 +328,12 @@ int main(int argc, char *argv[]) {
 				// Write input
 				rs_erasure_csr.erasure_pattern	= permutations_pattern[permutation_index];
 				rs_erasure_csr.survived_cells	= decode_index_bitstring[permutation_index][survival_index];
-
+			
 				// Call to kernel
 				RunKernel (
 						// selector,
 						cell_length,
+						num_erasures,
 						rs_erasure_input,
 						reconstructed_blocks_out,
 						rs_erasure_csr
@@ -324,10 +341,10 @@ int main(int argc, char *argv[]) {
 
 			#ifdef DEBUG			
 				printf("%s:%d: reconstructed_blocks_out:\n", __FILE__, __LINE__);
-				for ( unsigned int i = 0; i < NUM_ERASURES; i++ ) {
+				for ( unsigned int i = 0; i < num_erasures; i++ ) {
 					for ( int l = 0; l < cell_length; l++ ) {
 						printf("%02x ", ((uint8_t(*)[cell_length])reconstructed_blocks_out)[i][l]);
-						if ( ((l+1) % CELL_BYTE_WIDTH) == 0 ) {
+						if ( ((l+1) % LINE_BYTE_WIDTH) == 0 ) {
 							printf("\n");
 						}
 					}
@@ -344,17 +361,17 @@ int main(int argc, char *argv[]) {
 			} // !decode_isal
 
 			// Check that recovered buffers are the same as original
-			for ( unsigned int i = 0; i < NUM_ERASURES; i++ ) {
+			for ( unsigned int i = 0; i < num_erasures; i++ ) {
 				ret_val = memcmp(recover_outp[i], frag_ptrs[erasure_list[i]], cell_length);
 				if ( ret_val ) {
 					printf("%s:%d: Fail erasure recovery %d, frag %d\n", __FILE__, __LINE__, i, erasure_list[i]);
 					
 				#ifdef DEBUG			
 					printf("%s:%d: expected:\n", __FILE__, __LINE__);
-					for ( unsigned int i = 0; i < NUM_ERASURES; i++ ) {
+					for ( unsigned int i = 0; i < num_erasures; i++ ) {
 						for ( int l = 0; l < cell_length; l++ ) {
 							printf("%02x ", frag_ptrs[erasure_list[i]][l]);
-							if ( ((l+1) % CELL_BYTE_WIDTH) == 0 ) {
+							if ( ((l+1) % LINE_BYTE_WIDTH) == 0 ) {
 								printf("\n");
 							}
 						}
@@ -363,14 +380,14 @@ int main(int argc, char *argv[]) {
 				#endif
 						return -1;
 					}
-			}
+			} // Check results
 		}  // survival_index over num_vectors_per_erasure_pattern
 	} // permutation_index over max_permutations
 
 	printf("%s:%d: Test passed\n RS[%d:%d]\n cell_length=%d,\n encodind with %s,\n decoding with %s,\n PRNG seed=%u\n",
 		 __FILE__, __LINE__, RS_K, RS_P, cell_length,
-		 (encode_isal) ? "ISA-L" : "HLS core",
-		 (decode_isal) ? "ISA-L" : "HLS core",
+		 (encode_isal) ? "ISA-L" : "SYCL kernel",
+		 (decode_isal) ? "ISA-L" : "SYCL kernel",
 		 prng_seed
 		 );
 
@@ -380,20 +397,22 @@ int main(int argc, char *argv[]) {
 void RunKernel(
 		// sycl::device_selector selector,
 		unsigned int cell_length,
-		line_t* rs_erasure_input,
-		line_t* reconstructed_blocks_out,
+		unsigned int num_erasures,
+		device_read_t rs_erasure_input,
+		device_write_t reconstructed_blocks_out,
 		rs_erasure_csr_t rs_erasure_csr
 	){
+		
+#ifdef NO_SYCL
+	rs_erasure (
+                 rs_erasure_input,
+                 reconstructed_blocks_out,
+                 rs_erasure_csr
+                );
 
-	// rs_erasure (
-    //              rs_erasure_input,
-    //              reconstructed_blocks_out,
-    //              rs_erasure_csr
-    //             );
-	// return;
+#else // ! NO_SYCL
 
 	try {
-
 		// Create a queue bound to the chosen device.
 		// If the device is unavailable, a SYCL runtime exception is thrown.
 		queue q(selector, fpga_tools::exception_handler);
@@ -406,7 +425,7 @@ void RunKernel(
 		
 		// For Lambda
 		device_read_t  device_read  = sycl::malloc_shared<line_t>( RS_INPUT_SIZE(cell_length) , q);
-		device_write_t device_write = sycl::malloc_shared<line_t>( RS_OUTPUT_SIZE(cell_length), q);
+		device_write_t device_write = sycl::malloc_shared<line_t>( RS_OUTPUT_SIZE(cell_length, num_erasures), q);
 
 		// Check pointers are valid
 		assert(device_read);
@@ -421,13 +440,14 @@ void RunKernel(
 		// Run kernel
 		RunKernelLambda(
 						q,
+						num_erasures,
 						device_read,
 						device_write,
 						rs_erasure_csr
 					);
 		
 		// Read back data
-		for ( unsigned int i = 0; i < RS_OUTPUT_SIZE(cell_length)/sizeof(line_t); i++ ) {
+		for ( unsigned int i = 0; i < RS_OUTPUT_SIZE(cell_length, num_erasures)/sizeof(line_t); i++ ) {
 			reconstructed_blocks_out[i] = device_write[i];
 		}
 
@@ -442,5 +462,6 @@ void RunKernel(
 		std::terminate();
 
 	} // try/catch
+#endif // !NO_SYCL
 
 } // RunKernel
