@@ -203,7 +203,6 @@ int main(int argc, char *argv[]) {
 			// Write input
 			rs_erasure_csr.survived_cells	= RS_PATTERN_MASK & ((1 << RS_K) -1); // Bitmask for first k blocks
 			rs_erasure_csr.erasure_pattern	= erasure_patterns[RS_K + i];
-			// rs_erasure_csr.erasure_pattern	= RS_PATTERN_MASK & ~((1 << RS_K) -1); // Bitmask for last p blocks
 
 			// Call to kernel
 			RunKernel (
@@ -234,8 +233,6 @@ int main(int argc, char *argv[]) {
 	}
 	printf("\n");
 #endif
-
-// return 0; // DEBUG
 
 	printf("%s:%d: Decoding/Reconstructing blocks RS[%d:%d] cell_length=%d, using %s\n",
 		 __FILE__, __LINE__, RS_K, RS_P, cell_length, (decode_isal) ? "ISA-L" : "SYCL kernel");

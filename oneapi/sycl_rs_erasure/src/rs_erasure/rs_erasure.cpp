@@ -91,7 +91,6 @@ void rs_erasure (
 	// Input read
 	/////////////////////////////////////////
 	// Unpack rs_erasure_csr metadata
-    // uint8_t     code_id			= rs_erasure_csr.code_id		 ;
     uint16_t    erasure_pattern	= rs_erasure_csr.erasure_pattern;
     uint16_t    survived_cells	= rs_erasure_csr.survived_cells ;
 	uint32_t    cell_length		= rs_erasure_csr.cell_length_byte_width << LOG2_LINE_BYTE_WIDTH ;
@@ -111,9 +110,9 @@ void rs_erasure (
 #endif // NO_SYCL
 
 	// Check input values
-#ifdef FPGA_EMULATOR
+#if defined(FPGA_EMULATOR) || defined(NO_SYCL)
 	assert( ( num_erasures <= MAX_ERASURES )	); // Maximum supported erasures
-	assert( is_n_hot ( RS_K, survived_cells & PERMUTATION_PATTERN_MASK ) );
+	assert( is_n_hot ( RS_K, survived_cells & RS_PATTERN_MASK ) );
 	assert( cell_length >= CELL_LENGTH_MIN 		 );
 	assert( (cell_length % LINE_BYTE_WIDTH) == 0 ); // Must be an integer multiple
 #endif
@@ -160,7 +159,7 @@ LOOP_ERASURES:
 				// Array of k survived cell lines
 				line_t survived_cell_lines[RS_K];
 			
-		LOOP_READ_CELLS:
+			LOOP_READ_CELLS:
 				// Read RS_K lines for each input cell
 				// Strided memory read
 				#pragma unroll LOOP_READ_CELLS_UNROLL
@@ -184,7 +183,7 @@ LOOP_ERASURES:
 				reconstructed_cell_line = (line_t)0u;
 
 				// Loop over bytes in a cell
-		LOOP_BYTES:
+			LOOP_BYTES:
 				#pragma unroll // full unroll
 				for ( unsigned int cell_byte_index = 0; cell_byte_index < LINE_BYTE_WIDTH; cell_byte_index++ ) {
 		LOOP_READ_SCHRATCHPAD:
@@ -224,16 +223,12 @@ LOOP_ERASURES:
 				////////////////////////////
 				// Write out to interface //
 				////////////////////////////
-				device_write[ line_index + recontruction_counter ] = reconstructed_cell_line;
+				unsigned int write_line = line_index + (recontruction_counter * NUM_LINES);
+				device_write[ write_line ] = reconstructed_cell_line;
 			
 			#ifdef NO_SYCL
 				printf("%s:%d: recontruction_counter %d: \n", __FILE__, __LINE__, recontruction_counter );
-			#endif // NO_SYCL
-				// Increment counter
-				recontruction_counter++;
-
-			#ifdef NO_SYCL
-				printf("%s:%d: Output data on line_index %d: \n", __FILE__, __LINE__, line_index );
+				printf("%s:%d: Output data on line_index %d @%016x: \n", __FILE__, __LINE__, line_index, write_line );
 				for ( unsigned int byte_index = 0; byte_index < sizeof(reconstructed_cell_line); byte_index++ ) {
 					printf("%02x ", ((uint8_t*)&reconstructed_cell_line)[byte_index]);
 				}
@@ -241,6 +236,9 @@ LOOP_ERASURES:
 			#endif // NO_SYCL
 
 			} // line_index
+
+			// Increment counter
+			recontruction_counter++;
 
 		} // erasure_pattern_uint16[erasure_pattern_bit_index]
 

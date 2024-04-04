@@ -49,9 +49,9 @@ typedef struct rs_erasure_csr {
 	#include "roms/rs_erasure_patterns_3_2.c"
 	#include "roms/rs_decode_3_2.c"
 	#include "roms/rs_rom_3_2.c"
-	#define PERMUTATION_PATTERN_MASK 	0x001fu
+	#define RS_PATTERN_MASK 			0x001fu
 	#define permutations		 		erasures_3_2
-	#define permutations_pattern  		erasures_patterns_3_2
+	#define erasure_patterns 			erasures_patterns_3_2
 	#define decode_index     			decode_index_3_2
 	#define	decode_index_bitstring		decode_index_3_2_bitstring
 	#define decode_matrix_rom			DECMAT_ROM_3_2
@@ -62,9 +62,9 @@ typedef struct rs_erasure_csr {
 	#include "roms/rs_erasure_patterns_6_3.c"
 	#include "roms/rs_decode_6_3.c"
 	#include "roms/rs_rom_6_3.c"
-	#define PERMUTATION_PATTERN_MASK 	0x01ffu
+	#define RS_PATTERN_MASK 			0x01ffu
 	#define permutations		 		erasures_6_3
-	#define permutations_pattern  		erasures_patterns_6_3
+	#define erasure_patterns  			erasures_patterns_6_3
 	#define decode_index     			decode_index_6_3
 	#define	decode_index_bitstring		decode_index_6_3_bitstring
 	#define decode_matrix_rom			DECMAT_ROM_6_3
@@ -75,9 +75,9 @@ typedef struct rs_erasure_csr {
 	#include "roms/rs_erasure_patterns_10_4.c"
 	#include "roms/rs_decode_10_4.c"
 	#include "roms/rs_rom_10_4.c"
-	#define PERMUTATION_PATTERN_MASK 	0x3fffu
+	#define RS_PATTERN_MASK 			0x3fffu
 	#define permutations		 		erasures_10_4
-	#define permutations_pattern  		erasures_patterns_10_4
+	#define erasure_patterns  			erasures_patterns_10_4
 	#define decode_index     			decode_index_10_4
 	#define	decode_index_bitstring		decode_index_10_4_bitstring
 	#define decode_matrix_rom 			DECMAT_ROM_10_4
