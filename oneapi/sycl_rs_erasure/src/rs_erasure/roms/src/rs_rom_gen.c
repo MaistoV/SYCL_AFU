@@ -181,7 +181,7 @@ int main(int argc, char *argv[]) {
 	ec_encode_data(len, rs_k, rs_p, g_tbls, frag_ptrs, &frag_ptrs[rs_k]);
 	
 	// Total number of target erasure_patterns
-	unsigned long max_erasure_patterns = rs_k + rs_p;
+	unsigned long max_erasure_patterns = compute_1_erasure_patterns( rs_k, rs_p );
 	uint8_t* erasure_patterns;
 	erasure_patterns = (uint8_t*)malloc ( sizeof ( uint8_t ) * max_erasure_patterns ); 
 	// Generate erasure_patterns
@@ -479,7 +479,9 @@ int main(int argc, char *argv[]) {
 	}	
 	fprintf(fd_rom_lookup, "\tdefault:\n");
 	fprintf(fd_rom_lookup, "\t\t// Error\n");
+	fprintf(fd_rom_lookup, "\t\t\t\t#ifdef NO_SYCL\n");
 	fprintf(fd_rom_lookup, "\t\tprintf(\"%%s:%%d ERROR: Unsupported erasure pattern 0x%%04x\\n\", __FILE__, __LINE__, erasure_pattern);\n");
+	fprintf(fd_rom_lookup, "\t\t\t\t#endif // NO_SYCL\n");
 	fprintf(fd_rom_lookup, "\t\tret_val = -1;\n");
 	fprintf(fd_rom_lookup, "\tbreak;\n");	
 	fprintf(fd_rom_lookup, "\t}\n");	

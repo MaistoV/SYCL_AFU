@@ -240,8 +240,13 @@ unsigned long compute_max_erasure_patterns( int k, int p , unsigned int num_eras
 }
 
 // Compute binom(k+p, p): number of erasure patterns for P erasures
-unsigned long compute_p_erasure_patterns( int k, int p) {
-	return binom(k+p,p);;
+unsigned long compute_p_erasure_patterns( int k, int p ) {
+	return binom(k+p,p);
+}
+
+// Compute return k+p: number of erasure patterns for 1 erasure
+unsigned long compute_1_erasure_patterns( int k, int p ) {
+	return ( k + p );
 }
 
 // Compute ( ( k + p ) * binom( k+p-1, k ) * k )
@@ -250,6 +255,7 @@ unsigned long compute_max_survival_vectors( int k, int p ) {
 	// return (( k + p ) * binom( k+p-1, k ) * k );
 }
 
+// Compute binom( k+p-1, k ): numver of reconstruction vector for a single erasure pattern
 unsigned long compute_num_vectors_per_erasure_pattern( int k, int p ) {
 	return ( binom( k+p-1, k ) );
 }
