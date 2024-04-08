@@ -69,7 +69,6 @@ int main(int argc, char *argv[]) {
 	int encode_isal = 0;
 	int decode_isal = 0;
 	unsigned int cell_length = CELL_LENGTH_DEFAULT;
-	
 	unsigned long max_permutations;
 
 	// Permutation buffers
@@ -90,7 +89,6 @@ int main(int argc, char *argv[]) {
 			if ( (cell_length <= 0) || ((cell_length % LINE_BYTE_WIDTH) != 0) ) {
 				usage( argv );
 			}
-			break;
 			break;
 		case 'h':
 		default:
@@ -198,7 +196,7 @@ int main(int argc, char *argv[]) {
 
 		// Encode fragments RS_K+1, RS_K+2, ..., RS_K+RS_P
 		for ( unsigned int i = 0; i < RS_P; i++ ){
-			printf("%s:%d: Encoding parity cell %d [%d/%d] with HLS\n", __FILE__, __LINE__, i, i+1, RS_P);
+			printf("%s:%d: Encoding parity cell %d [%d/%d] with SYCL kernel\n", __FILE__, __LINE__, i, i+1, RS_P);
 
 			// Write input
 			rs_erasure_csr.survived_cells	= RS_PATTERN_MASK & ((1 << RS_K) -1); // Bitmask for first k blocks
@@ -216,10 +214,13 @@ int main(int argc, char *argv[]) {
 
 			// Pack results in fragments buffer
 			for ( int l = 0; l < cell_length; l++ ) {
+				// Always read from first reconstructed block at index 0
 				frag_ptrs[i + RS_K][l] = ((uint8_t(*)[cell_length])reconstructed_blocks_out)[0][l];
 			}
 		}	
 	} // !encode_isal
+	
+// Debug Complete cell array
 #ifdef DEBUG
 	printf("%s:%d: Complete cell array:\n", __FILE__, __LINE__);
 	for ( unsigned int i = 0; i < RS_K + RS_P; i++ ) {
@@ -401,7 +402,7 @@ void RunKernel(
 		
 		// For Lambda
 		device_read_t  device_read  = sycl::malloc_shared<line_t>( RS_INPUT_SIZE(cell_length) , q);
-		device_write_t device_write = sycl::malloc_shared<line_t>( RS_OUTPUT_SIZE(cell_length, ONE_ERASURE), q);
+		device_write_t device_write = sycl::malloc_shared<line_t>( RS_OUTPUT_SIZE(cell_length, num_erasures), q);
 
 		// Check pointers are valid
 		assert(device_read);
@@ -416,14 +417,14 @@ void RunKernel(
 		// Run kernel
 		RunKernelLambda(
 						q,
-						ONE_ERASURE,
+						num_erasures,
 						device_read,
 						device_write,
 						rs_erasure_csr
 					);
 		
 		// Read back data
-		for ( unsigned int i = 0; i < RS_OUTPUT_SIZE(cell_length, ONE_ERASURE)/sizeof(line_t); i++ ) {
+		for ( unsigned int i = 0; i < RS_OUTPUT_SIZE(cell_length, num_erasures)/sizeof(line_t); i++ ) {
 			reconstructed_blocks_out[i] = device_write[i];
 		}
 

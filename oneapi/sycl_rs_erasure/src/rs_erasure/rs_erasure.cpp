@@ -64,9 +64,6 @@ uint8_t popcount ( uint16_t pattern ) {
 			count++;
 		}
 	}
-#ifdef NO_SYCL
-	printf("%s:%d: count=%d\n", __FILE__, __LINE__, count );
-#endif // NO_SYCL
 	return count;
 }
 
@@ -98,6 +95,7 @@ void rs_erasure (
 	// Number of erasures (<= P)
 	uint8_t		num_erasures	= popcount(erasure_pattern);
 
+// Debug device_read
 #ifdef NO_SYCL
 	printf("%s:%d: device_read:\n", __FILE__, __LINE__);
 	for ( unsigned int i = 0; i < cell_length*RS_K; i++ ) {
@@ -117,67 +115,75 @@ void rs_erasure (
 	assert( (cell_length % LINE_BYTE_WIDTH) == 0 ); // Must be an integer multiple
 #endif
 
-	uint8_t recontruction_counter = 0;
-LOOP_ERASURES:
-	#pragma unroll 1 // No unroll
-	for ( unsigned int erasure_pattern_bit_index = 0; erasure_pattern_bit_index < RS_M; erasure_pattern_bit_index++ ) {
-		
-		// If we get a high bit
-		uint16 erasure_pattern_uint16 = erasure_pattern;
-		if ( erasure_pattern_uint16[erasure_pattern_bit_index] ) {
+LOOP_LINES:
+	// Loop over interface lines in a cell
+	#define NUM_LINES (cell_length / LINE_BYTE_WIDTH)
+	#pragma unroll 1 // Explicit no unroll
+	for ( unsigned int line_index = 0; line_index < NUM_LINES; line_index++ ) {
+		// Array of k survived cell lines, force it as registers
+		[[intel::fpga_register]] line_t survived_cell_lines [RS_K];
 
-			// Extract the one-hot erasure patterns for the next erasure
-			#define ERASURE_ONEHOT_MASK (erasure_pattern & (0x1u << erasure_pattern_bit_index))
-			// ROM index of reconstruction vector
-			uint16_t vector_index = rs_rom_lookup( ERASURE_ONEHOT_MASK, survived_cells );
-
-			// Schratchpad memory buffering ROM data
-			// If necessary, force it as register [[intel::fpga_register]]
-			uint8_t reconstruction_vector	[SCRATCHPAD_DEPTH];
-
-		LOOP_WRITE_SCHRATCHPAD:
-			// Read decoding matrix from the right ROM address
-			#pragma unroll
-			for ( unsigned int j = 0; j < RS_K; j++ ) {
-				reconstruction_vector[j] = decode_matrix_rom[vector_index][j];
-			}
-
+	LOOP_READ_LINES:
+		// Read RS_K lines for each input cell
+		// Strided memory read
+		#pragma unroll LOOP_READ_CELLS_UNROLL
+		for ( unsigned int cell_index = 0; cell_index < RS_K; cell_index++ ){
+			survived_cell_lines[cell_index] = device_read[ (cell_index * NUM_LINES) + line_index ];
+		}
+		// Debug survived_cell_lines
 		#ifdef NO_SYCL
-			printf("%s:%d: vector_index=%hu\n", __FILE__, __LINE__, vector_index);
-			printf("%s:%d: reconstruction_vector: ", __FILE__, __LINE__ );
-			for ( unsigned int j = 0; j < RS_K; j++ ) {
-				printf("%hhu ", reconstruction_vector[j]);
+			for ( unsigned int cell_index = 0; cell_index < RS_K; cell_index++ ){
+				printf("%s:%d: survived_cell_lines[%d] for line_index=%d:\n", __FILE__, __LINE__, cell_index, line_index);
+				for ( int byte_index = 0; byte_index < LINE_BYTE_WIDTH; byte_index++ ) {
+					printf("%02x ", ((uint8_t (*)[LINE_BYTE_WIDTH])survived_cell_lines)[cell_index][byte_index] );
+				}
+				printf("\n");
 			}
 			printf("\n");
 		#endif // NO_SYCL
 
-		LOOP_LINES:
-			// Loop over interface lines in a cell
-			#define NUM_LINES (cell_length / LINE_BYTE_WIDTH)
-			#pragma unroll 1 // No unroll
-			for ( unsigned int line_index = 0; line_index < NUM_LINES; line_index++ ) {
-				// Array of k survived cell lines
-				line_t survived_cell_lines[RS_K];
-			
-			LOOP_READ_CELLS:
-				// Read RS_K lines for each input cell
-				// Strided memory read
-				#pragma unroll LOOP_READ_CELLS_UNROLL
-				for ( unsigned int cell_index = 0; cell_index < RS_K; cell_index++ ){
-					survived_cell_lines[cell_index] = device_read[ (cell_index * NUM_LINES) + line_index ];
-				}
+		uint8_t recontruction_counter = 0;
+		LOOP_ERASURES:
+			#pragma unroll 1 // Explicit no unroll
+			for ( unsigned int erasure_pattern_bit_index = 0; erasure_pattern_bit_index < RS_M; erasure_pattern_bit_index++ ) {
+				
+				// If we get a high bit
+				uint16 erasure_pattern_uint16 = erasure_pattern;
+				if ( erasure_pattern_uint16[erasure_pattern_bit_index] ) {
 
-			#ifdef NO_SYCL
-				for ( unsigned int cell_index = 0; cell_index < RS_K; cell_index++ ){
-					printf("%s:%d: survived_cell_lines[%d] for line_index=%d:\n", __FILE__, __LINE__, cell_index, line_index);
-					for ( int byte_index = 0; byte_index < LINE_BYTE_WIDTH; byte_index++ ) {
-						printf("%02x ", ((uint8_t (*)[LINE_BYTE_WIDTH])survived_cell_lines)[cell_index][byte_index] );
+					////////////////
+					// ROM lookup //
+					////////////////
+
+					// Extract the one-hot erasure patterns for the next erasure
+					#define ERASURE_ONEHOT_MASK (erasure_pattern & (0x1u << erasure_pattern_bit_index))
+					// ROM index of reconstruction vector
+					uint16_t vector_index = rs_rom_lookup( ERASURE_ONEHOT_MASK, survived_cells );
+
+					// Schratchpad memory buffering ROM data
+					// If necessary, force it as register [[intel::fpga_register]]
+					uint8_t reconstruction_vector	[SCRATCHPAD_DEPTH];
+
+				LOOP_ROM_LOOKUP:
+					// Read decoding matrix from the right ROM address
+					#pragma unroll
+					for ( unsigned int j = 0; j < RS_K; j++ ) {
+						reconstruction_vector[j] = decode_matrix_rom[vector_index][j];
+					}
+
+				// Debug reconstruction_vector
+				#ifdef NO_SYCL
+					printf("%s:%d: vector_index=%hu\n", __FILE__, __LINE__, vector_index);
+					printf("%s:%d: reconstruction_vector: ", __FILE__, __LINE__ );
+					for ( unsigned int j = 0; j < RS_K; j++ ) {
+						printf("%hhu ", reconstruction_vector[j]);
 					}
 					printf("\n");
-				}
-				printf("\n");
-			#endif // NO_SYCL
+				#endif // NO_SYCL
 
+				/////////////////
+				// GF multiply //
+				/////////////////
 				// Reset all the recontructing bits
 				line_t reconstructed_cell_line;
 				reconstructed_cell_line = (line_t)0u;
@@ -226,6 +232,7 @@ LOOP_ERASURES:
 				unsigned int write_line = line_index + (recontruction_counter * NUM_LINES);
 				device_write[ write_line ] = reconstructed_cell_line;
 			
+			// Debug reconstructed_cell_line
 			#ifdef NO_SYCL
 				printf("%s:%d: recontruction_counter %d: \n", __FILE__, __LINE__, recontruction_counter );
 				printf("%s:%d: Output data on line_index %d @%016x: \n", __FILE__, __LINE__, line_index, write_line );
@@ -235,14 +242,12 @@ LOOP_ERASURES:
 				printf("\n\n");
 			#endif // NO_SYCL
 
-			} // line_index
+				// Increment counter
+				recontruction_counter++;
 
-			// Increment counter
-			recontruction_counter++;
-
-		} // erasure_pattern_uint16[erasure_pattern_bit_index]
-
-	} // erasure_pattern_bit_index
+			} // erasure_pattern_uint16[erasure_pattern_bit_index]
+		} // erasure_pattern_bit_index
+	} // line_index
 
 } // rs_erasure
 

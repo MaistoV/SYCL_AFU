@@ -95,5 +95,8 @@ typedef struct rs_erasure_csr {
 // #pragma message "Building RS[" XSTR(RS_K) ":" XSTR(RS_P) "]"
 
 #define RS_M (RS_K + RS_P) // Total number of cells
+#if RS_M > 16
+	#error Current implementation does not support M = K + P > 16
+#endif
 
 #endif // _RS_ERASURE_H_
