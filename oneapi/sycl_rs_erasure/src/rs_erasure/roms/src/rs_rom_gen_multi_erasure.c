@@ -65,9 +65,6 @@ int main(int argc, char *argv[]) {
 	unsigned int rs_k = 6, rs_p = 3, len = 1;	
 	int use_cauchy_matrix = 1;
 
-	// Fragment buffer pointers
-	uint8_t* bitstring;
-
 	int c;
 	while ( ( c = getopt(argc, argv, "k:p:o:h") ) != -1 ) {
 		switch (c) {
@@ -111,6 +108,7 @@ int main(int argc, char *argv[]) {
 	// Open input erasure patterns file
 	char filename[38] = "erasure_patterns_X_X.txt";
 	sprintf(filename, "erasure_patterns_%d_%d.txt", rs_k, rs_p);
+	printf("%s:%d: Opening %s\n", __FILE__, __LINE__, filename);
 	fd_pattern = fopen(filename, "r");
 	if ( fd_pattern == NULL ) {
 		fprintf(stderr, "%s:%d: Can't open file %s\n", __FILE__, __LINE__, filename);
@@ -124,8 +122,9 @@ int main(int argc, char *argv[]) {
 	fd_erasure_patterns = fopen(tmp_string, "w");
 	if ( fd_erasure_patterns == NULL ) {
 		printf("%s:%d ERROR: can't open %s\n", __FILE__, __LINE__, filedir);   
-		ret_val = -1;
-		goto clean_up;
+		return -1;
+		// ret_val = -1;
+		// goto close_fd_pattern;
 	}
 
 	// Allocate memory
@@ -191,13 +190,11 @@ int main(int argc, char *argv[]) {
 	fprintf(fd_erasure_patterns, "};\n");
 	fprintf(fd_erasure_patterns, "\n");
 
-close_files:
 	// Close files
-	fclose ( fd_erasure_patterns );
+// close_files:
+// 	fclose ( fd_erasure_patterns );
+// close_fd_pattern:
+// 	fclose ( fd_pattern );
 
-clean_up:
-	// Free dynamic memory
-	free ( bitstring	 );
-
-	return ret_val;
+	return 0;
 }

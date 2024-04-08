@@ -230,8 +230,8 @@ unsigned long binom ( int n, int m ) {
 	return ( factorial( n ) / factorial(m) / factorial(n-m) );
 }
 
-// Compute sum(l=1:p,binom(k+p, l)): maximum number of erasure patterns from 1 to P erasures
-unsigned long compute_max_erasure_patterns( int k, int p , unsigned int num_erasures){
+// Compute sum(l=1:num_erasures,binom(k+p, num_erasures)): maximum number of erasure patterns from 1 to P erasures
+unsigned long compute_max_erasure_patterns( int k, int p , unsigned int num_erasures ){
 	unsigned long sum = 0;
 	for ( unsigned int l = 1; l <= num_erasures; l++ ) {
 		sum += binom(k+p,l);
@@ -239,12 +239,17 @@ unsigned long compute_max_erasure_patterns( int k, int p , unsigned int num_eras
 	return sum;
 }
 
+// Compute binom(k+p-e, k): number of survival patterns for a single P-erasures erasure pattern
+unsigned long compute_survival_patterns_per_n_erasures( int k, int p, int e ) {
+	return binom(k+p-e,k);
+}
+
 // Compute binom(k+p, p): number of erasure patterns for P erasures
 unsigned long compute_p_erasure_patterns( int k, int p ) {
 	return binom(k+p,p);
 }
 
-// Compute return k+p: number of erasure patterns for 1 erasure
+// Compute k+p: number of erasure patterns for 1 single erasure
 unsigned long compute_1_erasure_patterns( int k, int p ) {
 	return ( k + p );
 }
@@ -255,7 +260,7 @@ unsigned long compute_max_survival_vectors( int k, int p ) {
 	// return (( k + p ) * binom( k+p-1, k ) * k );
 }
 
-// Compute binom( k+p-1, k ): numver of reconstruction vector for a single erasure pattern
+// Compute binom( k+p-1, k ): numver of reconstruction vector for a single 1-erasure erasure pattern
 unsigned long compute_num_vectors_per_erasure_pattern( int k, int p ) {
 	return ( binom( k+p-1, k ) );
 }
@@ -433,7 +438,7 @@ void convert_bitstring_to_array (
 				unsigned int value = (len_single_string-2) -j;
 				// Set this value
 				int_array[ (i * expected_high_bits) + int_array_index ] = value; 
-				printf("-- %u %u %hhu %s\n", j, value, int_array_index, &(bitstring[i * len_single_string]));
+				// printf("-- %u %u %hhu %s\n", j, value, int_array_index, &(bitstring[i * len_single_string]));
 				// Increment index
 				int_array_index++;
 			}

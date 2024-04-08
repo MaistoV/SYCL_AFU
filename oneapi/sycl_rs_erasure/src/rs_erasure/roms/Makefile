@@ -29,12 +29,12 @@ regen_roms: rom_gen regen_perms
 	./rom_gen -k 10 -p 4 -l 1 -e 1 -o $(OUT_DIR)
 
 regen_roms_multi_erasure: rom_gen_multi_erasure regen_perms
-	./rom_gen_multi_erasure -k 3 	-p 2 -l 1 -e 1 -o $(OUT_DIR)
-	./rom_gen_multi_erasure -k 6 	-p 3 -l 1 -e 1 -o $(OUT_DIR)
-	./rom_gen_multi_erasure -k 10	-p 4 -l 1 -e 1 -o $(OUT_DIR)
+	./rom_gen_multi_erasure -k 3  -p 2 -o $(OUT_DIR)
+	./rom_gen_multi_erasure -k 6  -p 3 -o $(OUT_DIR)
+	./rom_gen_multi_erasure -k 10 -p 4 -o $(OUT_DIR)
 
 clean:
-	$(RM) rom_gen regen_roms_multi_erasure erasure_gen survival_gen
+	$(RM) rom_gen rom_gen_multi_erasure regen_roms_multi_erasure erasure_gen survival_gen 
 
 
 
