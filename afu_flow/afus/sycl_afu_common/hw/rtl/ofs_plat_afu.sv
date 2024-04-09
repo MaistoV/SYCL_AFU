@@ -88,8 +88,12 @@ module ofs_plat_afu
     // =========================================================================
     
     kernel_dfl_wrapper # (
-     .DISABLE_AVMM_INTERRUPT     ( `DISABLE_AVMM_INTERRUPT         ),
-     .KERNEL_REGISTER_MAP_OFFSET ( `KERNEL_REGISTER_MAP_OFFSET_HEX )
+    `ifdef DISABLE_AVMM_INTERRUPT
+      .DISABLE_AVMM_INTERRUPT     ( `DISABLE_AVMM_INTERRUPT         ),
+    `endif // DISABLE_AVMM_INTERRUPT
+    `ifdef KERNEL_REGISTER_MAP_OFFSET_HEX
+      .KERNEL_REGISTER_MAP_OFFSET ( `KERNEL_REGISTER_MAP_OFFSET_HEX )
+    `endif // KERNEL_REGISTER_MAP_OFFSET_HEX
     ) kernel_dfl_wrapper_inst (
       .clock_i           ( clk               ), 
       .reset_ni          ( reset_n           ),

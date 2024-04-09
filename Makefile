@@ -125,7 +125,7 @@ oneapi_asp_%: oneapi_cmake_asp
 # ONE API IP Authoring Flow #
 #############################
 CMAKE_IP_FLAGS = -DFPGA_DEVICE=${AGILEX7_PART_NUMBER}
-oneapi_ip_cmake: ${SYCL_IP_BUILD_DIR}
+oneapi_cmake_ip: ${SYCL_IP_BUILD_DIR}
 ${SYCL_IP_BUILD_DIR}: ${SYCL_IP_CMAKE_SOURCES}
 	mkdir ${SYCL_IP_BUILD_DIR};	\
 	cd ${SYCL_IP_BUILD_DIR};		\

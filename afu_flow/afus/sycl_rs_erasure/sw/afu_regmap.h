@@ -8,10 +8,9 @@
 #include "dfl_csr_regmap.h"
 
 // Patched register map
-#define KERNEL_STATUS                   (ZTS11RSERASUREID_REGISTER_MAP_STATUS_REG)   // Status register
-// Missing in register_map_offsets.hpp
-#define KERNEL_START                    (0x8 + ZTS11RSERASUREID_REGISTER_MAP_OFFSET) // Start the kernel, don't read in ASE! 
-#define KERNEL_FINISH_COUNTER           (ZTS11RSERASUREID_REGISTER_MAP_FINISHCOUNTER_REG)
+#define KERNEL_STATUS                   (ZTS11RSERASUREID_REGISTER_MAP_STATUS_REG)                  // Status register
+#define KERNEL_START                    (ZTS11RSERASUREID_REGISTER_MAP_START_REG)                   // Start the kernel, don't read in ASE! 
+#define KERNEL_FINISH_COUNTER           (ZTS11RSERASUREID_REGISTER_MAP_FINISHCOUNTER_REG)           // Get the number of finish runs, this will also clear the register and pending interrupt
 #define KERNEL_ARG_DEVICE_READ_REG      (ZTS11RSERASUREID_REGISTER_MAP_ARG_ARG_DEVICE_READ_REG)     // Read interface
 #define KERNEL_ARG_DEVICE_WRITE_REG     (ZTS11RSERASUREID_REGISTER_MAP_ARG_ARG_DEVICE_WRITE_REG)    // Write interface
 #define KERNEL_ARG_RS_ERASURE_CSR_REG   (ZTS11RSERASUREID_REGISTER_MAP_ARG_ARG_RS_ERASURE_CSR_REG)  // CSR word for rs_erasure

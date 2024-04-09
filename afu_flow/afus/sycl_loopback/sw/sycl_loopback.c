@@ -91,7 +91,7 @@ int main(int argc, char *argv[]) {
         printf("%s:%d Disable AFU interrupts via CSR write...\n", __FILE__, __LINE__);
         res = fpgaWriteMMIO64(accel_handles[0], 0, AFU_IRQ_EN, ~(AFU_IRQ_EN_VALUE));
         fpga_assert(res);
-        printf("%s:%d write @%80x, value = %016lx\n", __FILE__, __LINE__, AFU_IRQ_EN, ~(AFU_IRQ_EN_VALUE));
+        printf("%s:%d write @%08x, value = %016lx\n", __FILE__, __LINE__, AFU_IRQ_EN, ~(AFU_IRQ_EN_VALUE) & AFU_IRQ_EN_MASK);
     }
 
     // Allocate MMIO buffers
@@ -103,7 +103,6 @@ int main(int argc, char *argv[]) {
 
     assert(NULL != device_read);
     assert(NULL != device_write);
-
 
     // Check addresses are 41 bits
     #define BIT_MASK_41 ((uint64_t)0x01fffffffffful)

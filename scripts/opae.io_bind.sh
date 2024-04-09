@@ -20,8 +20,6 @@ if [ $SRIOV_NUMVF -lt $SRIOV_TOTVF ]; then
 
     SRIOV_NUMVF=$(sudo find /sys/ -name "sriov_numvfs" | head -n1 | xargs cat)
     echo "[INFO] Setup $SRIOV_NUMVF sriov_numvfs"
-    echo "[INFO] Running fpgainfo port..."
-    echo "[INFO] See fpgainfo_port.new.log"
 fi
 
 sudo chown $USER /etc/opae/
