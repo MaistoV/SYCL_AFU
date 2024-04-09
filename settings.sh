@@ -41,11 +41,15 @@ export FPGA="$BOARD_VAR"
 # OFSS FIM flow # 
 #################
 
+# Number of PR VFs
+# NOTE: one every eight is not going to bind to OPAE-vfio
 export FIM_NUM_PF0_VFS=10
-export OFSS_CONFIG=pf0_${FIM_NUM_PF0_VFS}vf
-export FIRST_AFU_VF=5
-# export OFSS_CONFIG=pf0_${FIM_NUM_PF0_VFS}vf_no_hems
-# export FIRST_AFU_VF=?
+export FIM_NUM_USER_AFUS=$((${FIM_NUM_PF0_VFS}-(${FIM_NUM_PF0_VFS}/8)))
+
+# export OFSS_CONFIG=pf0_${FIM_NUM_PF0_VFS}vf
+# export FIRST_AFU_VF=5 # First VF index after FIM AFUs
+export OFSS_CONFIG=pf0_${FIM_NUM_PF0_VFS}vf_no_hems
+export FIRST_AFU_VF=1
 
 export OFSS_CONFIG_DIR=${ROOT_DIR}/fim_flow/ofss_configs/ofss_config_${OFSS_CONFIG}
 

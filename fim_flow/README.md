@@ -21,8 +21,8 @@ To increase the number of VFs exposed in the PR region, you must increase the `n
 
 Preliminary experiments show that 10 VFs can be routed on the PR-region for the system target frequency. Further analysis si necessary to determine the number of VFs necessary to meet the system's throughput requirement.
 
-### Caveat 
-Preliminary experiments show that the 8th VF, is mapped to a PF 0 of a subsequent device number, e.g. `0000:01:01.0`, which will not bind to a vfio-pci driver by the OPAE library. E.g.:
+### Bug/Caveat 
+Preliminary experiments show that every 8th VF, including the FIM's, is mapped to a VF 0 of a subsequent device number, e.g. `0000:01:01.0`, which will not bind to a vfio-pci driver by the OPAE library. E.g.:
 
 ``` console
 $ opae.io ls | sort
@@ -45,7 +45,7 @@ $ opae.io ls | sort
 
 This causes any hardware mapped in hardware on `0000:01:01.0` not to be enumerated by the vfio plugin, and therefore not accessible. E.g., of 10 placed VFs, only 9 would be accessible by OPAE-SDK.
 
-> NOTE: **This needs further exploration.**
+Furthermore, all the switching resources are wasted for this unreachable port.
 
-> For now leave this at this is, a simple workaround would be to instantiate a `null_afu` in that position so save hardware, by the switching logic would still be there.
-
+#### Solution
+When using this flow, be aware of not plugging any hardware to the 8th port and tying it off. For an example see [ofs_plat_afu_array.sv](../afu_flow/afus/sycl_afu_common/hw/rtl/ofs_plat_afu_array.sv)

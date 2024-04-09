@@ -1,6 +1,7 @@
 my_custom_afu_array.json
 ofs_plat_afu.sv
 my_custom_afu_axi.sv
+${HTS_RELEASE}/ofs-agx7-pcie-attach/ofs-common/src/common/he_null/he_null.sv
 
 # Pointer to software:
 # sw:../../sw/my_custom_afu_array
