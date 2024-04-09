@@ -11,7 +11,6 @@ help:
 #######
 # FIM #
 #######
-OFSS_CONFIG_DIR := ${ROOT_DIR}/fim_flow/ofss_configs/ofss_config_${OFSS_CONFIG}
 fim_build_pr:
 fim_build_flat:
 fim_build_%:
@@ -26,7 +25,7 @@ fim_build_%:
 fim_update: 
 #	Update flash images 
 	sudo fpgasupdate --log-level debug ${FIM_IMAGE_USER1} ${PAC_PCIE_SBD}.0
-#	No need to update also pase user2, for now
+#	No need to update also page user2, for now
 # sudo fpgasupdate --log-level debug ${FIM_IMAGE_USER2} ${PAC_PCIE_SBD}.0
 	@echo "To configure the new FIM, powercycle the PAC with:"
 	@echo "    ${MAKE} pac_powercycle_user1"
@@ -43,18 +42,49 @@ opae.io_bind:
 
 opae.io_bind_one:
 	sudo pci_device ${PAC_PCIE_SBD}.0 vf 1
-	sudo opae.io -d ${PAC_PCIE_SBD}.0 init ${USER}:${USER}
+	sudo opae.io -d ${PAC_PCIE_SBD}.${FIRST_AFU_VF} init ${USER}:${USER}
 	opae.io ls
 
+opae.io_release:
+	${ROOT_DIR}/scripts/opae.io_release.sh
+	
 pac_hot_plug:
 	sudo pci_device ${PAC_PCIE_SBD}.0 unplug
 	sudo pci_device ${PAC_PCIE_SBD}.0 plug
 
+############################
+# ONE API CMake Envirnment #
+############################
+ONEAPI_DEBUG_ENV := MMD_ENABLE_DEBUG=1  \
+					MMD_PROGRAM_DEBUG=1
+SYCL_IP_CMAKE_SOURCES := ${SYCL_IP_DIR}/CMakeLists.txt ${SYCL_IP_DIR}/src/CMakeLists.txt
+
+# Wrap these variables in a single list
+SYCL_IP_ENV += RS_SCHEMA=${RS_SCHEMA} \
+				SYCL_IP_NAME=${SYCL_IP_NAME} \
+				SYCL_IP_BUILD_DIR=${SYCL_IP_BUILD_DIR} \
+				SYCL_IP_PRJ=${SYCL_IP_PRJ}
+
+SYCL_IP_DEBUG ?= 0
+FAST_COMPILE ?= 0
+CMAKE_FLAGS ?=
+ifeq (${FAST_COMPILE}, 1)
+	CMAKE_FLAGS += -DUSER_HARDWARE_FLAGS=-Xsfast-compile
+endif
+ifeq (${SYCL_IP_DEBUG}, 1)
+	CMAKE_FLAGS += --trace-expand
+endif
+
+# Environment setup for cmake
+MULTI_ERASURE ?= 1
+CMAKE_ENV = USER_HARDWARE_FLAGS=${USER_HARDWARE_FLAGS} \
+			SYCL_IP_NAME=${SYCL_IP_NAME} \
+			${SYCL_IP_ENV} \
+			MULTI_ERASURE=${MULTI_ERASURE}
+
 ####################
 # ONE API ASP Flow #
 ####################
-ONEAPI_DEBUG_ENV := MMD_ENABLE_DEBUG=1  \
-					MMD_PROGRAM_DEBUG=1
 
 oneapi_asp_build_aocx:
 	cd ${OFS_ASP_ROOT}; \
@@ -76,48 +106,30 @@ aocl_aocx_initalize:
 	sudo opae.io init -d ${PAC_PCIE_SBD}.5 ${USER}:${USER};	\
 	${ONEAPI_DEBUG_ENV} aocl initialize ${ACL_DEVICE} ${OFS_ASP_BOARD_VARIANT} 
 
-oneapi_asp_cmake: 
+CMAKE_ASP_FLAGS = -DFPGA_DEVICE=${OFS_ASP_FPGA_DEVICE}
+oneapi_cmake_asp: ${SYCL_ASP_BUILD_DIR}
+${SYCL_ASP_BUILD_DIR}: ${SYCL_IP_CMAKE_SOURCES}
 	mkdir ${SYCL_ASP_BUILD_DIR};	\
 	cd ${SYCL_ASP_BUILD_DIR};		\
-	cmake .. -DFPGA_DEVICE=${OFS_ASP_FPGA_DEVICE} 
+	${CMAKE_ENV} cmake .. ${CMAKE_FLAGS} ${CMAKE_ASP_FLAGS}
 
 oneapi_asp_fpga_emu:
 oneapi_asp_fpga_sim:
 oneapi_asp_report:
 oneapi_asp_fpga:
-oneapi_asp_%: oneapi_asp_cmake
-	cd ${SYCL_IP_DIR}/build_asp; \
+oneapi_asp_%: oneapi_cmake_asp
+	cd ${SYCL_ASP_BUILD_DIR}; \
 	make $*
 
 #############################
 # ONE API IP Authoring Flow #
 #############################
-# Wrap these variables in a single list
-SYCL_IP_ENV += RS_SCHEMA=${RS_SCHEMA} \
-				SYCL_IP_NAME=${SYCL_IP_NAME} \
-				SYCL_IP_BUILD_DIR=${SYCL_IP_BUILD_DIR} \
-				SYCL_IP_PRJ=${SYCL_IP_PRJ}
-
-SYCL_IP_DEBUG ?= 0
-FAST_COMPILE ?= 0
-ifeq (${FAST_COMPILE}, 1)
-	CMAKE_FLAGS += "-DUSER_HARDWARE_FLAGS=-Xsfast-compile"
-endif
-ifeq (${SYCL_IP_DEBUG}, 1)
-	CMAKE_FLAGS += "--trace-expand"
-endif
-
-# Environment setup for cmake
-CMAKE_ENV = USER_HARDWARE_FLAGS=${USER_HARDWARE_FLAGS} \
-			SYCL_IP_NAME=${SYCL_IP_NAME} \
-			${SYCL_IP_ENV} 
-
-CMAKE_FLAGS += -DFPGA_DEVICE=${AGILEX7_PART_NUMBER} 
+CMAKE_IP_FLAGS = -DFPGA_DEVICE=${AGILEX7_PART_NUMBER}
 oneapi_ip_cmake: ${SYCL_IP_BUILD_DIR}
-${SYCL_IP_BUILD_DIR}: 
+${SYCL_IP_BUILD_DIR}: ${SYCL_IP_CMAKE_SOURCES}
 	mkdir ${SYCL_IP_BUILD_DIR};	\
 	cd ${SYCL_IP_BUILD_DIR};		\
-	${CMAKE_ENV} cmake .. ${CMAKE_FLAGS}
+	${CMAKE_ENV} cmake .. ${CMAKE_FLAGS} ${CMAKE_IP_FLAGS}
 
 oneapi_ip_report: oneapi_ip_cmake ${SYCL_IP_PRJ}
 ${SYCL_IP_PRJ}: 
@@ -142,6 +154,13 @@ oneapi_ip_fpga_emu: oneapi_ip_cmake
 
 oneapi_ip_emu:
 	cd ${SYCL_IP_BUILD_DIR}; ./${SYCL_IP_NAME}.fpga_emu ${TEST_ARGS}
+
+oneapi_ip_plain_c: oneapi_ip_cmake
+	cd ${SYCL_IP_BUILD_DIR}; \
+	make plain_c
+
+oneapi_ip_plain_c_run:
+	cd ${SYCL_IP_BUILD_DIR}; ./${SYCL_IP_NAME}.plain_c ${TEST_ARGS}
 
 #######
 # AFU #
@@ -174,7 +193,7 @@ ase_waves: ${AFU_ASE_DIR}/work/vsim.wlf
 # Build Green Bitstream
 # This takes around 40 minutes...
 gbs: ${AFU_SYNTH_DIR} #oneapi_ip
-${AFU_SYNTH_DIR}: ${OPAE_PLATFORM_ROOT} clean_gbs
+${AFU_SYNTH_DIR}: ${OPAE_PLATFORM_ROOT} #clean_gbs
 	${SYCL_IP_ENV} ${AFU_FLOW_DIR}/afu_synth.sh
 
 gbs_configure:
@@ -223,7 +242,7 @@ clean_oneapi_ip: clean_oneapi_ip_report
 	rm -rf ${SYCL_IP_BUILD_DIR}
 
 clean_oneapi_asp:
-	rm -rf ${ONEAPI_IP_DIR}/build_asp
+	rm -rf ${SYCL_ASP_BUILD_DIR}
 	# TBD
 
 clean_all: # clean_ase clean_sw clean_gbs clean_ase clean_oneapi_ip clean_oneapi_asp 

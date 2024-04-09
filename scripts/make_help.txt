@@ -6,6 +6,8 @@ FIM:
 	fim_update            Update flash images on the board (around 2m)
 	pac_powercycle_<page> Power cycle from page <user1|user2|factory>, necessary after FIM udpate (fim_update) (waits for 10s)
 	opae.io_bind          Bind all VFs to VFIO driver
+	opae.io_bind_one      Bind only ${FIRST_AFU_VF} to VFIO driver
+	opae.io_relese        Release all VFs from VFIO driver
 	pac_hot_plug          Unplug and re-plug PAC from PCIe bus (virtually)
 
 OneAPI ASP flow (Altera OpenCL):
@@ -19,6 +21,10 @@ OneAPI IP flow:
 	oneapi_ip_emu         Build oneapi design in ${SYCL_IP_DIR}, target fpga_emu
 	oneapi_ip_report      Build oneapi design in ${SYCL_IP_DIR}, target report
 	oneapi_ip_report_open Open early report in browser 
+	oneapi_ip_fpga_emu    Build for fpga_emu target
+	oneapi_ip_fpga_emu    Run fpga_emu binary
+	oneapi_ip_plain_c     Build for plain_c
+	oneapi_ip_plain_c_run Run plain_c binary
 
 AFU flow:
 	afu_host              Build AFU host application in ${AFU_SW_DIR}

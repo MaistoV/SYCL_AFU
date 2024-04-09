@@ -43,9 +43,11 @@ export FPGA="$BOARD_VAR"
 
 export FIM_NUM_PF0_VFS=10
 export OFSS_CONFIG=pf0_${FIM_NUM_PF0_VFS}vf
+export FIRST_AFU_VF=5
 # export OFSS_CONFIG=pf0_${FIM_NUM_PF0_VFS}vf_no_hems
-# export FIM_STATIC_AFUS=4 # VFs 1..4
-# export FIM_TOT_AFUS=$((${FIM_NUM_PF0_VFS} + ${FIM_STATIC_AFUS}))
+# export FIRST_AFU_VF=?
+
+export OFSS_CONFIG_DIR=${ROOT_DIR}/fim_flow/ofss_configs/ofss_config_${OFSS_CONFIG}
 
 #####################
 # FIM/AFU synthesis #
@@ -115,9 +117,9 @@ export PATH=$MTI_HOME/linux_x86_64/:$MTI_HOME/bin/:$PATH
 # AFU flow # 
 ############
 # Utility AFUs
-# export AFU_NAME=my_custom_afu_array
-# export AFU_NAME=sycl_hello # hold back due to issues with AVMM read channel 
-export AFU_NAME=sycl_loopback
+# export AFU_NAME=${AFU_NAME="my_custom_afu"}
+# export AFU_NAME=${AFU_NAME="mixed_intf_afu_array"}
+# export AFU_NAME=${AFU_NAME="sycl_loopback_qsys"}
 
 # Target AFU
 export AFU_NAME=${AFU_NAME="sycl_rs_erasure"}
@@ -183,22 +185,22 @@ export SYCL_IP_PRJ_AFU_EXPORT=${AFU_HW_DIR}/${SYCL_IP_NAME}_report.prj
 export AGILEX7_PART_NUMBER=AGFB014R24C2E2V # C220 part number
 # Offset of the SYCL kernel CSR space
 export KERNEL_REGISTER_MAP_OFFSET_HEX=40
+export DISABLE_AVMM_INTERRUPT=0
 
 ##############
 # OneAPI ASP #
 ##############
-export SYCL_ASP_BUILD_DIR=${SYCL_IP_DIR}/build_asp
-export OFS_ASP_ROOT="$HTS_RELEASE/oneapi/oneapi-asp_agf014/nc220"
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$OFS_ASP_ROOT/linux64/lib
-
 # ASP variant, from tree $OFS_ASP_ROOT/hardware/
 export OFS_ASP_BOARD_VARIANT=${OFS_ASP_BOARD_VARIANT=ofs_nc220}
-# export OFS_ASP_BOARD_VARIANT=ofs_nc220_iopipes
-# export OFS_ASP_BOARD_VARIANT=ofs_nc220_usm
-# export OFS_ASP_BOARD_VARIANT=ofs_nc220_usm_iopip
+# export OFS_ASP_BOARD_VARIANT=${OFS_ASP_BOARD_VARIANT=ofs_nc220_iopipes}
+# export OFS_ASP_BOARD_VARIANT=${OFS_ASP_BOARD_VARIANT=ofs_nc220_usm}
+# export OFS_ASP_BOARD_VARIANT=${OFS_ASP_BOARD_VARIANT=ofs_nc220_usm_iopipes}
 
 # ASP BSP OneAPI compilation flag
 export OFS_ASP_FPGA_DEVICE=$OFS_ASP_ROOT:$OFS_ASP_BOARD_VARIANT
+export SYCL_ASP_BUILD_DIR=${SYCL_IP_DIR}/build_asp_${OFS_ASP_BOARD_VARIANT}
+export OFS_ASP_ROOT="$HTS_RELEASE/oneapi/oneapi-asp_agf014/nc220"
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$OFS_ASP_ROOT/linux64/lib
 
 ########################
 # Print out enviroment #  
