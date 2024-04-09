@@ -8,9 +8,15 @@ rm -rf ${AFU_ASE_DIR}
 
 # In case of SYCL-imported IP, prepare Questa file list from kernel_system.qip, using the original ASP flow
 if [[ ${AFU_NAME} == *sycl* ]]; then
+    # Generate new file for source list
+    cd ${AFU_HW_DIR}
+    SIM_AFU_SOURCE_LIST=tmp_$(basename ${AFU_SOURCE_LIST} .txt )_sim.txt
+    cp ${AFU_SOURCE_LIST} ${SIM_AFU_SOURCE_LIST}
+
     if [ -d ${SYCL_IP_PRJ_AFU_EXPORT} ]; then
         # Move to where the kernel_system.qip file is
         cd ${SYCL_IP_PRJ_AFU_EXPORT}
+        rm -rf sim_files/
         echo "[INFO] Launching ase-sim-compile.sh"
         # NOTE: this script is the same as for n6001
         # NOTE: this script strictly relies on oneapi-asp's release tag: ofs-2023.3-2
@@ -20,9 +26,6 @@ if [[ ${AFU_NAME} == *sycl* ]]; then
 
         cd ${AFU_HW_DIR}
 
-        # Generate new file for source list
-        SIM_AFU_SOURCE_LIST=tmp_$(basename ${AFU_SOURCE_LIST} .txt )_sim.txt
-        cp ${AFU_SOURCE_LIST} ${SIM_AFU_SOURCE_LIST}
         # Append header line
         printf "\n########################################################" >> ${SIM_AFU_SOURCE_LIST}
         printf "\n# Force Questa to include files from kernel_system.qip #" >> ${SIM_AFU_SOURCE_LIST}
@@ -32,9 +35,8 @@ if [[ ${AFU_NAME} == *sycl* ]]; then
         # Append new list, inject compile order
         SIM_FILES_DIR=${SYCL_IP_NAME}_report.prj/sim_files
 
-        # Add simlation-only defines
-        echo "# Simlation-only defines"
-        echo "+define+DISABLE_AVMM_INTERRUPT=1" >> ${SIM_AFU_SOURCE_LIST}
+        # Variables for simlation-only
+        export DISABLE_AVMM_INTERRUPT=1 # Otherwise ASE will error-out on the user interrupt zero-width write
 
         # NOTE: Injecting the compile order is a dirty workaround, but this is just a PoC
         # TODO: there is some redundancy here, remove replicates
@@ -51,13 +53,13 @@ if [[ ${AFU_NAME} == *sycl* ]]; then
         find ${SIM_FILES_DIR} -type f -name "hld_*" | sort >> ${SIM_AFU_SOURCE_LIST}
 
         echo "# All others, exclude acl primitives and IP" >> ${SIM_AFU_SOURCE_LIST}
-        find ${SIM_FILES_DIR} -type f               | grep -Ev "_report_di|RSErasureID|acl|hld|inst|kernel_system\.v" | sort >> ${SIM_AFU_SOURCE_LIST}
+        find ${SIM_FILES_DIR} -type f               | grep -Ev "_report_di|ID|acl|hld|inst|kernel_system\.v" | sort >> ${SIM_AFU_SOURCE_LIST}
 
         echo "# SYCL IP internal"
-        find ${SIM_FILES_DIR} -type f -name "*RSErasureID*"  | sort >> ${SIM_AFU_SOURCE_LIST}
+        find ${SIM_FILES_DIR} -type f -name "*ID*"  | sort >> ${SIM_AFU_SOURCE_LIST}
 
         # echo "# Finally, SYCL IP and wrapper"
-        # find ${SIM_FILES_DIR} -type f -name "*${SYCL_IP_NAME}*" | grep -Ev "inst|RSErasureID|sys" | sort >> ${SIM_AFU_SOURCE_LIST}
+        # find ${SIM_FILES_DIR} -type f -name "*${SYCL_IP_NAME}*" | grep -Ev "inst|ID|sys" | sort >> ${SIM_AFU_SOURCE_LIST}
         echo "# Finally, SYCL IP wrapper"
         find ${SIM_FILES_DIR} -type f -name "kernel_system.v" >> ${SIM_AFU_SOURCE_LIST}
 

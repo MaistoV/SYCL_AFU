@@ -16,31 +16,13 @@
 #include "afu_json_info.h"
 
 // Register map emitted for DFL
-#include "afu_dfl_regmap.h"
-// Register map emitted by SYCL
-#include "register_map_offsets.hpp"
+#include "afu_regmap.h"
+
+// Utility functions
+#include "sycl_afu_utils.h"
+
 // RS header
 #include "rs_erasure.hpp"
-
-/*
- * macro to check return codes, print error message, and goto cleanup label
- * NOTE: this changes the program flow (uses goto)!
- */
-int s_error_count = 0;
-void print_err(const char *s, fpga_result res) {
-	fprintf(stderr, "%s:%d: Error %s: %s\n", __FILE__, __LINE__, s, fpgaErrStr(res));
-}
-#define ON_ERR_GOTO(res, label, desc) \
-	do                                \
-	{                                 \
-		if ((res) != FPGA_OK)         \
-		{                             \
-			print_err((desc), (res)); \
-			s_error_count += 1;       \
-			goto label;               \
-		}                             \
-	} while (0)
-
 //
 // Search for all accelerators matching the requested properties and
 // connect to them. The input value of *num_handles is the maximum

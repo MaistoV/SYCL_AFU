@@ -1,52 +1,54 @@
 make targets:
 
 FIM:
-	fim_build_pr          Build FIM and PR-tree (takes around 1h45m)
-	fim_build_flat        Build flat FIM (takes around 1h10m)
-	fim_update            Update flash images on the board (around 2m)
-	pac_powercycle_<page> Power cycle from page <user1|user2|factory>, necessary after FIM udpate (fim_update) (waits for 10s)
-	opae.io_bind          Bind all VFs to VFIO driver
-	opae.io_bind_one      Bind only ${FIRST_AFU_VF} to VFIO driver
-	opae.io_relese        Release all VFs from VFIO driver
-	pac_hot_plug          Unplug and re-plug PAC from PCIe bus (virtually)
+    fim_build_pr          Build FIM and PR-tree (takes around 1h45m)
+    fim_build_flat        Build flat FIM (takes around 1h10m)
+    fim_update            Update flash images on the board (around 2m)
+    pac_powercycle_<page> Power cycle from page <user1|user2|factory>, necessary after FIM udpate (fim_update) (waits for 10s)
+    opae.io_bind          Bind all VFs to VFIO driver
+    opae.io_bind_one      Bind only ${FIRST_AFU_VF} to VFIO driver
+    opae.io_relese        Release all VFs from VFIO driver
+    pac_hot_plug          Unplug and re-plug PAC from PCIe bus (virtually)
 
 OneAPI ASP flow (Altera OpenCL):
-	oneapi_asp_build_aocx Build bitstreaam for ASP
-	aocl_aocx_initalize   Program PAC with aocx (requires the right PR interface to be already flashed on the PAC)
-	aocl_bsp_build        Build PR-tree related BSP
-	aocl_bsp_[un]install  Install/uninstall BSP
-	oneapi_asp_<target>   Build oneapi design in ${SYCL_IP_DIR}, target in: {fpga_emu, fpga_sim, report, fpga}
+    oneapi_asp_build_aocx Build bitstreaam for ASP
+    aocl_aocx_initalize   Program PAC with aocx (requires the right PR interface to be already flashed on the PAC)
+    aocl_bsp_build        Build PR-tree related BSP
+    aocl_bsp_[un]install  Install/uninstall BSP
+    oneapi_cmake_asp      Setup ASP IP cmake environment
+    oneapi_asp_<target>   Build oneapi design in ${SYCL_IP_DIR}, target in: {fpga_emu, fpga_sim, report, fpga}
 
 OneAPI IP flow:
-	oneapi_ip_emu         Build oneapi design in ${SYCL_IP_DIR}, target fpga_emu
-	oneapi_ip_report      Build oneapi design in ${SYCL_IP_DIR}, target report
-	oneapi_ip_report_open Open early report in browser 
-	oneapi_ip_fpga_emu    Build for fpga_emu target
-	oneapi_ip_fpga_emu    Run fpga_emu binary
-	oneapi_ip_plain_c     Build for plain_c
-	oneapi_ip_plain_c_run Run plain_c binary
+    oneapi_cmake_ip       Setup SYCL IP cmake environment
+    oneapi_ip_emu         Build oneapi design in ${SYCL_IP_DIR}, target fpga_emu
+    oneapi_ip_report      Build oneapi design in ${SYCL_IP_DIR}, target report
+    oneapi_ip_report_open Open early report in browser 
+    oneapi_ip_fpga_emu    Build for fpga_emu target
+    oneapi_ip_fpga_emu    Run fpga_emu binary
+    oneapi_ip_plain_c     Build for plain_c
+    oneapi_ip_plain_c_run Run plain_c binary
 
 AFU flow:
-	afu_host              Build AFU host application in ${AFU_SW_DIR}
-	ase_setup             Setup and launch ASE simulation environment {locks a terminal}
-	ase_launch            Subsequent launches of ASE simulator, if the source list of sim config has not changed {locks a terminal}
-	ase_waves             Open simulated waveforms in ${AFU_ASE_DIR}/work/vsim.wlf
-	gbs                   Build green bitstream (takes around 40 minutes)
-	gbs_configure         Configure GBS in PR-slot. On error, you must first make pac_hot_plug
-	test_gbs              Run host application against hadware
-	test_ase              Run host application against ASE simulator (requires make ase_setup or make ase_launch in another terminal)
+    afu_host              Build AFU host application in ${AFU_SW_DIR}
+    ase_setup             Setup and launch ASE simulation environment {locks a terminal}
+    ase_launch            Subsequent launches of ASE simulator, if the source list of sim config has not changed {locks a terminal}
+    ase_waves             Open simulated waveforms in ${AFU_ASE_DIR}/work/vsim.wlf
+    gbs                   Build green bitstream (takes around 40 minutes)
+    gbs_configure         Configure GBS in PR-slot. On error, you must first make pac_hot_plug
+    test_gbs              Run host application against hadware
+    test_ase              Run host application against ASE simulator (requires make ase_setup or make ase_launch in another terminal)
 
 Clean targets:
-	clean_oneapi_asp      Clean OneAPI ASP build
-	clean_oneapi_ip       Clean OneAPI IP build
-	clean_oneapi_ip_report Clean only generated and exported OneAPI IP 
-	clean_afu_host        Clean AFU host software
-	clean_gbs             Clean gbs build
-	clean_ase             Clean ASE simulator setup
-	clean_sw              Clean software build
-	clean_all             TBD
+    clean_oneapi_asp      Clean OneAPI ASP build
+    clean_oneapi_ip       Clean OneAPI IP build
+    clean_oneapi_ip_report Clean only generated and exported OneAPI IP 
+    clean_afu_host        Clean AFU host software
+    clean_gbs             Clean gbs build
+    clean_ase             Clean ASE simulator setup
+    clean_sw              Clean software build
+    clean_all             TBD
 
 make variables:
-	OFSS_CONFIG           Suffix to identify FIM build and OFSS flow
-	RS_SCHEMA             Reed-Solomon code schema in [RS_3_2, RS_6_3, RS_10_4]
-	TEST_ARGS             Arguments to pass to the host elf in oneapi_ip_emu, test_gbs and test_ase, start with -h
+    OFSS_CONFIG           Suffix to identify FIM build and OFSS flow
+    RS_SCHEMA             Reed-Solomon code schema in [RS_3_2, RS_6_3, RS_10_4]
+    TEST_ARGS             Arguments to pass to the host elf in oneapi_ip_emu, test_gbs and test_ase, start with -h
