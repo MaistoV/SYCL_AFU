@@ -40,3 +40,4 @@ This tree is organized as follows:
     └── survival_gen.c                      # Generate survival_patterns_[K]_[P].txt 
 ```
 > TODO: split utility rs_rom_utils.cpp into multiple files
+> TODO: once stable, export this as a separate git repo

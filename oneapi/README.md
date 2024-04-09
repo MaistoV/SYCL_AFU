@@ -83,7 +83,7 @@ $ cmake .. \
     -DUSER_HARDWARE_FLAGS="-Xsno-env-check" \
     -DSUPPORTS_USM=1
 $ make fpga_emu             # Build emulation    (<test_name>.<fpga_emu>)
-$ make fpga_sim             # Build co-simulaton (<test_name>.<fpga_sim>)
+$ make fpga_sim             # Build co-simulaton (<test_name>.<fpga_sim>) (15m build)
 $ make fpga                 # Build for device   (<test_name>.<fpga>) (1h build)
 $ ./<test_name>.<target>    # Run emulation/co-simulation/on device (CL_CONTEXT_MPSIM_DEVICE_INTELFPGA=1 for fpga_sim)
 $ make report               # Optimization report  
