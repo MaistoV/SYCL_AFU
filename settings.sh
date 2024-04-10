@@ -41,15 +41,11 @@ export FPGA="$BOARD_VAR"
 # OFSS FIM flow # 
 #################
 
-# Number of PR VFs
-# NOTE: one every eight is not going to bind to OPAE-vfio
 export FIM_NUM_PF0_VFS=10
-export FIM_NUM_USER_AFUS=$((${FIM_NUM_PF0_VFS}-(${FIM_NUM_PF0_VFS}/8)))
-
-# export OFSS_CONFIG=pf0_${FIM_NUM_PF0_VFS}vf
-# export FIRST_AFU_VF=5 # First VF index after FIM AFUs
-export OFSS_CONFIG=pf0_${FIM_NUM_PF0_VFS}vf_no_hems
-export FIRST_AFU_VF=1
+export OFSS_CONFIG=pf0_${FIM_NUM_PF0_VFS}vf
+export FIRST_AFU_VF=5
+# export OFSS_CONFIG=pf0_${FIM_NUM_PF0_VFS}vf_no_hems
+# export FIRST_AFU_VF=?
 
 export OFSS_CONFIG_DIR=${ROOT_DIR}/fim_flow/ofss_configs/ofss_config_${OFSS_CONFIG}
 
@@ -174,10 +170,12 @@ export ONEAPI_SAMPLES_INCLUDE=${ONEAPI_SAMPLES_DIR}/DirectProgramming/C++SYCL_FP
 export SYCL_IP_NAME=${AFU_NAME} # Use same name as AFU
 export SYCL_IP_DIR=${ROOT_DIR}/oneapi/${SYCL_IP_NAME}
 export SYCL_IP_BUILD_DIR=${SYCL_IP_DIR}/build_ip
+export SYCL_ASP_BUILD_DIR=${SYCL_IP_DIR}/build_asp
 # Append RS_SCHEMA (if set)
 if [[ "${RS_SCHEMA}" != "" ]]; then
     export SYCL_IP_NAME=${SYCL_IP_NAME}_${RS_SCHEMA}
     export SYCL_IP_BUILD_DIR=${SYCL_IP_BUILD_DIR}_${RS_SCHEMA}
+    export SYCL_ASP_BUILD_DIR=${SYCL_ASP_BUILD_DIR}_${RS_SCHEMA}
 fi
 
 # Original project path
@@ -195,16 +193,25 @@ export DISABLE_AVMM_INTERRUPT=0
 # OneAPI ASP #
 ##############
 # ASP variant, from tree $OFS_ASP_ROOT/hardware/
-export OFS_ASP_BOARD_VARIANT=${OFS_ASP_BOARD_VARIANT=ofs_nc220}
+# export OFS_ASP_BOARD_VARIANT=${OFS_ASP_BOARD_VARIANT=ofs_nc220}
 # export OFS_ASP_BOARD_VARIANT=${OFS_ASP_BOARD_VARIANT=ofs_nc220_iopipes}
-# export OFS_ASP_BOARD_VARIANT=${OFS_ASP_BOARD_VARIANT=ofs_nc220_usm}
+export OFS_ASP_BOARD_VARIANT=${OFS_ASP_BOARD_VARIANT=ofs_nc220_usm}
 # export OFS_ASP_BOARD_VARIANT=${OFS_ASP_BOARD_VARIANT=ofs_nc220_usm_iopipes}
+
+# Set USM flag
+unset OFS_ASP_USM_FLAG
+if [[ "${OFS_ASP_BOARD_VARIANT}" == *"usm"* ]]; then
+    export OFS_ASP_USM_FLAG="-DIS_USM=1"
+fi
+
+export OFS_ASP_ROOT="$HTS_RELEASE/oneapi/oneapi-asp_agf014/nc220"
 
 # ASP BSP OneAPI compilation flag
 export OFS_ASP_FPGA_DEVICE=$OFS_ASP_ROOT:$OFS_ASP_BOARD_VARIANT
-export SYCL_ASP_BUILD_DIR=${SYCL_IP_DIR}/build_asp_${OFS_ASP_BOARD_VARIANT}
-export OFS_ASP_ROOT="$HTS_RELEASE/oneapi/oneapi-asp_agf014/nc220"
+# Append board variant
+export SYCL_ASP_BUILD_DIR=${SYCL_ASP_BUILD_DIR}_${OFS_ASP_BOARD_VARIANT}
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$OFS_ASP_ROOT/linux64/lib
+
 
 ########################
 # Print out enviroment #  
@@ -219,7 +226,8 @@ echo ""
 gcc --version | grep gcc --color=none
 echo ""
 
-echo "PAC_PCIE_SBD       : $PAC_PCIE_SBD"
-echo "OPAE_PLATFORM_ROOT : $(basename $(dirname $OPAE_PLATFORM_ROOT))"
-echo "OFSS_CONFIG        : $OFSS_CONFIG"
-echo "AFU_ENV            : $AFU_ENV"
+echo "PAC_PCIE_SBD          : $PAC_PCIE_SBD"
+echo "OPAE_PLATFORM_ROOT    : $(basename $(dirname $OPAE_PLATFORM_ROOT))"
+echo "OFSS_CONFIG           : $OFSS_CONFIG"
+echo "OFS_ASP_BOARD_VARIANT : $OFS_ASP_BOARD_VARIANT"
+echo "AFU_ENV               : $AFU_ENV"

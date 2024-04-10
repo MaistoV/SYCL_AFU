@@ -22,20 +22,28 @@ fim_build_%:
 	./setup_env.sh; \
 	${ROOT_DIR}/fim_flow/build_fim.sh --$* ${OFSS_CONFIG}
 
+FIM_IMAGE ?= ${FIM_IMAGE_USER1}
+FIM_DEBUG ?= 0
+ifeq (${FIM_DEBUG}, 1)
+	FPGASUPDATE_FLAGS += --log-level debug 
+endif
 fim_update: 
 #	Update flash images 
-	sudo fpgasupdate --log-level debug ${FIM_IMAGE_USER1} ${PAC_PCIE_SBD}.0
-#	No need to update also page user2, for now
-# sudo fpgasupdate --log-level debug ${FIM_IMAGE_USER2} ${PAC_PCIE_SBD}.0
+	sudo fpgasupdate ${FPGASUPDATE_FLAGS} ${FIM_IMAGE} ${PAC_PCIE_SBD}.0
 	@echo "To configure the new FIM, powercycle the PAC with:"
-	@echo "    ${MAKE} pac_powercycle_user1"
+	@echo "    ${MAKE} pac_powercycle_<bootpage>"
 
+
+RSU_DEBUG ?= 0
+ifeq (${RSU_DEBUG}, 1)
+	RSU_FLAGS += --debug fpga
+endif
 pac_powercycle_user1:
 pac_powercycle_user2:
 pac_powercycle_factory:
 pac_powercycle_%:
 # 	Power cycle PAC
-	sudo rsu --debug fpga --page=$* ${PAC_PCIE_SBD}.0
+	sudo rsu ${RSU_FLAGS} fpga --page=$* ${PAC_PCIE_SBD}.0
 
 opae.io_bind:
 	${ROOT_DIR}/scripts/opae.io_bind.sh
@@ -65,13 +73,13 @@ SYCL_IP_ENV += RS_SCHEMA=${RS_SCHEMA} \
 				SYCL_IP_BUILD_DIR=${SYCL_IP_BUILD_DIR} \
 				SYCL_IP_PRJ=${SYCL_IP_PRJ}
 
-SYCL_IP_DEBUG ?= 0
+SYCL_DEBUG ?= 0
 FAST_COMPILE ?= 0
 CMAKE_FLAGS ?=
 ifeq (${FAST_COMPILE}, 1)
 	CMAKE_FLAGS += -DUSER_HARDWARE_FLAGS=-Xsfast-compile
 endif
-ifeq (${SYCL_IP_DEBUG}, 1)
+ifeq (${SYCL_DEBUG}, 1)
 	CMAKE_FLAGS += --trace-expand
 endif
 
@@ -100,13 +108,14 @@ aocl_bsp_install:
 aocl_bsp_uninstall:
 	${ONEAPI_DEBUG_ENV} aocl uninstall ${OFS_ASP_ROOT}
 
-ACL_DEVICE = acl0 # Assuming only one device connected
+ACL_DEVICE ?= acl0 # Assuming only one device connected
 aocl_aocx_initalize:
 	sudo pci_device ${PAC_PCIE_SBD}.0 vf 1 ; 				\
 	sudo opae.io init -d ${PAC_PCIE_SBD}.5 ${USER}:${USER};	\
 	${ONEAPI_DEBUG_ENV} aocl initialize ${ACL_DEVICE} ${OFS_ASP_BOARD_VARIANT} 
 
-CMAKE_ASP_FLAGS = -DFPGA_DEVICE=${OFS_ASP_FPGA_DEVICE}
+CMAKE_ASP_FLAGS = -DFPGA_DEVICE=${OFS_ASP_FPGA_DEVICE} \
+	-DIS_BSP=1 ${OFS_ASP_USM_FLAG}
 oneapi_cmake_asp: ${SYCL_ASP_BUILD_DIR}
 ${SYCL_ASP_BUILD_DIR}: ${SYCL_IP_CMAKE_SOURCES}
 	mkdir ${SYCL_ASP_BUILD_DIR};	\
@@ -124,8 +133,9 @@ oneapi_asp_%: oneapi_cmake_asp
 #############################
 # ONE API IP Authoring Flow #
 #############################
-CMAKE_IP_FLAGS = -DFPGA_DEVICE=${AGILEX7_PART_NUMBER}
-oneapi_cmake_ip: ${SYCL_IP_BUILD_DIR}
+CMAKE_IP_FLAGS = -DFPGA_DEVICE=${AGILEX7_PART_NUMBER} \
+	-DIS_BSP=0
+oneapi_ip_cmake: ${SYCL_IP_BUILD_DIR}
 ${SYCL_IP_BUILD_DIR}: ${SYCL_IP_CMAKE_SOURCES}
 	mkdir ${SYCL_IP_BUILD_DIR};	\
 	cd ${SYCL_IP_BUILD_DIR};		\

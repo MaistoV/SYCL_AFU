@@ -16,10 +16,6 @@
 // Typedefs //
 //////////////
 
-// Compatible interfaces for top-level component
-#define ADDR_SPACE_READ 1
-#define ADDR_SPACE_WRITE 2
-
 // Byte/bit width of interfaces
 #define CELL_BIT_WIDTH 512
 #define CELL_BYTE_WIDTH (CELL_BIT_WIDTH/8)
@@ -28,8 +24,14 @@
 typedef ac_int<CELL_BIT_WIDTH, false> line_t;
 
 // Definitions for memory interfaces
-#define BUFFER_LOCATION_READ 1
-#define BUFFER_LOCATION_WRITE 2
+#ifdef IS_BSP
+  #define BUFFER_LOCATION_READ  0
+  #define BUFFER_LOCATION_WRITE 0
+#else // !IS_BSP
+  #define BUFFER_LOCATION_READ  1
+  #define BUFFER_LOCATION_WRITE 2
+#endif // !IS_BSP
+
 // Match Avalon MM hostchan parameters
 // see ofs_plat_if_top_config.vh and ofs_plat_avalon_mem_rdwr_if.sv
 #define ADDR_WIDTH  41                  // This should match ofs_plat_if_top_config.vh and ofs_plat_avalon_mem_rdwr_if.sv

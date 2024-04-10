@@ -11,6 +11,16 @@ set(SIMULATOR_TARGET ${TARGET_NAME}.fpga_sim)
 set(FPGA_TARGET ${TARGET_NAME}.fpga)
 set(ISA_L_LINK_FLAG "-lisal")
 
+# Check if the target is a BSP
+if(IS_BSP MATCHES "1")
+    set(BSP_FLAGS "-DIS_BSP")
+    if(IS_USM MATCHES "1")
+        set(BSP_FLAGS "${BSP_FLAGS} -DIS_USM")
+    endif()
+else()
+    set(BSP_FLAGS "")
+endif()
+
 if($ENV{SYCL_IP_DEBUG})
     set(DEBUG_FLAGS "-DDEBUG")
 endif()
@@ -34,7 +44,7 @@ endif()
 # 1. The "compile" stage compiles the device code to an intermediate representation (SPIR-V).
 # 2. The "link" stage invokes the compiler's FPGA backend before linking.
 #    For this reason, FPGA backend flags must be passed as link flags in CMake.
-set(COMMON_COMPILE_FLAGS "-fsycl -fintelfpga -Wall ${WIN_FLAG} -D$ENV{RS_SCHEMA} -Wno-unused-label ${DEBUG_FLAGS}")
+set(COMMON_COMPILE_FLAGS "-fsycl -fintelfpga -Wall ${BSP_FLAGS} ${WIN_FLAG} -D$ENV{RS_SCHEMA} -Wno-unused-label ${DEBUG_FLAGS}")
 # Temporary -Wno-unused-variable
 set(COMMON_COMPILE_FLAGS "${COMMON_COMPILE_FLAGS} -Wno-unused-variable -Wno-unused-but-set-variable")
 # Link against ISA-L
@@ -45,7 +55,7 @@ set(EMULATOR_LINK_FLAGS "${COMMON_LINK_FLAGS}")
 set(SIMULATOR_COMPILE_FLAGS "${COMMON_COMPILE_FLAGS} -Xssimulation -DFPGA_SIMULATOR")
 set(SIMULATOR_LINK_FLAGS "${COMMON_LINK_FLAGS} -Xssimulation -Xsghdl -Xstarget=${FPGA_DEVICE} ${USER_HARDWARE_FLAGS}")
 set(HARDWARE_COMPILE_FLAGS "${COMMON_COMPILE_FLAGS} -DFPGA_HARDWARE")
-set(HARDWARE_LINK_FLAGS "${COMMON_LINK_FLAGS} -Xshardware -Xstarget=${FPGA_DEVICE} ${USER_HARDWARE_FLAGS}")
+set(HARDWARE_LINK_FLAGS "${COMMON_LINK_FLAGS} -Xshardware -Xstarget=${FPGA_DEVICE} ${USER_HARDWARE_FLAGS} ${BSP_FLAGS}")
 # use cmake -D USER_HARDWARE_FLAGS=<flags> to set extra flags for FPGA backend compilation
 
 ###############################################################################
