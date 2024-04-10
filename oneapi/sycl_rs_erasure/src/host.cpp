@@ -400,34 +400,15 @@ void RunKernel(
 							<< device.get_info<sycl::info::device::name>().c_str()
 							<< std::endl;
 		
-		// For Lambda
-		device_read_t  device_read  = sycl::malloc_shared<line_t>( RS_INPUT_SIZE(cell_length) , q);
-		device_write_t device_write = sycl::malloc_shared<line_t>( RS_OUTPUT_SIZE(cell_length, num_erasures), q);
-
-		// Check pointers are valid
-		assert(device_read);
-		assert(device_write);
-
-		// Copy data in input region
-		for ( unsigned int i = 0; i < RS_INPUT_SIZE(cell_length)/sizeof(line_t); i++ ) {
-			// ((uint8_t*)device_read)[i] = ((uint8_t*)rs_erasure_input)[i];
-			device_read[i] = rs_erasure_input[i];
-		}
-
 		// Run kernel
 		RunKernelLambda(
 						q,
 						num_erasures,
-						device_read,
-						device_write,
+						rs_erasure_input,
+						reconstructed_blocks_out,
 						rs_erasure_csr
 					);
 		
-		// Read back data
-		for ( unsigned int i = 0; i < RS_OUTPUT_SIZE(cell_length, num_erasures)/sizeof(line_t); i++ ) {
-			reconstructed_blocks_out[i] = device_write[i];
-		}
-
 	} catch (exception const &e) {
 		// Catches exceptions in the host code
 		std::cerr << "Caught a SYCL host exception:\n" << e.what() << "\n";

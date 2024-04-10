@@ -38,7 +38,7 @@ typedef ac_int<1, false> uint1;
 typedef ac_int<8, false> uint8;
 typedef ac_int<16, false> uint16;
 
-#ifndef NO_SYCL
+#if !(defined(NO_SYCL) | defined(IS_BSP))
   // Definitions for memory interfaces
   #define BUFFER_LOCATION_READ 1
   #define BUFFER_LOCATION_WRITE 2
@@ -74,12 +74,12 @@ typedef ac_int<16, false> uint16;
   // Interface typedefs
   typedef sycl::ext::oneapi::experimental::annotated_arg<line_t *, read_properties > device_read_t;
   typedef sycl::ext::oneapi::experimental::annotated_arg<line_t *, write_properties> device_write_t;
-#else // NO_SYCL
+#else // NO_SYCL || IS_BSP
   // For BSP builds
   // Don't set any properties, no annotation, just pointers
   typedef line_t* device_read_t;
   typedef line_t* device_write_t;
-#endif // NO_SYCL
+#endif // NO_SYCL || IS_BSP
 
 //////////////////////////
 // Invocation functions //

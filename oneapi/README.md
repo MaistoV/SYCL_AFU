@@ -73,8 +73,10 @@ Refere to [ASP UG Section](https://ofs.github.io/ofs-2023.2/hw/common/user_guide
 Build example:
 
 ``` console 
+$ make aocl_aocx_initalize  # Program PAC with OneAPI hardware runtime
+$ make opae.io_bind_one 
 $ # cd path-to-sample-location, e.g.:
-$ git update submodules
+$ git update submodules --init oneapi/oneAPI-samples
 $ cd oneapi/oneAPI-samples/DirectProgramming/C++SYCL_FPGA/ReferenceDesigns/board_test/
 $ mkdir build
 $ cd build
@@ -90,6 +92,8 @@ $ make report               # Optimization report
 $ browse <test_name>.report.prj/reports/report.html # Open report
 ```
 In case timing is not met, you can pass `USER_HARDWARE_FLAGS=-Xsseed=seed_value` in the cmake command above and recompile hardware image.
+
+OFS_ASP_FPGA_DEVICE is in the form `<path-to-oneapi-asp>:<board_variant>`, e.g. `..../oneapiasp_agf0xx/nc220:ofs_nc220_usm`
 
 Utility make targets are provided in the top level Makefile:
 ``` console 

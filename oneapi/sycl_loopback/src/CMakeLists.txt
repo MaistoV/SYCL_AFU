@@ -16,6 +16,16 @@ else()
     message(STATUS "Configuring the design with the following target: ${FPGA_DEVICE}")
 endif()
 
+# Check if the target is a BSP
+if(IS_BSP MATCHES "1")
+    set(BSP_FLAGS "-DIS_BSP")
+    if(IS_USM MATCHES "1")
+        set(BSP_FLAGS "${BSP_FLAGS} -DIS_USM")
+    endif()
+else()
+    set(BSP_FLAGS "")
+endif()
+
 # This is a Windows-specific flag that enables exception handling in host code
 if(WIN32)
     set(WIN_FLAG "/EHsc")
@@ -25,12 +35,12 @@ endif()
 # 1. The "compile" stage compiles the device code to an intermediate representation (SPIR-V).
 # 2. The "link" stage invokes the compiler's FPGA backend before linking.
 #    For this reason, FPGA backend flags must be passed as link flags in CMake.
-set(EMULATOR_COMPILE_FLAGS "-fsycl -fintelfpga -Wall ${WIN_FLAG} -DFPGA_EMULATOR")
-set(EMULATOR_LINK_FLAGS "-fsycl -fintelfpga")
-set(SIMULATOR_COMPILE_FLAGS "-fsycl -fintelfpga -Wall ${WIN_FLAG} -Xssimulation -DFPGA_SIMULATOR")
-set(SIMULATOR_LINK_FLAGS "-fsycl -fintelfpga -Xssimulation -Xsghdl -Xstarget=${FPGA_DEVICE} ${USER_HARDWARE_FLAGS}")
-set(HARDWARE_COMPILE_FLAGS "-fsycl -fintelfpga -Wall ${WIN_FLAG} -DFPGA_HARDWARE")
-set(HARDWARE_LINK_FLAGS "-fsycl -fintelfpga -Xshardware -Xstarget=${FPGA_DEVICE} ${USER_HARDWARE_FLAGS}")
+set(EMULATOR_COMPILE_FLAGS "-fsycl -fintelfpga -Wall ${BSP_FLAG} ${WIN_FLAG} -DFPGA_EMULATOR")
+set(EMULATOR_LINK_FLAGS "-fsycl -fintelfpga ${BSP_FLAG} ")
+set(SIMULATOR_COMPILE_FLAGS "-fsycl -fintelfpga -Wall ${BSP_FLAG}  ${WIN_FLAG} -Xssimulation -DFPGA_SIMULATOR")
+set(SIMULATOR_LINK_FLAGS "-fsycl -fintelfpga ${BSP_FLAG}  -Xssimulation -Xsghdl -Xstarget=${FPGA_DEVICE} ${USER_HARDWARE_FLAGS}")
+set(HARDWARE_COMPILE_FLAGS "-fsycl -fintelfpga -Wall ${BSP_FLAG}  ${WIN_FLAG} -DFPGA_HARDWARE")
+set(HARDWARE_LINK_FLAGS "-fsycl -fintelfpga ${BSP_FLAG}  -Xshardware -Xstarget=${FPGA_DEVICE} ${USER_HARDWARE_FLAGS}")
 # use cmake -D USER_HARDWARE_FLAGS=<flags> to set extra flags for FPGA backend compilation
 
 ###############################################################################

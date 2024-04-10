@@ -15,22 +15,76 @@ void RunKernelLambda( sycl::queue& q,
                 rs_erasure_csr_t rs_erasure_csr
               ){
 
-
 // If building in NO_SYCL mode, this function is a null macro
 #ifndef NO_SYCL
+
+// If targeting OneAPI BSP/ASP, using zero-copy data transfer design pattern
+#ifdef IS_BSP
+    // make sure the device supports USM host allocations
+	#ifdef IS_USM
+		auto device = q.get_device();
+		if (!device.get_info<sycl::info::device::usm_host_allocations>()) {
+		std::cerr << "ERROR: The selected device does not support USM host allocations\n";
+		exit(1);
+		}
+	#endif // ! IS_USM
+
+	// Derive cell length forom CSR input
+	uint64_t cell_length = rs_erasure_csr.cell_length_byte_width * LINE_BYTE_WIDTH;
+
+    // Input and output data for the zero-copy version
+    // malloc_host allocates memory specifically in the host's address space
+    line_t* in_zero_copy  = sycl::malloc_host<line_t>(RS_INPUT_SIZE(cell_length), q.get_context());
+    line_t* out_zero_copy = sycl::malloc_host<line_t>(RS_OUTPUT_SIZE(cell_length, num_erasures), q.get_context());
+
+	// Check pointers are valid
+	assert ( in_zero_copy  );
+	assert ( out_zero_copy );
+
+	// Manually copy data from argument buffers to local ones
+	for ( unsigned int i = 0; i < RS_INPUT_SIZE(cell_length); i++ ) {
+		((uint8_t*)in_zero_copy)[i] = ((uint8_t*)device_read)[i];
+	}
+
+#endif // IS_BSP
 
     // submit the kernel
     q.submit([&](sycl::handler &h) {
 		// Use kernel_args_restrict to specify that pointers do not alias.
 		h.single_task<RSErasureID>([=]() [[intel::kernel_args_restrict]] {
+#ifdef IS_BSP
+			// using a host_ptr tells the compiler that this pointer lives in the
+			// hosts address space
+			sycl::host_ptr<line_t> host_in_data(in_zero_copy);
+			sycl::host_ptr<line_t> host_out_data(out_zero_copy);
+
+			// Compute
+			rs_erasure(
+					host_in_data,
+					host_out_data,
+					rs_erasure_csr
+				);
+#else // ! IS_BSP
 			rs_erasure(
 					device_read,
 					device_write,
 					rs_erasure_csr
 				);
+#endif // ! IS_BSP
       	});
     })
 	.wait();
+
+#ifdef IS_BSP
+	// Copy back data from local buffer to caller's
+	for ( unsigned int i = 0; i < RS_OUTPUT_SIZE(cell_length, num_erasures); i++ ) {
+		((uint8_t*)device_write)[i] = ((uint8_t*)out_zero_copy)[i];
+	}
+	
+	// Free allocations
+    sycl::free(in_zero_copy, q);
+    sycl::free(out_zero_copy, q);
+#endif // IS_BSP
 
 #endif // ! NO_SYCL
 
