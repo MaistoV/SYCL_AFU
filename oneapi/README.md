@@ -68,7 +68,7 @@ $ aocl diagnose acl0
 ```
 
 ## OneAPI SYCL Sample Kernels
-Refere to [ASP UG Section](https://ofs.github.io/ofs-2023.2/hw/common/user_guides/oneapi_asp/ug_oneapi_asp/#26-compile-and-run-oneapi-sample-applications).
+Refer to [ASP UG Section](https://ofs.github.io/ofs-2023.2/hw/common/user_guides/oneapi_asp/ug_oneapi_asp/#26-compile-and-run-oneapi-sample-applications).
 
 Build example:
 
@@ -101,6 +101,22 @@ $ make oneapi_asp_<target>
 $ make oneapi_asp_report_open # Uses firefox, not fpga_report, for convenience
 ``` 
 
+## Build and Run Custom Examples
+Put SYCL project in [oneapi](.) folder, the build desired target with:
+``` console 
+$ make oneapi_asp_fpga_emu # Builds emulation binary
+$ make oneapi_asp_fpga_sim
+$ make oneapi_asp_report
+$ make oneapi_asp_fpga
+``` 
+
+Run example with related test target:
+``` console
+$ make test_asp_fpga_emu
+$ make test_asp_fpga # make sure to make aocl_aocx_initalize first
+$ make test_asp_fpga_sim
+```
+
 # IP Authoring Flow, SYCL AFUs
 Following the [install guide](https://www.intel.com/content/www/us/en/docs/programmable/749869/22-4/installing-the-ip-authoring-development.html).
 
@@ -120,11 +136,13 @@ $ make oneapi_ip
 
 Utility make targets are provided in the top level Makefile:
 ``` console 
-$ make oneapi_ip_fpga_emu # Builds emulation binary $(AFU_NAME)_fpga_emu
-$ make oneapi_ip_emu      # Runs emualtion bianty
+$ make oneapi_ip_fpga_emu # Builds emulation binary
+$ make test_oneapi_ip_emu # Runs emualtion bianty
 $ make oneapi_ip_report   # Build IP sources and generate HLD report
 $ make clean_oneapi_ip_report # Clean only report and exported project
 $ make clean_oneapi_ip    # Clean all IP-related artifacts
 $ make oneapi_ip_report_open # View HLD report (uses firefox, not fpga_report, for convenience)
+$ make oneapi_ip_plain_c # View HLD report (uses firefox, not fpga_report, for convenience)
+$ make test_oneapi_ip_plain_c # View HLD report (uses firefox, not fpga_report, for convenience)
 ``` 
 

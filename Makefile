@@ -89,6 +89,7 @@ CMAKE_ENV = USER_HARDWARE_FLAGS=${USER_HARDWARE_FLAGS} \
 			SYCL_IP_NAME=${SYCL_IP_NAME} \
 			${SYCL_IP_ENV} \
 			MULTI_ERASURE=${MULTI_ERASURE}
+CMAKE = ${CMAKE_ENV} cmake .. ${CMAKE_FLAGS}
 
 ####################
 # ONE API ASP Flow #
@@ -120,7 +121,7 @@ oneapi_cmake_asp: ${SYCL_ASP_BUILD_DIR}
 ${SYCL_ASP_BUILD_DIR}: ${SYCL_IP_CMAKE_SOURCES}
 	mkdir ${SYCL_ASP_BUILD_DIR};	\
 	cd ${SYCL_ASP_BUILD_DIR};		\
-	${CMAKE_ENV} cmake .. ${CMAKE_FLAGS} ${CMAKE_ASP_FLAGS}
+	${CMAKE} ${CMAKE_ASP_FLAGS}
 
 oneapi_asp_fpga_emu:
 oneapi_asp_fpga_sim:
@@ -130,23 +131,34 @@ oneapi_asp_%: oneapi_cmake_asp
 	cd ${SYCL_ASP_BUILD_DIR}; \
 	make $*
 
+test_asp_fpga:
+test_asp_fpga_emu:
+test_asp_fpga_sim: CL_CONTEXT_MPSIM_DEVICE_INTELFPGA=1
+test_asp_%:
+# 	Make sure to make aocl_aocx_initalize first
+	cd ${SYCL_ASP_BUILD_DIR}; \
+		CL_CONTEXT_MPSIM_DEVICE_INTELFPGA={CL_CONTEXT_MPSIM_DEVICE_INTELFPGA} \
+		./${SYCL_IP_NAME}.$* ${TEST_ARGS}
+
 #############################
 # ONE API IP Authoring Flow #
 #############################
 CMAKE_IP_FLAGS = -DFPGA_DEVICE=${AGILEX7_PART_NUMBER} \
 	-DIS_BSP=0
-oneapi_ip_cmake: ${SYCL_IP_BUILD_DIR}
+oneapi_cmake_ip: ${SYCL_IP_BUILD_DIR}
 ${SYCL_IP_BUILD_DIR}: ${SYCL_IP_CMAKE_SOURCES}
 	mkdir ${SYCL_IP_BUILD_DIR};	\
-	cd ${SYCL_IP_BUILD_DIR};		\
-	${CMAKE_ENV} cmake .. ${CMAKE_FLAGS} ${CMAKE_IP_FLAGS}
+	cd ${SYCL_IP_BUILD_DIR};	\
+	${CMAKE} ${CMAKE_IP_FLAGS}
 
-oneapi_ip_report: oneapi_ip_cmake ${SYCL_IP_PRJ}
-${SYCL_IP_PRJ}: 
+oneapi_ip_report:
+oneapi_ip_fpga_emu:
+oneapi_ip_plain_c:
+oneapi_ip_%: oneapi_cmake_ip
 	cd ${SYCL_IP_BUILD_DIR}; \
-	make report ${SYCL_IP_ENV}
+	make $* ${SYCL_IP_ENV}
 
-oneapi_ip_report_open:
+oneapi_open_ip_report:
 	firefox ${SYCL_IP_PRJ}/reports/report.html &
 
 oneapi_ip: oneapi_ip_report
@@ -158,19 +170,10 @@ oneapi_ip: oneapi_ip_report
 #	Update SYCL IP CSR offset
 	make -C ${AFU_SW_DIR} register_map_offsets
 
-oneapi_ip_fpga_emu: oneapi_ip_cmake
-	cd ${SYCL_IP_BUILD_DIR}; \
-	make fpga_emu
-
-oneapi_ip_emu:
-	cd ${SYCL_IP_BUILD_DIR}; ./${SYCL_IP_NAME}.fpga_emu ${TEST_ARGS}
-
-oneapi_ip_plain_c: oneapi_ip_cmake
-	cd ${SYCL_IP_BUILD_DIR}; \
-	make plain_c
-
-oneapi_ip_plain_c_run:
-	cd ${SYCL_IP_BUILD_DIR}; ./${SYCL_IP_NAME}.plain_c ${TEST_ARGS}
+test_ip_fpga_emu:
+test_ip_plain_c:
+test_ip_%:
+	cd ${SYCL_IP_BUILD_DIR}; ./${SYCL_IP_NAME}.$* ${TEST_ARGS}
 
 #######
 # AFU #

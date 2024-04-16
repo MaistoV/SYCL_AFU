@@ -124,10 +124,10 @@ export PATH=$MTI_HOME/linux_x86_64/:$MTI_HOME/bin/:$PATH
 # Target AFU
 export AFU_NAME=${AFU_NAME="sycl_rs_erasure"}
 # Don't export RS_SCHEMA for AFUs other than sycl_rs_erasure
-unset RS_SCHEMA
 if [ "${AFU_NAME}" == "sycl_rs_erasure" ]; then
-    export RS_SCHEMA=RS_3_2
-    # export RS_SCHEMA=RS_6_3
+    export RS_SCHEMA=${RS_SCHEMA=RS_3_2}
+else 
+    unset RS_SCHEMA
 fi
 
 # AFU-specific settings
@@ -140,10 +140,10 @@ export AFU_FIM_IMAGE_INFO=$(cat ${AFU_SYNTH_DIR}/build/quartus_proj_dir/user1_im
 export AFU_PR_INTERFACE_ID=$(grep "FME_IFC_ID=" ${AFU_SYNTH_DIR}/build/quartus_proj_dir/build_env_db.txt | sed "s/FME_IFC_ID=//g")
 # Collect in a single variable
 export AFU_ENV="
-    AFU_NAME            = ${AFU_NAME}
-    AFU_ID              = ${AFU_ID}
-    AFU_FIM_IMAGE_INFO  = ${AFU_FIM_IMAGE_INFO}
-    AFU_PR_INTERFACE_ID = ${AFU_PR_INTERFACE_ID}
+    - AFU_NAME            = ${AFU_NAME}
+    - AFU_ID              = ${AFU_ID}
+    - AFU_FIM_IMAGE_INFO  = ${AFU_FIM_IMAGE_INFO}
+    - AFU_PR_INTERFACE_ID = ${AFU_PR_INTERFACE_ID}
 "
 
 ###############
@@ -158,14 +158,6 @@ export LIBOPAE_C_ROOT=/usr
 # Setup OneAPI Base Toolkit, force re-execution
 source ${ONEAPI_ROOT}/setvars.sh --force
 
-############################
-# OneAPI FPGA IP Authoring #  
-############################
-
-# OneAPI includes
-export ONEAPI_SAMPLES_DIR=${ROOT_DIR}/oneapi/oneAPI-samples
-export ONEAPI_SAMPLES_INCLUDE=${ONEAPI_SAMPLES_DIR}/DirectProgramming/C++SYCL_FPGA/include
-
 # SYCL IP names and working directories
 export SYCL_IP_NAME=${AFU_NAME} # Use same name as AFU
 export SYCL_IP_DIR=${ROOT_DIR}/oneapi/${SYCL_IP_NAME}
@@ -177,6 +169,14 @@ if [[ "${RS_SCHEMA}" != "" ]]; then
     export SYCL_IP_BUILD_DIR=${SYCL_IP_BUILD_DIR}_${RS_SCHEMA}
     export SYCL_ASP_BUILD_DIR=${SYCL_ASP_BUILD_DIR}_${RS_SCHEMA}
 fi
+
+############################
+# OneAPI FPGA IP Authoring #  
+############################
+
+# OneAPI includes
+export ONEAPI_SAMPLES_DIR=${ROOT_DIR}/oneapi/oneAPI-samples
+export ONEAPI_SAMPLES_INCLUDE=${ONEAPI_SAMPLES_DIR}/DirectProgramming/C++SYCL_FPGA/include
 
 # Original project path
 export SYCL_IP_PRJ=${SYCL_IP_BUILD_DIR}/${SYCL_IP_NAME}_report.prj
@@ -206,12 +206,13 @@ fi
 
 export OFS_ASP_ROOT="$HTS_RELEASE/oneapi/oneapi-asp_agf014/nc220"
 
+export AOCX_PR_INTERFACE_ID=$(cat ${OFS_ASP_ROOT}/pr_build_template/hw/lib/fme-ifc-id.txt)
+
 # ASP BSP OneAPI compilation flag
 export OFS_ASP_FPGA_DEVICE=$OFS_ASP_ROOT:$OFS_ASP_BOARD_VARIANT
 # Append board variant
 export SYCL_ASP_BUILD_DIR=${SYCL_ASP_BUILD_DIR}_${OFS_ASP_BOARD_VARIANT}
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$OFS_ASP_ROOT/linux64/lib
-
 
 ########################
 # Print out enviroment #  
@@ -230,4 +231,5 @@ echo "PAC_PCIE_SBD          : $PAC_PCIE_SBD"
 echo "OPAE_PLATFORM_ROOT    : $(basename $(dirname $OPAE_PLATFORM_ROOT))"
 echo "OFSS_CONFIG           : $OFSS_CONFIG"
 echo "OFS_ASP_BOARD_VARIANT : $OFS_ASP_BOARD_VARIANT"
-echo "AFU_ENV               : $AFU_ENV"
+echo "AOCX_PR_INTERFACE_ID  : $AOCX_PR_INTERFACE_ID"
+echo "AFU_ENV                 $AFU_ENV"
