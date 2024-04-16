@@ -5,6 +5,7 @@
 // =============================================================
 
 #include <iostream>
+#include <chrono>
 
 #ifndef NO_SYCL
 	#include <sycl/sycl.hpp>
@@ -35,6 +36,13 @@ void RunKernel(
 		rs_erasure_csr_t rs_erasure_csr
 	);
 
+// Decode cell_length for Bytes, KBs or MBs
+int decode_cell_length (
+		char cell_length_byte_power[2],
+		unsigned int* cell_length_byte,
+		const unsigned int cell_length
+		);
+
 int usage( char** argv ) {
 	fprintf(stderr,
 		"Usage: %s [options]\n"
@@ -42,6 +50,8 @@ int usage( char** argv ) {
 		"  -r <seed>	Seed for PRNG for randomized data\n"
 		"  -e <0|1>		Perform encoding with ISA-L\n"
 		"  -d <0|1>		Perform decoding with ISA-L\n"
+		"  -m 			Measure reconstruction latency\n"
+		"  -o <dir>		Output directory for latency measures (requires -m)\n"
 		"  -l <value>	Cell length in bytes (positive multiple of 64B)\n"
 		, argv[0]
 	);
@@ -60,20 +70,44 @@ int usage( char** argv ) {
 #endif
 #endif // ! NO_SYCL
 
+// Number of erasures for this test
 #define ONE_ERASURE 1
 
+// TODO: export this
+// Start measure with chrono
+#define MEASURE_LATENCY_START(start)			start = std::chrono::steady_clock::now();
+// End measure, return double
+#define MEASURE_LATENCY_END(start, time_sec) 	end = std::chrono::steady_clock::now(); \
+												time_sec = std::chrono::duration_cast<std::chrono::duration<double>>(end - start).count();
+// Print time_sec on fd_latency
+#define MEASURE_LATENCY_FPRINTF(fd_latency, time_sec) fprintf(fd_latency, "%0.10f\n", time_sec);
+// Combine simpler macros
+#define MEASURE_LATENCY_END_AND_PRINT(start, time_sec, fd_latency) MEASURE_LATENCY_END(start,time_sec); MEASURE_LATENCY_FPRINTF(fd_latency, time_sec);
+
 int main(int argc, char *argv[]) {
-	int ret_val = 0;
 	// Default params
+	int ret_val = 0;
 	unsigned int prng_seed = 54656;
 	int encode_isal = 0;
 	int decode_isal = 0;
+	int measure_latency = 0;
 	unsigned int cell_length = CELL_LENGTH_DEFAULT;
-	unsigned long max_permutations;
+	unsigned long max_permutations = 0;
+
+	// For latency measurement
+	char filename[256];
+	char filedir[256] = "./";
+	char tmp_string[256];
+	double time_sec = 0.;
+	FILE* fd_latency;
+    std::chrono::time_point<
+		std::chrono::steady_clock,
+		std::chrono::nanoseconds
+		> start, end;
 
 	// Permutation buffers
 	int c;
-	while ( ( c = getopt(argc, argv, "r:e:d:l:n:h") ) != -1 ) {
+	while ( ( c = getopt(argc, argv, "r:e:d:l:m:o:h") ) != -1 ) {
 		switch (c) {
 		case 'r':
 			prng_seed = atoi(optarg);
@@ -90,13 +124,21 @@ int main(int argc, char *argv[]) {
 				usage( argv );
 			}
 			break;
+		case 'm':
+			measure_latency = atoi(optarg);
+			break;
+		case 'o':
+			if ( measure_latency != 1 ) {
+				usage( argv );
+			}
+			strcpy(filedir, optarg);
+			break;
 		case 'h':
 		default:
 			usage ( argv );
 			break;
 		}
 	}
-
 
 	max_permutations = compute_max_erasure_patterns( RS_K, RS_P, ONE_ERASURE );
 
@@ -242,6 +284,22 @@ int main(int argc, char *argv[]) {
 
 	max_permutations = compute_1_erasure_patterns( RS_K, RS_P );
 
+	// Prepare latency measurements
+    if ( measure_latency ) {
+		// Decode cell_elgth for Bytes, KBs or MBs
+		unsigned int cell_length_byte;
+		char cell_length_byte_power[3];
+		decode_cell_length ( cell_length_byte_power, &cell_length_byte, cell_length );
+
+		#define BASE_FILENAME "latency"
+		// Open output file
+		sprintf( filename, "%s_%d_%d_%d%s_%s.txt", BASE_FILENAME, RS_K, RS_P, cell_length_byte, cell_length_byte_power, (decode_isal) ? "ISA-L" : "SYCL");
+		strcpy( tmp_string, filedir );
+		strcat( tmp_string, filename );
+		fd_latency = fopen(tmp_string, "a");
+		printf("%s:%d: Appending data on file %s\n", __FILE__, __LINE__, tmp_string);
+	}
+	
 	// Loop over all possible RS_K:RS_P permutations
 	for ( unsigned int permutation_index = 0; permutation_index < max_permutations; permutation_index++ ) {
 		for ( unsigned int survival_index = 0; survival_index < num_vectors_per_erasure_pattern; survival_index++ ) {
@@ -260,11 +318,21 @@ int main(int argc, char *argv[]) {
 				for ( unsigned int i = 0; i < RS_K; i++ ){
 					recover_srcs[i] = frag_ptrs[decode_index[permutation_index][survival_index][i]];
 				}
+
+				// Start measure by macro
+				if ( measure_latency ) {
+					MEASURE_LATENCY_START(start);
+				}
+
 				// Recover data
 				uint8_t* decode_matrix = (uint8_t*)decode_matrix_rom[permutation_index*num_vectors_per_erasure_pattern + survival_index];
 				ec_init_tables(RS_K, ONE_ERASURE, decode_matrix, g_tbls);
 				ec_encode_data(cell_length, RS_K, ONE_ERASURE, g_tbls, (unsigned char **)recover_srcs, (unsigned char **)recover_outp);
-				
+
+				// End measure by macro
+				if ( measure_latency ) {
+					MEASURE_LATENCY_END_AND_PRINT(start, time_sec, fd_latency);
+				}
 			#ifdef DEBUG			
 				printf("%s:%d: reconstructed_blocks_out:\n", __FILE__, __LINE__);
 				for ( unsigned int i = 0; i < ONE_ERASURE; i++ ) {
@@ -306,6 +374,11 @@ int main(int argc, char *argv[]) {
 				rs_erasure_csr.erasure_pattern	= erasure_patterns[permutation_index];
 				rs_erasure_csr.survived_cells	= decode_index_bitstring[permutation_index][survival_index];
 			
+				// Start measure by macro
+				if ( measure_latency ) {
+					MEASURE_LATENCY_START(start);
+				}
+
 				// Call to kernel
 				RunKernel (
 						// selector,
@@ -315,6 +388,12 @@ int main(int argc, char *argv[]) {
 						reconstructed_blocks_out,
 						rs_erasure_csr
 					);
+	
+				// End measure by macro
+				if ( measure_latency ) {
+					MEASURE_LATENCY_END_AND_PRINT(start, time_sec, fd_latency);
+				}
+
 
 			#ifdef DEBUG			
 				printf("%s:%d: reconstructed_blocks_out:\n", __FILE__, __LINE__);
@@ -342,7 +421,7 @@ int main(int argc, char *argv[]) {
 				ret_val = memcmp(recover_outp[i], frag_ptrs[permutation_index], cell_length);
 				if ( ret_val ) {
 					printf("%s:%d: Fail erasure recovery %d, frag %d\n", __FILE__, __LINE__, i, permutation_index);
-					
+	
 				#ifdef DEBUG			
 					printf("%s:%d: expected:\n", __FILE__, __LINE__);
 					for ( unsigned int i = 0; i < ONE_ERASURE; i++ ) {
@@ -361,6 +440,13 @@ int main(int argc, char *argv[]) {
 		}  // survival_index over num_vectors_per_erasure_pattern
 	} // permutation_index over max_permutations
 
+	// Close file
+	if ( measure_latency ) {
+		fclose(fd_latency);
+		printf("%s:%d: New latency data appended on file %s\n", __FILE__, __LINE__, tmp_string);
+	}
+
+	// Test summary
 	printf("%s:%d: Test passed\n RS[%d:%d]\n cell_length=%d,\n encodind with %s,\n decoding with %s,\n PRNG seed=%u\n",
 		 __FILE__, __LINE__, RS_K, RS_P, cell_length,
 		 (encode_isal) ? "ISA-L" : "SYCL kernel",
@@ -379,7 +465,7 @@ void RunKernel(
 		device_write_t reconstructed_blocks_out,
 		rs_erasure_csr_t rs_erasure_csr
 	){
-		
+
 #ifdef NO_SYCL
 	rs_erasure (
                  rs_erasure_input,
@@ -423,3 +509,35 @@ void RunKernel(
 #endif // !NO_SYCL
 
 } // RunKernel
+
+
+int decode_cell_length ( char cell_length_byte_power[2], unsigned int* cell_length_byte, const unsigned int cell_length ) {
+	unsigned int byte_power = 0;
+
+	*cell_length_byte = cell_length;
+	while ( (*cell_length_byte / 1024) != 0 ) {
+		*cell_length_byte /= 1024;
+		byte_power++;
+	}
+
+	cell_length_byte_power[1] = 'B';
+	switch ( byte_power ) {
+	case 0:
+		cell_length_byte_power[0] = 'B';
+		cell_length_byte_power[1] = '\0';
+		break;
+	case 1:
+		cell_length_byte_power[0] = 'K';
+		break;
+	case 2:
+		cell_length_byte_power[0] = 'M';
+		break;
+	default:
+		printf("Error decoding cell_length, aborting");
+		return -1;
+		break;
+	}
+	cell_length_byte_power[2] = '\0';
+
+	return 0;
+};
