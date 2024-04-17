@@ -123,6 +123,7 @@ ${SYCL_ASP_BUILD_DIR}: ${SYCL_IP_CMAKE_SOURCES}
 	cd ${SYCL_ASP_BUILD_DIR};		\
 	${CMAKE} ${CMAKE_ASP_FLAGS}
 
+oneapi_asp_plain_c:
 oneapi_asp_fpga_emu:
 oneapi_asp_fpga_sim:
 oneapi_asp_report:
@@ -131,14 +132,13 @@ oneapi_asp_%: oneapi_cmake_asp
 	cd ${SYCL_ASP_BUILD_DIR}; \
 	make $*
 
-test_asp_fpga:
+test_asp_plain_c:
+test_asp_fpga: # Make sure to make aocl_aocx_initalize first
 test_asp_fpga_emu:
-test_asp_fpga_sim: CL_CONTEXT_MPSIM_DEVICE_INTELFPGA=1
+test_asp_fpga_sim: # TODO: CL_CONTEXT_MPSIM_DEVICE_INTELFPGA=1
 test_asp_%:
-# 	Make sure to make aocl_aocx_initalize first
 	cd ${SYCL_ASP_BUILD_DIR}; \
-		CL_CONTEXT_MPSIM_DEVICE_INTELFPGA={CL_CONTEXT_MPSIM_DEVICE_INTELFPGA} \
-		./${SYCL_IP_NAME}.$* ${TEST_ARGS}
+	./${SYCL_IP_NAME}.$* ${TEST_ARGS}
 
 #############################
 # ONE API IP Authoring Flow #
@@ -218,12 +218,37 @@ gbs_configure:
 AFU_ELF_NAME ?= bin/${AFU_NAME}
 TEST_ARGS	 ?=
 
+test_sycl_afu: test_gbs
 test_gbs: afu_host #gbs_configure ${AFU_GBS_FILE}
 #	Run host application
 	cd ${AFU_SW_DIR}; ./${AFU_ELF_NAME} ${TEST_ARGS}
 
 test_ase: afu_host
 	cd ${AFU_SW_DIR}; with_ase ./${AFU_ELF_NAME} ${TEST_ARGS}
+
+#########
+# ISA-L #
+#########
+# Alias ISA-L on plain_c ASP or IP implementations
+
+test_isal: test_ip_plain_c
+oneapi_isal: oneapi_ip_plain_c
+
+############
+# Measures #
+############
+
+measure_all: measure_isal measure_asp_fpga measure_sycl_afu
+# measure_asp_fpga: 	aocl_aocx_initalize
+
+measure_isal:
+measure_asp_fpga:
+measure_sycl_afu:
+measure_%:
+	${MEASURE_LATENCY_DIR}/measure_latency_top.sh $* ${MEASURE_NUM_REPS}
+
+clean_measure:
+	rm -rf ${ROOT_DIR}/measures/latency/data/*
 
 ############
 # Clean up #

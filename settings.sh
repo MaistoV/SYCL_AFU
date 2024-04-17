@@ -214,6 +214,13 @@ export OFS_ASP_FPGA_DEVICE=$OFS_ASP_ROOT:$OFS_ASP_BOARD_VARIANT
 export SYCL_ASP_BUILD_DIR=${SYCL_ASP_BUILD_DIR}_${OFS_ASP_BOARD_VARIANT}
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$OFS_ASP_ROOT/linux64/lib
 
+############
+# Measures #
+############
+export MEASURE_LATENCY_DIR=${ROOT_DIR}/measures/latency
+export MEASURE_NUM_REPS=${MEASURE_NUM_REPS=1} # TODO: set me to 20 or 30
+# export MEASURE_LATENC_OUTPUT_DIR=${MEASURE_LATENC_OUTPUT_DIR=${MEASURE_LATENCY_DIR}/data/}
+
 ########################
 # Print out enviroment #  
 ########################

@@ -14,9 +14,11 @@ hitek_release/*
 # Auxiliary tmp files
 tmp*
 
-# Results
+# Results, data and plots
 *.csv
 *.log
+data*/
+*.png
 
 # Simulation files
 transcript

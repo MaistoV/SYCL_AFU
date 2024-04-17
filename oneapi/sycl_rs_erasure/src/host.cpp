@@ -7,11 +7,11 @@
 #include <iostream>
 #include <chrono>
 
-#ifndef NO_SYCL
+#ifndef NO_SYCL_ASP
 	#include <sycl/sycl.hpp>
 	#include <sycl/ext/intel/fpga_extensions.hpp>
 	#include "exception_handler.hpp"
-#endif // !NO_SYCL
+#endif // !NO_SYCL_ASP
 
 
 // Header for device code.
@@ -26,7 +26,7 @@
 
 using namespace sycl;
 
-// Utility function wrapping the complexity of the SYCL call
+// Utility function wrapping the complexity of the SYCL_ASP call
 void RunKernel(
 		// sycl::device_selector selector,
 		unsigned int cell_length,
@@ -51,7 +51,8 @@ int usage( char** argv ) {
 		"  -e <0|1>		Perform encoding with ISA-L\n"
 		"  -d <0|1>		Perform decoding with ISA-L\n"
 		"  -m 			Measure reconstruction latency\n"
-		"  -o <dir>		Output directory for latency measures (requires -m)\n"
+		"  -o <dir>		Output directory for latency measures (ignored for -m=0)\n"
+		"  -x <0|1>		Decode once each cell and exit\n"
 		"  -l <value>	Cell length in bytes (positive multiple of 64B)\n"
 		, argv[0]
 	);
@@ -60,7 +61,7 @@ int usage( char** argv ) {
 
 // DEBUG: make selector global for now
 // Select either the FPGA emulator, FPGA simulator or FPGA device
-#ifndef NO_SYCL
+#ifndef NO_SYCL_ASP
 #if FPGA_SIMULATOR
 	auto selector = sycl::ext::intel::fpga_simulator_selector_v;
 #elif FPGA_HARDWARE
@@ -68,7 +69,7 @@ int usage( char** argv ) {
 #else	// #if FPGA_EMULATOR
 	auto selector = sycl::ext::intel::fpga_emulator_selector_v;
 #endif
-#endif // ! NO_SYCL
+#endif // ! NO_SYCL_ASP
 
 // Number of erasures for this test
 #define ONE_ERASURE 1
@@ -90,6 +91,7 @@ int main(int argc, char *argv[]) {
 	unsigned int prng_seed = 54656;
 	int encode_isal = 0;
 	int decode_isal = 0;
+	int decode_once = 0;
 	int measure_latency = 0;
 	unsigned int cell_length = CELL_LENGTH_DEFAULT;
 	unsigned long max_permutations = 0;
@@ -107,7 +109,7 @@ int main(int argc, char *argv[]) {
 
 	// Permutation buffers
 	int c;
-	while ( ( c = getopt(argc, argv, "r:e:d:l:m:o:h") ) != -1 ) {
+	while ( ( c = getopt(argc, argv, "r:e:d:l:m:o:x:h") ) != -1 ) {
 		switch (c) {
 		case 'r':
 			prng_seed = atoi(optarg);
@@ -128,10 +130,10 @@ int main(int argc, char *argv[]) {
 			measure_latency = atoi(optarg);
 			break;
 		case 'o':
-			if ( measure_latency != 1 ) {
-				usage( argv );
-			}
 			strcpy(filedir, optarg);
+			break;
+		case 'x':
+			decode_once = atoi(optarg);
 			break;
 		case 'h':
 		default:
@@ -199,7 +201,7 @@ int main(int argc, char *argv[]) {
 #endif
 
 	printf("%s:%d: Encoding parity cells for RS[%d:%d] cell_length=%d, using %s\n",
-		 __FILE__, __LINE__, RS_K, RS_P, cell_length, (encode_isal) ? "ISA-L" : "SYCL kernel");
+		 __FILE__, __LINE__, RS_K, RS_P, cell_length, (encode_isal) ? "ISA-L" : "SYCL_ASP kernel");
 	
 	// Encode with ISA-L
 	if ( encode_isal ) {
@@ -238,7 +240,7 @@ int main(int argc, char *argv[]) {
 
 		// Encode fragments RS_K+1, RS_K+2, ..., RS_K+RS_P
 		for ( unsigned int i = 0; i < RS_P; i++ ){
-			printf("%s:%d: Encoding parity cell %d [%d/%d] with SYCL kernel\n", __FILE__, __LINE__, i, i+1, RS_P);
+			printf("%s:%d: Encoding parity cell %d [%d/%d] with SYCL_ASP kernel\n", __FILE__, __LINE__, i, i+1, RS_P);
 
 			// Write input
 			rs_erasure_csr.survived_cells	= RS_PATTERN_MASK & ((1 << RS_K) -1); // Bitmask for first k blocks
@@ -278,7 +280,7 @@ int main(int argc, char *argv[]) {
 #endif
 
 	printf("%s:%d: Decoding/Reconstructing blocks RS[%d:%d] cell_length=%d, using %s\n",
-		 __FILE__, __LINE__, RS_K, RS_P, cell_length, (decode_isal) ? "ISA-L" : "SYCL kernel");
+		 __FILE__, __LINE__, RS_K, RS_P, cell_length, (decode_isal) ? "ISA-L" : "SYCL_ASP kernel");
 
 	int num_vectors_per_erasure_pattern = compute_num_vectors_per_erasure_pattern (RS_K, RS_P);
 
@@ -293,8 +295,9 @@ int main(int argc, char *argv[]) {
 
 		#define BASE_FILENAME "latency"
 		// Open output file
-		sprintf( filename, "%s_%d_%d_%d%s_%s.txt", BASE_FILENAME, RS_K, RS_P, cell_length_byte, cell_length_byte_power, (decode_isal) ? "ISA-L" : "SYCL");
+		sprintf( filename, "%s_%d_%d_%d%s_%s.txt", BASE_FILENAME, RS_K, RS_P, cell_length_byte, cell_length_byte_power, (decode_isal) ? "ISA-L" : "SYCL_ASP");
 		strcpy( tmp_string, filedir );
+		strcat( tmp_string, "/" );
 		strcat( tmp_string, filename );
 		fd_latency = fopen(tmp_string, "a");
 		printf("%s:%d: Appending data on file %s\n", __FILE__, __LINE__, tmp_string);
@@ -437,7 +440,19 @@ int main(int argc, char *argv[]) {
 						return -1;
 					}
 			} // Check results
+			
+			// Break out of the survival_index loop
+			if ( decode_once ) {
+				break;
+			}
+
 		}  // survival_index over num_vectors_per_erasure_pattern
+		
+		// Break out of the permutation_index loop
+		if ( decode_once ) {
+			break;
+		}
+
 	} // permutation_index over max_permutations
 
 	// Close file
@@ -449,8 +464,8 @@ int main(int argc, char *argv[]) {
 	// Test summary
 	printf("%s:%d: Test passed\n RS[%d:%d]\n cell_length=%d,\n encodind with %s,\n decoding with %s,\n PRNG seed=%u\n",
 		 __FILE__, __LINE__, RS_K, RS_P, cell_length,
-		 (encode_isal) ? "ISA-L" : "SYCL kernel",
-		 (decode_isal) ? "ISA-L" : "SYCL kernel",
+		 (encode_isal) ? "ISA-L" : "SYCL_ASP kernel",
+		 (decode_isal) ? "ISA-L" : "SYCL_ASP kernel",
 		 prng_seed
 		 );
 
@@ -466,18 +481,18 @@ void RunKernel(
 		rs_erasure_csr_t rs_erasure_csr
 	){
 
-#ifdef NO_SYCL
+#ifdef NO_SYCL_ASP
 	rs_erasure (
                  rs_erasure_input,
                  reconstructed_blocks_out,
                  rs_erasure_csr
                 );
 
-#else // ! NO_SYCL
+#else // ! NO_SYCL_ASP
 
 	try {
 		// Create a queue bound to the chosen device.
-		// If the device is unavailable, a SYCL runtime exception is thrown.
+		// If the device is unavailable, a SYCL_ASP runtime exception is thrown.
 		queue q(selector, fpga_tools::exception_handler);
 
 		auto device = q.get_device();
@@ -497,7 +512,7 @@ void RunKernel(
 		
 	} catch (exception const &e) {
 		// Catches exceptions in the host code
-		std::cerr << "Caught a SYCL host exception:\n" << e.what() << "\n";
+		std::cerr << "Caught a SYCL_ASP host exception:\n" << e.what() << "\n";
 
 		// Most likely the runtime couldn't find FPGA hardware!
 		if (e.code().value() == CL_DEVICE_NOT_FOUND) {
@@ -506,7 +521,7 @@ void RunKernel(
 		std::terminate();
 
 	} // try/catch
-#endif // !NO_SYCL
+#endif // !NO_SYCL_ASP
 
 } // RunKernel
 
