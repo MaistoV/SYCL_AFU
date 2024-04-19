@@ -218,7 +218,8 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$OFS_ASP_ROOT/linux64/lib
 # Measures #
 ############
 export MEASURE_LATENCY_DIR=${ROOT_DIR}/measures/latency
-export MEASURE_NUM_REPS=${MEASURE_NUM_REPS=1} # TODO: set me to 20 or 30
+export MEASURE_NUM_REPS=${MEASURE_NUM_REPS=1} 
+export MEASURE_MAX_DECODE=${MEASURE_MAX_DECODE=20} 
 # export MEASURE_LATENC_OUTPUT_DIR=${MEASURE_LATENC_OUTPUT_DIR=${MEASURE_LATENCY_DIR}/data/}
 
 ########################
@@ -234,6 +235,7 @@ echo ""
 gcc --version | grep gcc --color=none
 echo ""
 
+echo "RS_SCHEMA             : $RS_SCHEMA"
 echo "PAC_PCIE_SBD          : $PAC_PCIE_SBD"
 echo "OPAE_PLATFORM_ROOT    : $(basename $(dirname $OPAE_PLATFORM_ROOT))"
 echo "OFSS_CONFIG           : $OFSS_CONFIG"

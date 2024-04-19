@@ -43,6 +43,7 @@ typedef struct rs_erasure_csr {
 } rs_erasure_csr_t;
 
 // Mux ROM values among RS codes
+// TODO: this could be auto generated
 #ifdef RS_3_2
 	#define RS_K 3
 	#define RS_P 2
@@ -89,10 +90,6 @@ typedef struct rs_erasure_csr {
 	#error RS_K and RS_P undefined, define [RS_3_2 | RS_6_3 | RS_10_4]
 #endif
 #endif
-
-// #define STR(x) #x
-// #define XSTR(x) STR(x)
-// #pragma message "Building RS[" XSTR(RS_K) ":" XSTR(RS_P) "]"
 
 #define RS_M (RS_K + RS_P) // Total number of cells
 #if RS_M > 16

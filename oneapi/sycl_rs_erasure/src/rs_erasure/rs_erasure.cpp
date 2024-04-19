@@ -9,6 +9,8 @@ class RSErasureID;
 
 // Lambda
 void RunKernelLambda( sycl::queue& q,
+				int measure_latency,
+				FILE* fd_latency,
 				unsigned int num_erasures,
                 device_read_t device_read,
                 device_write_t device_write,
@@ -48,6 +50,13 @@ void RunKernelLambda( sycl::queue& q,
 
 #endif // IS_BSP
 
+	// Start measure by macro
+	std::chrono::time_point<std::chrono::steady_clock, std::chrono::nanoseconds> start, end;
+	double time_sec = 0.0;
+	if ( measure_latency ) {
+		MEASURE_LATENCY_START(start);
+	}
+
     // submit the kernel
     q.submit([&](sycl::handler &h) {
 		// Use kernel_args_restrict to specify that pointers do not alias.
@@ -74,6 +83,11 @@ void RunKernelLambda( sycl::queue& q,
       	});
     })
 	.wait();
+
+	// End measure by macro
+	if ( measure_latency ) {
+		MEASURE_LATENCY_END_AND_PRINT(start, time_sec, fd_latency);
+	}
 
 #ifdef IS_BSP
 	// Copy back data from local buffer to caller's

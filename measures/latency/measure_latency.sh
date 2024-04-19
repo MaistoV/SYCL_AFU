@@ -1,7 +1,7 @@
 #!/bin/bash
 ###############################################
 # Experiment subjects:
-#   * ISA-L vs SYCL kernel
+#   * Hardware config
 # Experiment factors
 #   * RS_SCHEMA
 #   * cell_length
@@ -22,7 +22,7 @@ COLOR_GREEN="tput setaf 2"
 COLOR_RED="tput setaf 1"
 COLOR_NORMAL="tput setaf 7"
 
-# Measure ISA-L
+# Measure ISA-L, for -d flag
 decode_ISAL="0"
 if [[ "$1" != "" ]]; then
     decode_ISAL=$1
@@ -36,13 +36,18 @@ if [[ "$2" != "" ]]; then
 fi
 echo num_runs = $num_runs
 
-# Output directory
-out_dir=${ROOT_DIR}/measures/latency/data/data_SYCL/
+# Output directory for -o flag
+out_dir=${ROOT_DIR}/measures/latency/data/data_ASP_SYCL/
 if [[ "$decode_ISAL" == "1" ]]; then 
     out_dir=${ROOT_DIR}/measures/latency/data/data_ISA_L/
 fi
 if [[ "$3" != "" ]]; then
     out_dir=$3
+fi
+
+# Maximum cells to decode for -c flag
+if [[ "$4" != "" ]]; then
+    MAX_DECODE=$4
 fi
 
 # Clear old data
@@ -74,11 +79,11 @@ do
         exp=$(($exp + 1))
         # Launch the experiment
         # NOTE: Also re-seed PRNG with the -r flag
-        export TEST_ARGS="-e 1 -d $decode_ISAL -m 1 -o $out_dir -r $(($len + $exp)) -l $length -x 1"
+        export TEST_ARGS="-e 1 -d $decode_ISAL -m 1 -o $out_dir -r $(($len + $exp)) -l $length -c $MAX_DECODE"
         CMD="make ${MAKE_TEST_TARGET}"
         echo "$RS_SCHEMA: Running experiment $exp/${#experiment_list[@]} length = $length"
-        echo ${CMD} TEST_ARGS=\"${TEST_ARGS}\"
+        # echo ${CMD} TEST_ARGS=\"${TEST_ARGS}\"
         ${CMD} > /dev/null
-        EXIT_CODE=$?; check_exit_code "$EXIT_CODE" "$CMD" && return $EXIT_CODE
+        # EXIT_CODE=$?; check_exit_code "$EXIT_CODE" "$CMD" && return $EXIT_CODE
     done
 done

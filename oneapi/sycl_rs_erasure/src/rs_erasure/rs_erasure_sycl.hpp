@@ -8,6 +8,9 @@
 // Reed-Solomon header
 #include "rs_erasure.hpp"
 
+// Measure macros for latency
+#include "../measure_latency.h"
+
 /////////////
 // Defines //
 /////////////
@@ -88,6 +91,8 @@ typedef ac_int<16, false> uint16;
 // Lambda
 void RunKernelLambda(
                 sycl::queue& q,
+                int measure_latency,
+                FILE* fd_latency,
                 unsigned int num_erasures,
                 device_read_t buf_master_read,
                 device_write_t buf_master_write,

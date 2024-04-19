@@ -7,11 +7,11 @@
 #include <iostream>
 #include <chrono>
 
-#ifndef NO_SYCL_ASP
+#ifndef NO_SYCL
 	#include <sycl/sycl.hpp>
 	#include <sycl/ext/intel/fpga_extensions.hpp>
 	#include "exception_handler.hpp"
-#endif // !NO_SYCL_ASP
+#endif // !NO_SYCL
 
 
 // Header for device code.
@@ -24,11 +24,15 @@
 // For compute_max_erasure_patterns, gf_gen_cauchy1_matrix, compute_num_vectors_per_erasure_pattern
 #include "rs_erasure/roms/src/rs_rom_utils.h"
 
+// Measure macros for latency
+#include "measure_latency.h"
+
 using namespace sycl;
 
 // Utility function wrapping the complexity of the SYCL_ASP call
 void RunKernel(
-		// sycl::device_selector selector,
+		int measure_latency,
+		FILE* fd_latency,
 		unsigned int cell_length,
 		unsigned int ONE_ERASURE,
 		device_read_t rs_erasure_input,
@@ -50,9 +54,10 @@ int usage( char** argv ) {
 		"  -r <seed>	Seed for PRNG for randomized data\n"
 		"  -e <0|1>		Perform encoding with ISA-L\n"
 		"  -d <0|1>		Perform decoding with ISA-L\n"
-		"  -m 			Measure reconstruction latency\n"
+		"  -m <0|1>		Measure reconstruction latency\n"
 		"  -o <dir>		Output directory for latency measures (ignored for -m=0)\n"
 		"  -x <0|1>		Decode once each cell and exit\n"
+		"  -c <value>	Decode at most <value> cells and exit\n"
 		"  -l <value>	Cell length in bytes (positive multiple of 64B)\n"
 		, argv[0]
 	);
@@ -61,7 +66,7 @@ int usage( char** argv ) {
 
 // DEBUG: make selector global for now
 // Select either the FPGA emulator, FPGA simulator or FPGA device
-#ifndef NO_SYCL_ASP
+#ifndef NO_SYCL
 #if FPGA_SIMULATOR
 	auto selector = sycl::ext::intel::fpga_simulator_selector_v;
 #elif FPGA_HARDWARE
@@ -69,21 +74,10 @@ int usage( char** argv ) {
 #else	// #if FPGA_EMULATOR
 	auto selector = sycl::ext::intel::fpga_emulator_selector_v;
 #endif
-#endif // ! NO_SYCL_ASP
+#endif // ! NO_SYCL
 
 // Number of erasures for this test
 #define ONE_ERASURE 1
-
-// TODO: export this
-// Start measure with chrono
-#define MEASURE_LATENCY_START(start)			start = std::chrono::steady_clock::now();
-// End measure, return double
-#define MEASURE_LATENCY_END(start, time_sec) 	end = std::chrono::steady_clock::now(); \
-												time_sec = std::chrono::duration_cast<std::chrono::duration<double>>(end - start).count();
-// Print time_sec on fd_latency
-#define MEASURE_LATENCY_FPRINTF(fd_latency, time_sec) fprintf(fd_latency, "%0.10f\n", time_sec);
-// Combine simpler macros
-#define MEASURE_LATENCY_END_AND_PRINT(start, time_sec, fd_latency) MEASURE_LATENCY_END(start,time_sec); MEASURE_LATENCY_FPRINTF(fd_latency, time_sec);
 
 int main(int argc, char *argv[]) {
 	// Default params
@@ -93,6 +87,7 @@ int main(int argc, char *argv[]) {
 	int decode_isal = 0;
 	int decode_once = 0;
 	int measure_latency = 0;
+	int max_reconstruction = -1; // unlimited
 	unsigned int cell_length = CELL_LENGTH_DEFAULT;
 	unsigned long max_permutations = 0;
 
@@ -109,7 +104,7 @@ int main(int argc, char *argv[]) {
 
 	// Permutation buffers
 	int c;
-	while ( ( c = getopt(argc, argv, "r:e:d:l:m:o:x:h") ) != -1 ) {
+	while ( ( c = getopt(argc, argv, "r:e:d:l:m:o:x:c:h") ) != -1 ) {
 		switch (c) {
 		case 'r':
 			prng_seed = atoi(optarg);
@@ -134,6 +129,9 @@ int main(int argc, char *argv[]) {
 			break;
 		case 'x':
 			decode_once = atoi(optarg);
+			break;
+		case 'c':
+			max_reconstruction = atoi(optarg);
 			break;
 		case 'h':
 		default:
@@ -247,8 +245,10 @@ int main(int argc, char *argv[]) {
 			rs_erasure_csr.erasure_pattern	= erasure_patterns[RS_K + i];
 
 			// Call to kernel
+			// Don't measure latency for encoding
 			RunKernel (
-					// selector,
+					0,			
+					NULL,
 					cell_length,
 					ONE_ERASURE,
 					rs_erasure_input,
@@ -304,11 +304,17 @@ int main(int argc, char *argv[]) {
 	}
 	
 	// Loop over all possible RS_K:RS_P permutations
+	int reconstruction_count = 0;
 	for ( unsigned int permutation_index = 0; permutation_index < max_permutations; permutation_index++ ) {
-		for ( unsigned int survival_index = 0; survival_index < num_vectors_per_erasure_pattern; survival_index++ ) {
-			printf("%s:%d: Reconstructing cell %d [%d/%lu] with survival pattern [%d/%d]\n",
+		for ( unsigned int survival_index = 0; 
+				(survival_index < num_vectors_per_erasure_pattern) & (reconstruction_count < max_reconstruction); 
+				survival_index++ ) {
+			printf("%s:%d: Reconstructing cell %d [%d/%lu] with survival pattern [%d/%d], count %d\n",
 				__FILE__, __LINE__, permutation_index, permutation_index+1, max_permutations,
-					survival_index+1, num_vectors_per_erasure_pattern);
+					survival_index+1, num_vectors_per_erasure_pattern, reconstruction_count);
+
+			// Increment counter
+			reconstruction_count++;
 
 			// Decode with ISA-L
 			if ( decode_isal ) {
@@ -377,14 +383,10 @@ int main(int argc, char *argv[]) {
 				rs_erasure_csr.erasure_pattern	= erasure_patterns[permutation_index];
 				rs_erasure_csr.survived_cells	= decode_index_bitstring[permutation_index][survival_index];
 			
-				// Start measure by macro
-				if ( measure_latency ) {
-					MEASURE_LATENCY_START(start);
-				}
-
 				// Call to kernel
 				RunKernel (
-						// selector,
+						measure_latency,
+						fd_latency,
 						cell_length,
 						ONE_ERASURE,
 						rs_erasure_input,
@@ -392,12 +394,6 @@ int main(int argc, char *argv[]) {
 						rs_erasure_csr
 					);
 	
-				// End measure by macro
-				if ( measure_latency ) {
-					MEASURE_LATENCY_END_AND_PRINT(start, time_sec, fd_latency);
-				}
-
-
 			#ifdef DEBUG			
 				printf("%s:%d: reconstructed_blocks_out:\n", __FILE__, __LINE__);
 				for ( unsigned int i = 0; i < ONE_ERASURE; i++ ) {
@@ -473,7 +469,8 @@ int main(int argc, char *argv[]) {
 }
 
 void RunKernel(
-		// sycl::device_selector selector,
+		int measure_latency,
+		FILE* fd_latency,
 		unsigned int cell_length,
 		unsigned int num_erasures,
 		device_read_t rs_erasure_input,
@@ -481,14 +478,26 @@ void RunKernel(
 		rs_erasure_csr_t rs_erasure_csr
 	){
 
-#ifdef NO_SYCL_ASP
+#ifdef NO_SYCL
+	// Start measure by macro
+	std::chrono::time_point<std::chrono::steady_clock, std::chrono::nanoseconds> start, end;
+	double time_sec = 0.0;
+	if ( measure_latency ) {
+		MEASURE_LATENCY_START(start);
+	}
+
 	rs_erasure (
                  rs_erasure_input,
                  reconstructed_blocks_out,
                  rs_erasure_csr
                 );
 
-#else // ! NO_SYCL_ASP
+	// End measure by macro
+	if ( measure_latency ) {
+		MEASURE_LATENCY_END_AND_PRINT(start, time_sec, fd_latency);
+	}
+
+#else // ! NO_SYCL
 
 	try {
 		// Create a queue bound to the chosen device.
@@ -500,15 +509,18 @@ void RunKernel(
 		std::cout << "Running on device: "
 							<< device.get_info<sycl::info::device::name>().c_str()
 							<< std::endl;
-		
+
 		// Run kernel
 		RunKernelLambda(
 						q,
+						measure_latency,
+						fd_latency,
 						num_erasures,
 						rs_erasure_input,
 						reconstructed_blocks_out,
 						rs_erasure_csr
 					);
+					
 		
 	} catch (exception const &e) {
 		// Catches exceptions in the host code
@@ -521,7 +533,7 @@ void RunKernel(
 		std::terminate();
 
 	} // try/catch
-#endif // !NO_SYCL_ASP
+#endif // !NO_SYCL
 
 } // RunKernel
 

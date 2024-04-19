@@ -63,8 +63,11 @@ pac_hot_plug:
 ############################
 # ONE API CMake Envirnment #
 ############################
-ONEAPI_DEBUG_ENV := MMD_ENABLE_DEBUG=1  \
-					MMD_PROGRAM_DEBUG=1
+ONEAPI_DEBUG ?= 0
+ifeq (${FIM_DEBUG}, 1)
+	ONEAPI_DEBUG_ENV := MMD_ENABLE_DEBUG=1  \
+						MMD_PROGRAM_DEBUG=1
+endif
 SYCL_IP_CMAKE_SOURCES := ${SYCL_IP_DIR}/CMakeLists.txt ${SYCL_IP_DIR}/src/CMakeLists.txt
 
 # Wrap these variables in a single list
@@ -110,9 +113,7 @@ aocl_bsp_uninstall:
 	${ONEAPI_DEBUG_ENV} aocl uninstall ${OFS_ASP_ROOT}
 
 ACL_DEVICE ?= acl0 # Assuming only one device connected
-aocl_aocx_initalize:
-	sudo pci_device ${PAC_PCIE_SBD}.0 vf 1 ; 				\
-	sudo opae.io init -d ${PAC_PCIE_SBD}.5 ${USER}:${USER};	\
+aocl_aocx_initalize: opae.io_bind_one 
 	${ONEAPI_DEBUG_ENV} aocl initialize ${ACL_DEVICE} ${OFS_ASP_BOARD_VARIANT} 
 
 CMAKE_ASP_FLAGS = -DFPGA_DEVICE=${OFS_ASP_FPGA_DEVICE} \
@@ -230,6 +231,7 @@ test_ase: afu_host
 # ISA-L #
 #########
 # Alias ISA-L on plain_c ASP or IP implementations
+# TODO: switch to test_gbs to minimize coupling with OneAPI
 
 test_isal: test_ip_plain_c
 oneapi_isal: oneapi_ip_plain_c
@@ -238,14 +240,17 @@ oneapi_isal: oneapi_ip_plain_c
 # Measures #
 ############
 
-measure_all: measure_isal measure_asp_fpga measure_sycl_afu
-# measure_asp_fpga: 	aocl_aocx_initalize
+measure_all: measure_isal measure_asp_fpga measure_asp_plain_c # measure_sycl_afu
+
+measure_plots:
+	cd ${MEASURE_LATENCY_DIR}; python plot_latency.py 
 
 measure_isal:
 measure_asp_fpga:
-measure_sycl_afu:
+measure_asp_plain_c: # For debug
+measure_sycl_afu: # not yet available
 measure_%:
-	${MEASURE_LATENCY_DIR}/measure_latency_top.sh $* ${MEASURE_NUM_REPS}
+	${MEASURE_LATENCY_DIR}/measure_latency_top.sh $* ${MEASURE_NUM_REPS} ${MEASURE_MAX_DECODE}
 
 clean_measure:
 	rm -rf ${ROOT_DIR}/measures/latency/data/*
@@ -256,9 +261,6 @@ clean_measure:
 # clean_fim:
 # 	rm -rf ${FIM_BUILD_DIR}/
 
-clean_afu_host:
-	${MAKE} -C ${AFU_SW_DIR} clean
-
 clean_ase:
 	rm -rf ${AFU_ASE_DIR}
 
@@ -266,7 +268,7 @@ clean_gbs:
 #	GBS build directory
 	rm -rf ${AFU_SYNTH_DIR}
 
-clean_sw:
+clean_afu_host:
 	${MAKE} -C ${AFU_SW_DIR} clean
 
 clean_oneapi_ip_report:
@@ -280,8 +282,8 @@ clean_oneapi_ip: clean_oneapi_ip_report
 	rm -rf ${SYCL_IP_BUILD_DIR}
 
 clean_oneapi_asp:
+#	Build directory
 	rm -rf ${SYCL_ASP_BUILD_DIR}
-	# TBD
 
 clean_all: # clean_ase clean_sw clean_gbs clean_ase clean_oneapi_ip clean_oneapi_asp 
 	# TBD: clean for all flows?
