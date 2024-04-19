@@ -1,7 +1,12 @@
 set(DEVICE_SOURCE_FILE rs_erasure/rs_erasure.cpp)
 set(RS_HEADER_FILE rs_erasure/rs_erasure.hpp)
 set(KERNEL_HEADER_FILE rs_erasure/rs_erasure_sycl.hpp)
+# For multi_erasure test
+if($ENV{MULTI_ERASURE})
+    set(HOST_SOURCE_FILE host_multi_erasure.cpp)
+else()
 set(HOST_SOURCE_FILE host.cpp)
+endif()
 set(ROM_UTILS_SOURCE_FILE rs_erasure/roms/src/rs_rom_utils.cpp)
 set(ROM_UTILS_HEADER_FILE rs_erasure/roms/src/rs_rom_utils.h)
 set(MEASURE_LATENCY_HEADER_FILE measure_latency.h)
@@ -22,7 +27,7 @@ else()
     set(BSP_FLAGS "")
 endif()
 
-if($ENV{SYCL_IP_DEBUG})
+if($ENV{SYCL_DEBUG})
     set(DEBUG_FLAGS "-DDEBUG")
 endif()
 
