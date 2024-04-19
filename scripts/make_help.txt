@@ -25,9 +25,9 @@ OneAPI IP flow:
     oneapi_ip_report      Build oneapi design in ${SYCL_IP_DIR}, target report
     oneapi_open_ip_report Open early report in browser 
     oneapi_ip_fpga_emu    Build fpga_emu target
-    oneapi_ip_plain_c     Build plain_c
+    oneapi_ip_plain_c     Build plain_c (C-only, no SYCL)
     test_ip_fpga_emu      Run fpga_emu binary
-    test_ip_fpga_emu      Run plain_c binary
+    test_ip_fpga_plain_c  Run plain_c binary
 
 AFU flow:
     afu_host              Build AFU host application in ${AFU_SW_DIR}
@@ -38,6 +38,13 @@ AFU flow:
     gbs_configure         Configure GBS in PR-slot. On error, you must first make pac_hot_plug
     test_gbs              Run host application against hadware
     test_ase              Run host application against ASE simulator (requires make ase_setup or make ase_launch in another terminal)
+
+Measure targets:
+    measure_asp_plain_c  Run measures for plain C implementation of SYCL code
+    measure_isal         Run measures for ISA-L
+    measure_asp_fpga     Run measures for ASP SYCL flow (also triggers asp_fpga to rebuild)
+    measure_sycl_afu     Run measures for AFU SYCL flow (only a single-threaded AFU)
+    measure_all          Run all of the above 
 
 Clean targets:
     clean_oneapi_asp      Clean OneAPI ASP build

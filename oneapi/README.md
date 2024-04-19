@@ -74,7 +74,6 @@ Build example:
 
 ``` console 
 $ make aocl_aocx_initalize  # Program PAC with OneAPI hardware runtime
-$ make opae.io_bind_one 
 $ # cd path-to-sample-location, e.g.:
 $ git update submodules --init oneapi/oneAPI-samples
 $ cd oneapi/oneAPI-samples/DirectProgramming/C++SYCL_FPGA/ReferenceDesigns/board_test/
@@ -98,7 +97,6 @@ OFS_ASP_FPGA_DEVICE is in the form `<path-to-oneapi-asp>:<board_variant>`, e.g. 
 Utility make targets are provided in the top level Makefile:
 ``` console 
 $ make oneapi_asp_<target>
-$ make oneapi_asp_report_open # Uses firefox, not fpga_report, for convenience
 ``` 
 
 ## Build and Run Custom Examples
@@ -137,12 +135,9 @@ $ make oneapi_ip
 Utility make targets are provided in the top level Makefile:
 ``` console 
 $ make oneapi_ip_fpga_emu # Builds emulation binary
-$ make test_oneapi_ip_emu # Runs emualtion bianty
 $ make oneapi_ip_report   # Build IP sources and generate HLD report
 $ make clean_oneapi_ip_report # Clean only report and exported project
 $ make clean_oneapi_ip    # Clean all IP-related artifacts
 $ make oneapi_ip_report_open # View HLD report (uses firefox, not fpga_report, for convenience)
-$ make oneapi_ip_plain_c # View HLD report (uses firefox, not fpga_report, for convenience)
-$ make test_oneapi_ip_plain_c # View HLD report (uses firefox, not fpga_report, for convenience)
 ``` 
-
+Run `make help` for more.
