@@ -415,7 +415,7 @@ void convert_binary_permutations_to_array ( const int rs_k, const int rs_p,
 
 }
 
-// Convent an input bitstring in a array of integers
+// Convert an input bitstring in a array of integers
 void convert_bitstring_to_array ( 
 									const int len_single_string, 
 									const int num_substrings, 

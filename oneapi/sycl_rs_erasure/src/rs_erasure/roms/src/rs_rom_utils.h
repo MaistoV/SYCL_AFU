@@ -37,6 +37,7 @@ void print_matrix_2d(FILE* fd, int num_rows, int num_cols, unsigned char *s, con
 unsigned long compute_max_erasure_patterns( int k, int p , unsigned int num_erasures);
 unsigned long compute_max_survival_vectors( int k, int p );
 unsigned long compute_num_vectors_per_erasure_pattern( int k, int p );
+unsigned long compute_max_erasure_patterns( int k, int p , unsigned int num_erasures );
 unsigned long compute_p_erasure_patterns( int k, int p );
 unsigned long compute_1_erasure_patterns( int k, int p );
 int gen_1_erasure_patterns ( int k, int p, uint8_t* erasure_patterns );
