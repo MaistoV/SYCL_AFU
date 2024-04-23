@@ -34,6 +34,7 @@ void RunKernelLambda( sycl::queue& q,
 	// Derive cell length forom CSR input
 	uint64_t cell_length = rs_erasure_csr.cell_length_byte_width * LINE_BYTE_WIDTH;
 
+#ifdef ASP_ZERO_COPY
     // Input and output data for the zero-copy version
     // malloc_host allocates memory specifically in the host's address space
     line_t* in_zero_copy  = sycl::malloc_host<line_t>(RS_INPUT_SIZE(cell_length), q.get_context());
@@ -47,6 +48,7 @@ void RunKernelLambda( sycl::queue& q,
 	for ( unsigned int i = 0; i < RS_INPUT_SIZE(cell_length); i++ ) {
 		((uint8_t*)in_zero_copy)[i] = ((uint8_t*)device_read)[i];
 	}
+#endif // ASP_ZERO_COPY
 
 #endif // IS_BSP
 
@@ -62,6 +64,7 @@ void RunKernelLambda( sycl::queue& q,
 		// Use kernel_args_restrict to specify that pointers do not alias.
 		h.single_task<RSErasureID>([=]() [[intel::kernel_args_restrict]] {
 #ifdef IS_BSP
+#ifdef ASP_ZERO_COPY
 			// using a host_ptr tells the compiler that this pointer lives in the
 			// hosts address space
 			sycl::host_ptr<line_t> host_in_data(in_zero_copy);
@@ -73,6 +76,14 @@ void RunKernelLambda( sycl::queue& q,
 					host_out_data,
 					rs_erasure_csr
 				);
+#else // ! ASP_ZERO_COPY
+			// Launch with USM pointers
+			rs_erasure(
+					device_read,
+					device_write,
+					rs_erasure_csr
+				);
+#endif // ! ASP_ZERO_COPY
 #else // ! IS_BSP
 			rs_erasure(
 					device_read,
@@ -89,7 +100,7 @@ void RunKernelLambda( sycl::queue& q,
 		MEASURE_LATENCY_END_AND_PRINT(start, time_sec, fd_latency);
 	}
 
-#ifdef IS_BSP
+#if defined(IS_BSP) && defined(ASP_ZERO_COPY)
 	// Copy back data from local buffer to caller's
 	for ( unsigned int i = 0; i < RS_OUTPUT_SIZE(cell_length, num_erasures); i++ ) {
 		((uint8_t*)device_write)[i] = ((uint8_t*)out_zero_copy)[i];
@@ -98,7 +109,7 @@ void RunKernelLambda( sycl::queue& q,
 	// Free allocations
     sycl::free(in_zero_copy, q);
     sycl::free(out_zero_copy, q);
-#endif // IS_BSP
+#endif // defined(IS_BSP) && defined(ASP_ZERO_COPY)
 
 #endif // ! NO_SYCL
 
@@ -165,6 +176,7 @@ void rs_erasure (
 
 // Debug device_read
 #ifdef NO_SYCL
+	printf("%s:%d: num_erasures: %u\n", __FILE__, __LINE__, num_erasures);
 	printf("%s:%d: device_read:\n", __FILE__, __LINE__);
 	for ( unsigned int i = 0; i < cell_length*RS_K; i++ ) {
 		printf("%02x ", ((uint8_t*)device_read)[i]);
