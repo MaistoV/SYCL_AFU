@@ -6,7 +6,7 @@ import numpy
 # import sys
 import os
 
-data_dirs = ["", ""]
+data_dirs = ["", "", ""]
 
 # hw_configs = ["ISA-L", "SYCL_ASP", "SYCL_AFU", "PLAIN_C"]
 hw_configs = ["ISA-L", "SYCL_ASP", "PLAIN_C"]
@@ -15,13 +15,13 @@ ISA_L		= 0
 SYCL_ASP  	= 1
 # SYCL_AFU  	= 2
 PLAIN_C		= 2 #3
-data_dirs[ISA_L]	= "./data/data_ISA_L/"
-data_dirs[SYCL_ASP] = "./data/data_SYCL_ASP/"
+data_dirs[ISA_L]	= "../data/data_ISA_L/"
+data_dirs[SYCL_ASP] = "../data/data_SYCL_ASP/"
 # data_dirs[SYCL_AFU] = "./data/data_SYCL_AFU/"
-# data_dirs[PLAIN_C] = "./data/data_PLAIN_C/"
+data_dirs[PLAIN_C] = "../data/data_PLAIN_C/"
 
 # Output directory for plots
-plot_dir = "./plots"
+plot_dir = "./output_plots"
 os.makedirs(plot_dir, exist_ok=True)
 
 # RS_SCHEMA_list = ["3_2", "6_3", "10_4"]
@@ -34,14 +34,14 @@ RS_6_3 = 1
 RS_3_2 = 0
 
 cell_length = [ 
-				# "64B"	,	"128B",	"256B",	"512B", 
+				"64B"	,	"128B",	"256B",	"512B", 
 				"1KB"	,	"2KB"	,	"4KB"	,	"8KB"	,	"16KB"	,
 				"32KB"	,	"64KB"	,	"128KB"	, 	"256KB"	,	"512KB"	,
 				"1MB"	,	"2MB"	,	"4MB"	,	"8MB"	, 	"16MB"	,
 				 "32MB"	,	"64MB"#	,	"128MB"	, 	"256MB"	,	"512MB"	,
 				# "1GB"
 				]
-cell_length_int = [# 64, 128, 256, 512, 
+cell_length_int = [ 64				, 128			, 256			, 512			, 
 					1024           , 2*1024         , 4*1024         , 8*1024       , 16*1024 		,
 					32*1024        , 64*1024        , 128*1024       , 256*1024     , 512*1024 		,
 					1024*1024      , 2*1024*1024    , 4*1024*1024    , 8*1024*1024  , 16*1024*1024 	,
@@ -108,9 +108,12 @@ for hw in range(0,len(hw_configs)):
 # Figure Latency
 plt.figure("Latency", figsize=[16,9])
 for rs in range(0,len(RS_SCHEMA_list)):
-	plt.loglog(cell_length_int, mean_latency_s[rs][SYCL_ASP  ], RS_SCHEMA_color[rs]+"-o", label="RS[" + RS_SCHEMA_txt[rs] + "] SYCL_ASP",   linewidth=2)
+	plt.loglog(cell_length_int, mean_latency_s[rs][SYCL_ASP  ], RS_SCHEMA_color[rs]+"-o", label="RS[" + RS_SCHEMA_txt[rs] + "] SYCL ASP",   linewidth=2)
 for rs in range(0,len(RS_SCHEMA_list)):
 	plt.loglog(cell_length_int, mean_latency_s[rs][ISA_L], RS_SCHEMA_color[rs]+"-x", label="RS[" + RS_SCHEMA_txt[rs] + "] ISA-L"	)
+for rs in range(0,len(RS_SCHEMA_list)):
+	plt.loglog(cell_length_int, mean_latency_s[rs][PLAIN_C], RS_SCHEMA_color[rs]+":x", label="RS[" + RS_SCHEMA_txt[rs] + "] PLAIN C"	)
+plt.axvline(x = 1024*1024, linestyle='--') # Vertical line at 1MB
 plt.xlabel("Cell length")
 plt.ylabel("seconds")
 plt.xticks(cell_length_int, cell_length)
@@ -188,8 +191,11 @@ for rs in range(0,len(RS_SCHEMA_list)):
 	ax = plt.gca(); ax.set_xscale("log", base=2); ax.set_yscale("log", base=10)
 	print(throughput_B_s[rs][SYCL_ASP  ][len(cell_length)-1]/1024/1024/1024)
 for rs in range(0,len(RS_SCHEMA_list)):
-	plt.loglog(cell_length_int, throughput_B_s[rs][ISA_L],  RS_SCHEMA_color[rs]+"x", label="RS[" + RS_SCHEMA_txt[rs] + "] ISA-L", linestyle="dashed"	)
+	plt.loglog(cell_length_int, throughput_B_s[rs][ISA_L],  RS_SCHEMA_color[rs]+"--x", label="RS[" + RS_SCHEMA_txt[rs] + "] ISA-L")
 	ax = plt.gca(); ax.set_xscale("log", base=2); ax.set_yscale("log", base=10)
+for rs in range(0,len(RS_SCHEMA_list)):
+	plt.loglog(cell_length_int, throughput_B_s[rs][PLAIN_C],  RS_SCHEMA_color[rs]+":*", label="RS[" + RS_SCHEMA_txt[rs] + "] PLAIN C")
+plt.axvline(x = 1024*1024, linestyle='--') # Vertical line at 1MB
 plt.grid(visible=True, which="both")
 plt.yticks(B_s_int, B_s)
 plt.xticks(cell_length_int, cell_length)

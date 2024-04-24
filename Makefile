@@ -242,7 +242,7 @@ oneapi_isal: oneapi_ip_plain_c
 measure_all: measure_isal measure_asp_fpga measure_asp_plain_c # measure_sycl_afu
 
 measure_plots:
-	cd ${MEASURE_LATENCY_DIR}; python plot_latency.py 
+	cd ${MEASURE_LATENCY_DIR}/plots; python plot_latency.py 
 
 measure_isal:
 measure_asp_fpga:

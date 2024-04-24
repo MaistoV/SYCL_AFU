@@ -19,6 +19,7 @@ tmp*
 *.log
 data*/
 *.png
+output_plots/
 
 # Simulation files
 transcript

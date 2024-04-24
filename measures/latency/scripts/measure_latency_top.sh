@@ -15,11 +15,13 @@ case $1 in
 
   "asp_fpga")
     MEASURE_LATENCY_OUTPUT_DIR=${MEASURE_LATENCY_DIR}/data/data_SYCL_ASP
+    # NOTE: this requires sudo, hence will stall the prompt by default
     make aocl_aocx_initalize
     ;;
 
   "sycl_afu")
     MEASURE_LATENCY_OUTPUT_DIR=${MEASURE_LATENCY_DIR}/data/data_SYCL_AFU
+    # NOTE: this requires sudo, hence will stall the prompt by default
     make gbs_config
     make opae.io_bind_one
     ;;
@@ -44,3 +46,9 @@ source ${MEASURE_LATENCY_DIR}/measure_latency.sh 	\
 	${NUM_RUNS}          					    \
 	${MEASURE_LATENCY_OUTPUT_DIR}     \
   ${MAX_DECODE}
+
+# NOTE: this is a dirty workaround
+# For plain_c runs, rename output files
+if [[ $1 == *"plain_c"* ]]; then
+  source ${MEASURE_LATENCY_DIR}/rename_PLAIN_C.sh
+fi
