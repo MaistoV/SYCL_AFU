@@ -1,12 +1,7 @@
 set(DEVICE_SOURCE_FILE rs_erasure/rs_erasure.cpp)
 set(RS_HEADER_FILE rs_erasure/rs_erasure.hpp)
 set(KERNEL_HEADER_FILE rs_erasure/rs_erasure_sycl.hpp)
-# For multi_erasure test
-if($ENV{MULTI_ERASURE_SIMPLE})
-    set(HOST_SOURCE_FILE host_multi_erasure.cpp)
-else()
-    set(HOST_SOURCE_FILE host.cpp)
-endif()
+set(HOST_SOURCE_FILE host.cpp)
 set(ROM_UTILS_SOURCE_FILE rs_erasure/roms/src/rs_rom_utils.cpp)
 set(ROM_UTILS_HEADER_FILE rs_erasure/roms/src/rs_rom_utils.h)
 set(MEASURE_LATENCY_HEADER_FILE measure_latency.h)
@@ -25,15 +20,6 @@ if(IS_BSP MATCHES "1")
     if(IS_USM MATCHES "1")
         set(USER_FLAGS "${USER_FLAGS} -DIS_USM")
     endif()
-endif()
-if($ENV{SYCL_DEBUG})
-    set(USER_FLAGS "${USER_FLAGS} -DDEBUG")
-endif()
-if($ENV{ASP_ZERO_COPY})
-    set(USER_FLAGS "${USER_FLAGS} -DASP_ZERO_COPY")
-endif()
-if($ENV{MULTI_ERASURE_SIMPLE})
-    set(USER_FLAGS "${USER_FLAGS} -DMULTI_ERASURE_SIMPLE")
 endif()
 
 # FPGA board selection
@@ -55,9 +41,7 @@ endif()
 # 1. The "compile" stage compiles the device code to an intermediate representation (SPIR-V).
 # 2. The "link" stage invokes the compiler's FPGA backend before linking.
 #    For this reason, FPGA backend flags must be passed as link flags in CMake.
-set(COMMON_COMPILE_FLAGS "-fsycl -fintelfpga -Wall ${USER_FLAGS} ${WIN_FLAG} -D$ENV{RS_SCHEMA} -Wno-unused-label")
-# Temporary -Wno-unused-variable
-set(COMMON_COMPILE_FLAGS "${COMMON_COMPILE_FLAGS} -Wno-unused-variable -Wno-unused-but-set-variable")
+set(COMMON_COMPILE_FLAGS "-fsycl -fintelfpga -Wall -Wno-unused-label -Wno-unused-variable -Wno-unused-but-set-variable ${USER_FLAGS} ${WIN_FLAG} -D$ENV{RS_SCHEMA}")
 # Link against ISA-L
 set(COMMON_LINK_FLAGS "-fsycl -fintelfpga -lisal")
 

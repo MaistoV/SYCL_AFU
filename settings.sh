@@ -223,6 +223,22 @@ export MEASURE_NUM_REPS=${MEASURE_NUM_REPS=1}
 export MEASURE_MAX_DECODE=${MEASURE_MAX_DECODE=20} 
 # export MEASURE_LATENC_OUTPUT_DIR=${MEASURE_LATENC_OUTPUT_DIR=${MEASURE_LATENCY_DIR}/data/}
 
+#################
+# Multi-erasure #
+#################
+
+# Use multi-erasure source code
+export MULTI_ERASURE_SIMPLE=1
+# Append MULTI_ERASURE_SIMPLE_SUFFIX (if MULTI_ERASURE_SIMPLE is set)
+if [[ ${MULTI_ERASURE_SIMPLE} == 1 ]]; then
+    export MULTI_ERASURE_SIMPLE_SUFFIX="_multi_erasure"
+    export MEASURE_LATENCY_DATA_DIR=${MEASURE_LATENCY_DIR}/data${MULTI_ERASURE_SIMPLE_SUFFIX}
+    export PLOT_OUT_DIR=${MEASURE_LATENCY_DIR}/plots/output_plots${MULTI_ERASURE_SIMPLE_SUFFIX}
+#     export SYCL_IP_NAME=${SYCL_IP_NAME}${MULTI_ERASURE_SIMPLE_SUFFIX}
+#     export SYCL_IP_BUILD_DIR=${SYCL_IP_BUILD_DIR}${MULTI_ERASURE_SIMPLE_SUFFIX}
+#     export SYCL_ASP_BUILD_DIR=${SYCL_ASP_BUILD_DIR}${MULTI_ERASURE_SIMPLE_SUFFIX}
+fi
+
 ########################
 # Print out enviroment #  
 ########################

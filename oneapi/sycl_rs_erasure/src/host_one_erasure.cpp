@@ -7,8 +7,8 @@
 #include <iostream>
 #include <chrono>
 
-#ifndef MULTI_ERASURE_SIMPLE
-	#error "This source only supports simple multi-erasure!"
+#ifdef MULTI_ERASURE_SIMPLE
+	#error "This source does not support multi-erasure!"
 #endif
 
 #ifndef NO_SYCL
@@ -24,7 +24,7 @@
 #include <getopt.h>
 // For ISA-L
 // #include <isa-l.h>
-// For compute_max_erasure_patterns, gf_gen_cauchy1_matrix, compute_num_vectors_per_erasure_pattern, gf_gen_decode_matrix_simple
+// For compute_max_erasure_patterns, gf_gen_cauchy1_matrix, compute_num_vectors_per_erasure_pattern
 #include "rs_erasure/roms/src/rs_rom_utils.h"
 
 // Measure macros for latency
@@ -37,7 +37,7 @@ void RunKernel(
 		int measure_latency,
 		FILE* fd_latency,
 		unsigned int cell_length,
-		unsigned int NUM_ERASURES,
+		unsigned int ONE_ERASURE,
 		device_read_t rs_erasure_input,
 		device_write_t reconstructed_blocks_out,
 		rs_erasure_csr_t rs_erasure_csr
@@ -67,6 +67,7 @@ int usage( char** argv ) {
 	exit(0);
 }
 
+
 // DEBUG: make selector global for now
 // Select either the FPGA emulator, FPGA simulator or FPGA device
 #ifndef NO_SYCL
@@ -80,7 +81,7 @@ int usage( char** argv ) {
 #endif // ! NO_SYCL
 
 // Number of erasures for this test
-#define NUM_ERASURES RS_P
+#define ONE_ERASURE 1
 
 int main(int argc, char *argv[]) {
 	// Default params
@@ -93,7 +94,6 @@ int main(int argc, char *argv[]) {
 	unsigned int max_reconstruction = -1; // unlimited
 	unsigned int cell_length = CELL_LENGTH_DEFAULT;
 	unsigned long max_permutations = 0;
-	unsigned int j, j_init = 0;
 
 	// For latency measurement
 	char filename[256];
@@ -144,12 +144,11 @@ int main(int argc, char *argv[]) {
 		}
 	}
 
-	// Maximum number of erasure patterns
-	// int max_erasure_patterns = compute_max_erasure_patterns( RS_K, RS_P, NUM_ERASURES );
+	max_permutations = compute_max_erasure_patterns( RS_K, RS_P, ONE_ERASURE );
 
 	// Interface arguments for IP
 	line_t* rs_erasure_input		 = (line_t*)malloc( RS_INPUT_SIZE(cell_length)					);
-	line_t* reconstructed_blocks_out = (line_t*)malloc( RS_OUTPUT_SIZE(cell_length, NUM_ERASURES)	);
+	line_t* reconstructed_blocks_out = (line_t*)malloc( RS_OUTPUT_SIZE(cell_length, ONE_ERASURE)	);
 
 	// CSR input to IP under test
 	rs_erasure_csr_t rs_erasure_csr;
@@ -190,7 +189,6 @@ int main(int argc, char *argv[]) {
 		}
 	}
 
-	// Debug frag_ptrs
 #ifdef DEBUG
 	printf("%s:%d: frag_ptrs\n", __FILE__, __LINE__);
 	for ( unsigned int i = 0; i < RS_K; i++ ) {
@@ -204,22 +202,17 @@ int main(int argc, char *argv[]) {
 	printf("\n");
 #endif
 
-
-	// Generate encode matrix for any ISA-L utilization
-	if ( encode_isal || decode_isal ) {
+	printf("%s:%d: Encoding parity cells for RS[%d:%d] cell_length=%d, using %s\n",
+		 __FILE__, __LINE__, RS_K, RS_P, cell_length, (encode_isal) ? "ISA-L" : "SYCL_ASP kernel");
+	
+	// Encode with ISA-L
+	if ( encode_isal ) {
 		// Pick an encode matrix. A Cauchy matrix is a good choice as even
 		// large RS_K are always invertable keeping the recovery rule simple.
 		gf_gen_cauchy1_matrix(encode_matrix, RS_M, RS_K);
 	#ifdef DEBUG	
 		print_matrix_2d(stdout, RS_M, RS_K, encode_matrix, "encode_matrix ");
 	#endif
-	}
-
-	printf("%s:%d: Encoding parity cells for RS[%d:%d] cell_length=%d, using %s\n",
-		 __FILE__, __LINE__, RS_K, RS_P, cell_length, (encode_isal) ? "ISA-L" : "SYCL kernel");
-	
-	// Encode with ISA-L
-	if ( encode_isal ) {
 		// Generate g_tbls
 		ec_init_tables(RS_K, RS_P, &encode_matrix[RS_K * RS_K], g_tbls);
 		// Generate EC parity blocks from sources
@@ -235,41 +228,56 @@ int main(int argc, char *argv[]) {
 	// Debug rs_erasure_input
 	#ifdef DEBUG
 		printf("%s:%d: rs_erasure_input\n", __FILE__, __LINE__);
-		print_contiguous_cell(stdout, (uint8_t*)rs_erasure_input, RS_K, cell_length, LINE_BYTE_WIDTH );
+		for ( unsigned int i = 0; i < RS_K; i++ ) {
+			for ( unsigned int l = 0; l < cell_length; l++ ) {
+				printf("%02x ", ((uint8_t(*)[cell_length])rs_erasure_input)[i][l]);
+				if ( ((l+1) % LINE_BYTE_WIDTH) == 0 ) {
+					printf("\n");
+				}
+			}
+		}
+		printf("\n");
 	#endif
 
 		// Encode fragments RS_K+1, RS_K+2, ..., RS_K+RS_P
-		printf("%s:%d: Encoding parity cells with SYCL_ASP kernel\n", __FILE__, __LINE__);
+		for ( unsigned int e = 0; e < RS_P; e++ ){
+			printf("%s:%d: Encoding parity cell %d [%d/%d] with SYCL_ASP kernel\n", __FILE__, __LINE__, e, e+1, RS_P);
 
-		// Write input
-		rs_erasure_csr.survived_cells	= RS_PATTERN_MASK &  ((1 << RS_K) -1); // Bitmask for first k blocks
-		rs_erasure_csr.erasure_pattern	= RS_PATTERN_MASK & ~((1 << RS_K) -1); // Bitmask for last p blocks
+			// Write input
+			rs_erasure_csr.survived_cells	= RS_PATTERN_MASK & ((1 << RS_K) -1); // Bitmask for first k blocks
+			rs_erasure_csr.erasure_pattern	= erasure_patterns[RS_K + e];
 
-		// Call to kernel
-		// Don't measure latency for encoding
-		RunKernel (
-				0,			
-				NULL,
-				cell_length,
-				NUM_ERASURES,
-				rs_erasure_input,
-				reconstructed_blocks_out,
-				rs_erasure_csr
-			);
+			// Call to kernel
+			// Don't measure latency for encoding
+			RunKernel (
+					0,
+					NULL,
+					cell_length,
+					ONE_ERASURE,
+					rs_erasure_input,
+					reconstructed_blocks_out,
+					rs_erasure_csr
+				);
 
-		// Pack results in fragments buffer
-		for ( unsigned int e = 0; e < NUM_ERASURES; e++ ) {
-			memcpy(frag_ptrs[e + RS_K], ((uint8_t(*)[cell_length])reconstructed_blocks_out)[e], sizeof(uint8_t) * cell_length );
-		}
-
+			// Pack results in fragments buffer
+			// Always read from first reconstructed block at index 0
+			memcpy(frag_ptrs[e + RS_K], ((uint8_t(*)[cell_length])reconstructed_blocks_out)[0], sizeof(uint8_t) * cell_length );
+		}	
 	} // !encode_isal
-
+	
 // Debug Complete cell array
 #ifdef DEBUG
 	printf("%s:%d: Complete cell array:\n", __FILE__, __LINE__);
 	for ( unsigned int i = 0; i < RS_K + RS_P; i++ ) {
-		print_contiguous_cell(stdout, (uint8_t*)frag_ptrs[i], 1, cell_length, LINE_BYTE_WIDTH );
+		for ( unsigned int l = 0; l < cell_length; l++ ) {
+			printf("%02x ", frag_ptrs[i][l]);
+			if ( ((l+1) % LINE_BYTE_WIDTH) == 0 ) {
+				printf("\n");
+			}
+		}
+		printf("\n");
 	}
+	printf("\n");
 #endif
 
 	printf("%s:%d: Decoding/Reconstructing blocks RS[%d:%d] cell_length=%d, using %s\n",
@@ -277,7 +285,7 @@ int main(int argc, char *argv[]) {
 
 	int num_vectors_per_erasure_pattern = compute_num_vectors_per_erasure_pattern (RS_K, RS_P);
 
-	max_permutations = compute_max_erasure_patterns( RS_K, RS_P, NUM_ERASURES );
+	max_permutations = compute_1_erasure_patterns( RS_K, RS_P );
 
 	// Prepare latency measurements
     if ( measure_latency ) {
@@ -298,231 +306,113 @@ int main(int argc, char *argv[]) {
 	
 	// Loop over all possible RS_K:RS_P permutations
 	int reconstruction_count = 0;
-	printf("%s:%d: max_permutations %lu, max_reconstruction %u\n", __FILE__, __LINE__, max_permutations, max_reconstruction);
+	for ( unsigned int permutation_index = 0; permutation_index < max_permutations; permutation_index++ ) {
+		for ( unsigned int survival_index = 0; 
+				(survival_index < num_vectors_per_erasure_pattern) & (reconstruction_count < max_reconstruction); 
+				survival_index++ ) {
+			printf("%s:%d: Reconstructing cell %d [%d/%lu] with survival pattern [%d/%d], count %d\n",
+				__FILE__, __LINE__, permutation_index, permutation_index+1, max_permutations,
+					survival_index+1, num_vectors_per_erasure_pattern, reconstruction_count);
 
-	// Start from the last group, i.e. the one with P erasures
-	unsigned int p_erasure_patterns = compute_p_erasure_patterns( RS_K, RS_P );
-	unsigned int erasure_pattern_offset = max_permutations - p_erasure_patterns;
-	for ( unsigned int permutation_index = erasure_pattern_offset;
-			(permutation_index < max_permutations) & (reconstruction_count < max_reconstruction);
-			permutation_index++ ) {
+			// Increment counter
+			reconstruction_count++;
 
-		printf("%s:%d: Reconstruction [%d/%lu], permutation_index %d, count %d\n",
-			__FILE__, __LINE__, permutation_index - erasure_pattern_offset +1, max_permutations - erasure_pattern_offset, permutation_index, reconstruction_count);
+			// Decode with ISA-L
+			if ( decode_isal ) {
+			#ifdef DEBUG	
+				print_matrix_2d(stdout, ONE_ERASURE, RS_K, (uint8_t*)(decode_matrix_rom[permutation_index]), "decode_matrix_rom ");
+				print_matrix_2d(stdout, 1, RS_K, (uint8_t*)decode_index[permutation_index][survival_index], "decode_index[permutation_index]");
+			#endif
 
-		// Increment counter
-		reconstruction_count++;
-
-		// Survival pattern bitstring
-		uint16_t survival_pattern = (~erasure_patterns[permutation_index]) & RS_PATTERN_MASK;
-		uint16_t erasure_pattern  = erasure_patterns[permutation_index] & RS_PATTERN_MASK;
-
-	#ifdef DEBUG
-		printf("%s:%d: survival_pattern 0x%04x\n", __FILE__, __LINE__, survival_pattern);
-		printf("%s:%d: erasure_pattern 0x%04x\n", __FILE__, __LINE__, erasure_pattern);
-	#endif
-
-		// Pack recovery array pointers as list of valid fragments
-		uint8_t survival_pattern_index [RS_M] = {0};
-		uint16_t survival_pattern_copy = survival_pattern;
-		for ( unsigned int i = 0; i < RS_M; i++ ) {
-			survival_pattern_index[i] = (survival_pattern_copy % 2);
-			survival_pattern_copy /= 2;
-		}
-		uint8_t erasure_pattern_index [RS_M] = {0};
-		uint16_t erasure_pattern_copy = erasure_pattern;
-		for ( unsigned int i = 0; i < RS_M; i++ ) {
-			erasure_pattern_index[i] = (erasure_pattern_copy % 2);
-			erasure_pattern_copy /= 2;
-		}
-
-		// Extract the indeces
-		// NOTE: this "if high" logic could be exported in a function
-		uint8_t survival_pattern_list [RS_K] = {0};
-		j_init = 0;
-		for ( unsigned int i = 0; i < RS_K; i++ ){			// For each survived cell
-			for ( j = j_init; j < RS_M; j++ ){				// Scan the survival pattern
-				if ( survival_pattern_index[j] ) { 			// if high
-					survival_pattern_list[i] = j;
-					break;									// Break out of this loop
+				// Pack recovery array pointers as list of valid fragments
+				for ( unsigned int i = 0; i < RS_K; i++ ){
+					recover_srcs[i] = frag_ptrs[decode_index[permutation_index][survival_index][i]];
 				}
-			}
-			// Start next j iteration from next index
-			j_init = j + 1;
-		}
-		// Same for erasure pattern
-		uint8_t erasure_pattern_list [NUM_ERASURES] = {0};
-		j_init = 0;
-		for ( unsigned int i = 0; i < NUM_ERASURES; i++ ){			// For each survived cell
-			for ( j = j_init; j < RS_M; j++ ){				// Scan the survival pattern
-				if ( erasure_pattern_index[j] ) { 			// if high
-					erasure_pattern_list[i] = j;
-					break;									// Break out of this loop
+
+				// Start measure by macro
+				if ( measure_latency ) {
+					MEASURE_LATENCY_START(start);
 				}
-			}
-			// Start next j iteration from next index
-			j_init = j + 1;
-		}
 
-	#ifdef DEBUG
-		printf("%s:%d: survival_pattern_index: ", __FILE__, __LINE__);
-		for ( unsigned int i = 0; i < RS_M; i++ ) {
-			printf("%hhu", survival_pattern_index[RS_M -i -1]);
-		}
-		printf("\n");
-		printf("%s:%d: erasure_pattern_index: ", __FILE__, __LINE__);
-		for ( unsigned int i = 0; i < RS_M; i++ ) {
-			printf("%hhu", erasure_pattern_index[RS_M -i -1]);
-		}
-		printf("\n");
-		print_matrix_2d(stdout, 1, RS_K, (uint8_t*)survival_pattern_list, "survival_pattern_list");
-		print_matrix_2d(stdout, 1, NUM_ERASURES, (uint8_t*)erasure_pattern_list, "erasure_pattern_list");
-	#endif
+				// Recover data
+				uint8_t* decode_matrix = (uint8_t*)decode_matrix_rom[permutation_index*num_vectors_per_erasure_pattern + survival_index];
+				ec_init_tables(RS_K, ONE_ERASURE, decode_matrix, g_tbls);
+				ec_encode_data(cell_length, RS_K, ONE_ERASURE, g_tbls, (unsigned char **)recover_srcs, (unsigned char **)recover_outp);
 
-		// Decode with ISA-L
-		if ( decode_isal ) {
-			// Retrieve the pointers of the survived cells
-			j_init = 0;
-			for ( unsigned int i = 0; i < RS_K; i++ ){			// For each survived cell
-				for ( j = j_init; j < RS_M; j++ ){				// Scan the survival pattern
-					if ( survival_pattern_index[j] ) { 			// if high
-						recover_srcs[i] = frag_ptrs[j]; 		// copy pointer
-						break;									// Break out of this loop
+				// End measure by macro
+				if ( measure_latency ) {
+					MEASURE_LATENCY_END_AND_PRINT(start, time_sec, fd_latency);
+				}
+			#ifdef DEBUG			
+				printf("%s:%d: recover_outp:\n", __FILE__, __LINE__);
+				print_contiguous_cell(stdout, (uint8_t*)recover_outp, ONE_ERASURE, cell_length, LINE_BYTE_WIDTH );
+			#endif
+
+			} // decode_isal
+			else { // !decode_isal
+				// Decode with rs_erasures
+				// Rearrange input in contiguous memory
+				for ( unsigned int i = 0; i < RS_K; i++ ) {
+					memcpy(((uint8_t(*)[cell_length])rs_erasure_input)[i], frag_ptrs[decode_index[permutation_index][survival_index][i]], cell_length); // copy buffer
+				}
+
+			#ifdef DEBUG
+				printf("%s:%d: rs_erasure_input:\n", __FILE__, __LINE__);
+				print_contiguous_cell(stdout, (uint8_t*)rs_erasure_input, RS_K, cell_length, LINE_BYTE_WIDTH );
+			#endif
+
+				// Write input
+				rs_erasure_csr.erasure_pattern	= erasure_patterns[permutation_index];
+				rs_erasure_csr.survived_cells	= decode_index_bitstring[permutation_index][survival_index];
+			
+				// Call to kernel
+				RunKernel (
+						measure_latency,
+						fd_latency,
+						cell_length,
+						ONE_ERASURE,
+						rs_erasure_input,
+						reconstructed_blocks_out,
+						rs_erasure_csr
+					);
+	
+			#ifdef DEBUG			
+				printf("%s:%d: reconstructed_blocks_out:\n", __FILE__, __LINE__);
+				print_contiguous_cell(stdout, (uint8_t*)reconstructed_blocks_out, ONE_ERASURE, cell_length, LINE_BYTE_WIDTH );
+			#endif
+
+				// Read data
+				for ( unsigned int i = 0; i < RS_P; i++ ) {
+					for ( int l = 0; l < cell_length; l++ ) {
+						recover_outp[i][l] = ((uint8_t(*)[cell_length])reconstructed_blocks_out)[i][l];
 					}
 				}
-				// Start next j iteration from next index
-				j_init = j + 1;
-			}
+			} // !decode_isal
 
-			// Start measure by macro
-			if ( measure_latency ) {
-				MEASURE_LATENCY_START(start);
-			}
-
-			uint8_t decode_matrix 	[NUM_ERASURES][RS_K];
-			uint8_t temp_matrix 	[RS_M][RS_K];
-			uint8_t invert_matrix 	[RS_M][RS_K];
-
-			// Re-compute a decode matrix to regenerate all erasures from remaining frags
-			// Altough the decode vectors have already been computed in DECMAT_ROMs, fetching
-			// multiple vectors is come complex than just deterministically re-generating them
-			ret_val = gf_gen_decode_matrix_simple (
-													encode_matrix,
-													(uint8_t*)decode_matrix,
-													(uint8_t*)invert_matrix,
-													(uint8_t*)temp_matrix,
-													survival_pattern_list,
-													erasure_pattern_list,
-													NUM_ERASURES,
-													RS_K,
-													RS_M
-												);
-			if ( ret_val != 0 ) {
-				printf("%s:%d: Fail on generating decode matrix (%d)\n", __FILE__, __LINE__, ret_val);
-				return -1;
-			}
-		#ifdef DEBUG
-			print_matrix_2d(stdout, NUM_ERASURES, RS_K, (uint8_t*)(decode_matrix), "decode_matrix ");
-		#endif
-
-			// Recover data
-			ec_init_tables(RS_K, NUM_ERASURES, (unsigned char *)decode_matrix, g_tbls);
-			ec_encode_data(cell_length, RS_K, NUM_ERASURES, g_tbls, (unsigned char **)recover_srcs, (unsigned char **)recover_outp);
-
-			// End measure by macro
-			if ( measure_latency ) {
-				MEASURE_LATENCY_END_AND_PRINT(start, time_sec, fd_latency);
-			}
-		#ifdef DEBUG			
-			printf("%s:%d: reconstructed_blocks_out:\n", __FILE__, __LINE__);
-			for ( unsigned int i = 0; i < NUM_ERASURES; i++ ) {
-				print_contiguous_cell(stdout, (uint8_t*)recover_outp[i], 1, cell_length, LINE_BYTE_WIDTH );
-			}
-		#endif
-
-		} // decode_isal
-		else { // !decode_isal
-			// Decode with rs_erasures
-			// Rearrange input in contiguous memory
-			j_init = 0;
-			for ( unsigned int i = 0; i < RS_K; i++ ){			// For each survived cell
-				for ( j = j_init; j < RS_M; j++ ){				// Scan the survival pattern
-					if ( survival_pattern_index[j] ) { 			// if high
-						memcpy(((uint8_t(*)[cell_length])rs_erasure_input)[i], frag_ptrs[j], cell_length); // copy buffer
-						break;									// Break out of this loop
-					}
-				}
-				// Start next j iteration from next index
-				j_init = j + 1;
-			}
-
-		#ifdef DEBUG
-			printf("%s:%d: rs_erasure_input:\n", __FILE__, __LINE__);
-			print_contiguous_cell(stdout, (uint8_t*)rs_erasure_input, RS_K, cell_length, LINE_BYTE_WIDTH );
-		#endif
-
-			// Write input
-			rs_erasure_csr.erasure_pattern	= erasure_pattern;
-			// Just flip erasure_pattern
-			rs_erasure_csr.survived_cells	= survival_pattern;
-
-			// Call to kernel
-			RunKernel (
-					measure_latency,
-					fd_latency,
-					cell_length,
-					NUM_ERASURES,
-					rs_erasure_input,
-					reconstructed_blocks_out,
-					rs_erasure_csr
-				);
-
-		#ifdef DEBUG			
-			printf("%s:%d: reconstructed_blocks_out:\n", __FILE__, __LINE__);
-			print_contiguous_cell(stdout, (uint8_t*)reconstructed_blocks_out, NUM_ERASURES, cell_length, LINE_BYTE_WIDTH );
-		#endif
-
-			// Read data
-			for ( unsigned int i = 0; i < NUM_ERASURES; i++ ) {
-				for ( int l = 0; l < cell_length; l++ ) {
-					recover_outp[i][l] = ((uint8_t(*)[cell_length])reconstructed_blocks_out)[i][l];
-				}
-			}
-		} // !decode_isal
-
-		// Check that recovered buffers are the same as original
-
-		j_init = 0;
-		for ( unsigned int i = 0; i < NUM_ERASURES; i++ ) {
-			for ( j = j_init; j < RS_M; j++ ){	  // Scan the erasure pattern
-				if ( erasure_pattern_index[j] ) { // if high
-					printf("%s:%d: Checking reconstruction %u, fragment %u\n", __FILE__, __LINE__, i, j);
-					// Check buffers
-					ret_val = memcmp(recover_outp[i], frag_ptrs[j], cell_length);
-
-					if ( ret_val ) {
-						printf("%s:%d: Fail reconstruction %d, frag %d\n", __FILE__, __LINE__, i, j);
-
+			// Check that recovered buffers are the same as original
+			for ( unsigned int i = 0; i < ONE_ERASURE; i++ ) {
+				ret_val = memcmp(recover_outp[i], frag_ptrs[permutation_index], cell_length);
+				if ( ret_val ) {
+					printf("%s:%d: Fail reconstruction %d, frag %d\n", __FILE__, __LINE__, i, permutation_index);
+	
 					// Debug frag_ptrs
-					#ifdef DEBUG
-						printf("%s:%d: Expected:\n", __FILE__, __LINE__);
-						print_contiguous_cell(stdout, (uint8_t*)frag_ptrs[i], 1, cell_length, LINE_BYTE_WIDTH );
-						printf("%s:%d: Given:\n", __FILE__, __LINE__);
-						print_contiguous_cell(stdout, (uint8_t*)recover_outp[i], 1, cell_length, LINE_BYTE_WIDTH );
-					#endif
+				#ifdef DEBUG			
+					printf("%s:%d: Expected:\n", __FILE__, __LINE__);
+					print_contiguous_cell(stdout, (uint8_t*)frag_ptrs[permutation_index], 1, cell_length, LINE_BYTE_WIDTH );
+					printf("%s:%d: Given:\n", __FILE__, __LINE__);
+					print_contiguous_cell(stdout, (uint8_t*)recover_outp[i], 1, cell_length, LINE_BYTE_WIDTH );
+				#endif
 						return -1;
 					}
-
-					// Break out of this j loop
-					break;
-				}
+			} // Check results
+			
+			// Break out of the survival_index loop
+			if ( decode_once ) {
+				break;
 			}
 
-			// Start next j iteration from next index
-			j_init = j + 1;
-
-		} // Check results
-			
+		}  // survival_index over num_vectors_per_erasure_pattern
+		
 		// Break out of the permutation_index loop
 		if ( decode_once ) {
 			break;
@@ -539,8 +429,8 @@ int main(int argc, char *argv[]) {
 	// Test summary
 	printf("%s:%d: Test passed\n RS[%d:%d]\n cell_length=%d,\n encodind with %s,\n decoding with %s,\n PRNG seed=%u\n",
 		 __FILE__, __LINE__, RS_K, RS_P, cell_length,
-		 (encode_isal) ? "ISA-L" : "SYCL kernel",
-		 (decode_isal) ? "ISA-L" : "SYCL kernel",
+		 (encode_isal) ? "ISA-L" : "SYCL_ASP kernel",
+		 (decode_isal) ? "ISA-L" : "SYCL_ASP kernel",
 		 prng_seed
 		 );
 

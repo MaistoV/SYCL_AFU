@@ -87,12 +87,22 @@ ifeq (${SYCL_DEBUG}, 1)
 endif
 
 # Environment setup for cmake
-MULTI_ERASURE_SIMPLE ?= 1
 CMAKE_ENV = USER_HARDWARE_FLAGS=${USER_HARDWARE_FLAGS} \
 			SYCL_IP_NAME=${SYCL_IP_NAME} \
-			${SYCL_IP_ENV} \
-			MULTI_ERASURE_SIMPLE=${MULTI_ERASURE_SIMPLE}
+			${SYCL_IP_ENV}
 CMAKE = ${CMAKE_ENV} cmake .. ${SYCL_CMAKE_FLAGS}
+
+# Build-time variables
+ifeq (${MULTI_ERASURE_SIMPLE}, 1)
+	SYCL_CXX_DEFINES += -DMULTI_ERASURE_SIMPLE
+endif
+ifeq (${SYCL_DEBUG}, 1)
+	SYCL_CXX_DEFINES += -DDEBUG
+endif
+ifeq (${ASP_ZERO_COPY}, 1)
+	SYCL_CXX_DEFINES += -DASP_ZERO_COPY
+endif
+SYCL_MAKE_ENV = "CXX_DEFINES=${SYCL_CXX_DEFINES}"
 
 ####################
 # ONE API ASP Flow #
@@ -130,8 +140,10 @@ oneapi_asp_fpga_sim:
 oneapi_asp_report:
 oneapi_asp_fpga:
 oneapi_asp_%: oneapi_cmake_asp
+#	Force rebuild by touching host code
+	touch ${SYCL_SRC_DIR}/src/host.cpp
 	cd ${SYCL_ASP_BUILD_DIR}; \
-	make $*
+	${MAKE} $* ${SYCL_MAKE_ENV}
 
 test_asp_plain_c:
 test_asp_fpga: # Make sure to make aocl_aocx_initalize first
@@ -157,7 +169,7 @@ oneapi_ip_fpga_emu:
 oneapi_ip_plain_c:
 oneapi_ip_%: oneapi_cmake_ip
 	cd ${SYCL_IP_BUILD_DIR}; \
-	make $* ${SYCL_IP_ENV}
+	${MAKE} $* ${SYCL_MAKE_ENV}
 
 oneapi_open_ip_report:
 	firefox ${SYCL_IP_PRJ}/reports/report.html &
@@ -242,14 +254,18 @@ oneapi_isal: oneapi_ip_plain_c
 measure_all: measure_isal measure_asp_fpga measure_asp_plain_c # measure_sycl_afu
 
 measure_plots:
-	cd ${MEASURE_LATENCY_DIR}/plots; python plot_latency.py 
+	cd ${MEASURE_LATENCY_DIR}/plots; \
+	python plot_latency.py ${MEASURE_LATENCY_DATA_DIR} ${PLOT_OUT_DIR}
 
 measure_isal:
 measure_asp_fpga:
 measure_asp_plain_c: # For debug
 measure_sycl_afu: # not yet available
 measure_%:
-	${MEASURE_LATENCY_DIR}/measure_latency_top.sh $* ${MEASURE_NUM_REPS} ${MEASURE_MAX_DECODE}
+	${MEASURE_LATENCY_DIR}/scripts/measure_latency_top.sh \
+		$* 						\
+		${MEASURE_NUM_REPS} 	\
+		${MEASURE_MAX_DECODE}
 
 clean_measure:
 	rm -rf ${ROOT_DIR}/measures/latency/data/*
