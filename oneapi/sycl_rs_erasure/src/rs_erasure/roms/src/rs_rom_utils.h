@@ -34,6 +34,7 @@ int gf_gen_decode_matrix(
 				int k, int m);
 void print_matrix_1d(FILE* fd, int num_rows, int num_cols, unsigned char *s, const char *msg);
 void print_matrix_2d(FILE* fd, int num_rows, int num_cols, unsigned char *s, const char *msg);
+void print_contiguous_cell(FILE* fd, uint8_t* array, unsigned int num_cells, unsigned int cell_length, unsigned int line_byte_width );
 unsigned long compute_max_erasure_patterns( int k, int p , unsigned int num_erasures);
 unsigned long compute_max_survival_vectors( int k, int p );
 unsigned long compute_num_vectors_per_erasure_pattern( int k, int p );

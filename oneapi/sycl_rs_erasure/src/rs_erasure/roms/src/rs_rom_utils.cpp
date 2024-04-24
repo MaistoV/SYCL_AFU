@@ -210,6 +210,19 @@ void print_matrix_2d(FILE* fd, int num_rows, int num_cols, unsigned char *s, con
 	fprintf(fd, "\n");
 }
 
+// Utility function for printing cells from contiguos memory
+void print_contiguous_cell ( FILE* fd, uint8_t* array, unsigned int num_cells, unsigned int cell_length, unsigned int line_byte_width ) {
+	for ( unsigned int i = 0; i < num_cells; i++ ) {
+		for ( unsigned int l = 0; l < cell_length; l++ ) {
+			fprintf(fd, "%02x ", ((uint8_t(*)[cell_length])array)[i][l]);
+			if ( ((l+1) % line_byte_width) == 0 ) {
+				fprintf(fd, "\n");
+			}
+		}
+	}
+	fprintf(fd, "\n");
+}
+
 // Factorial of n
 unsigned long factorial ( int n ) {
 	// Input sanitizatioon

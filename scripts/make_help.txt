@@ -15,14 +15,14 @@ OneAPI ASP flow (Altera OpenCL):
     aocl_aocx_initalize   Program PAC with aocx (requires the right PR interface to be already flashed on the PAC)
     aocl_bsp_build        Build PR-tree related BSP
     aocl_bsp_[un]install  Install/uninstall BSP
-    oneapi_asp_<target>   Build oneapi design in ${SYCL_IP_DIR}, target in: {fpga_emu, fpga_sim, report, fpga}
+    oneapi_asp_<target>   Build oneapi design in ${SYCL_SRC_DIR}, target in: {fpga_emu, fpga_sim, report, fpga}
     test_asp_fpga_emu     Test ASP in emulation
     test_asp_fpga_sim     Test ASP in simulation
     test_asp_fpga          Test ASP on hardware (requires aocl_aocx_initalize)
 
 OneAPI IP flow:
-    oneapi_ip_emu         Build oneapi design in ${SYCL_IP_DIR}, target fpga_emu
-    oneapi_ip_report      Build oneapi design in ${SYCL_IP_DIR}, target report
+    oneapi_ip_emu         Build oneapi design in ${SYCL_SRC_DIR}, target fpga_emu
+    oneapi_ip_report      Build oneapi design in ${SYCL_SRC_DIR}, target report
     oneapi_open_ip_report Open early report in browser 
     oneapi_ip_fpga_emu    Build fpga_emu target
     oneapi_ip_plain_c     Build plain_c (C-only, no SYCL)
@@ -45,6 +45,7 @@ Measure targets:
     measure_asp_fpga     Run measures for ASP SYCL flow (also triggers asp_fpga to rebuild)
     measure_sycl_afu     Run measures for AFU SYCL flow (only a single-threaded AFU)
     measure_all          Run all of the above 
+    measure_plots        Run data plot scripts
 
 Clean targets:
     clean_oneapi_asp      Clean OneAPI ASP build
@@ -54,9 +55,19 @@ Clean targets:
     clean_gbs             Clean gbs build
     clean_ase             Clean ASE simulator setup
     clean_sw              Clean software build
+    clean_measure         Remove old measures
     clean_all             TBD
 
 make variables:
     OFSS_CONFIG           Suffix to identify FIM build and OFSS flow
     RS_SCHEMA             Reed-Solomon code schema in [RS_3_2, RS_6_3, RS_10_4]
     TEST_ARGS             Arguments to pass to the host elf in oneapi_ip_emu, test_gbs and test_ase, start with -h
+    MMD_DEBUG             Enable debug mode for OneAPI/OpenCL MMD driver
+    RSU_DEBUG             Enable debug mode for RSU operation (pac_powercycle_*)
+    FIM_UPDATE_DEBUG      Enable debug mode for fpgasupdate operation (fim_update, gbs_config)
+    FIM_IMAGE             Override default FIM image for fim_update
+    SYCL_DEBUG            Enable debug mode for SYCL builds
+    SYCL_FAST_COMPILE     Set -Xsfast-compile for SYCL builds
+    SYCL_CMAKE_FLAGS      Add user cmake flags for SYCL builds
+    MULTI_ERASURE_SIMPLE         Enable multi-erasure tb
+    ACL_DEVICE            Override default acl device for aocl_aocx_initalize

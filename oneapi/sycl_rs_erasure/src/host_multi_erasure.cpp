@@ -13,6 +13,9 @@
 	#include "exception_handler.hpp"
 #endif // !NO_SYCL
 
+#ifndef MULTI_ERASURE_SIMPLE
+	#error "This source only supports simple multi-erasure!"
+#endif
 
 // Header for device code.
 #include "rs_erasure/rs_erasure_sycl.hpp"
@@ -226,23 +229,13 @@ int main(int argc, char *argv[]) {
 	else { // !encode_isal
 		// Rearrange input in contiguous memory
 		for ( unsigned int i = 0; i < RS_K; i++ ) {
-			for ( int l = 0; l < cell_length; l++ ) {
-				((uint8_t(*)[cell_length])rs_erasure_input)[i][l] = frag_ptrs[i][l];
-			}
+			memcpy(((uint8_t(*)[cell_length])rs_erasure_input)[i], frag_ptrs[i], sizeof(uint8_t) * cell_length );
 		}
 
 	// Debug rs_erasure_input
 	#ifdef DEBUG
 		printf("%s:%d: rs_erasure_input\n", __FILE__, __LINE__);
-		for ( unsigned int i = 0; i < RS_K; i++ ) {
-			for ( unsigned int l = 0; l < cell_length; l++ ) {
-				printf("%02x ", ((uint8_t(*)[cell_length])rs_erasure_input)[i][l]);
-				if ( ((l+1) % LINE_BYTE_WIDTH) == 0 ) {
-					printf("\n");
-				}
-			}
-		}
-		printf("\n");
+		print_contiguous_cell(stdout, (uint8_t*)rs_erasure_input, RS_K, cell_length, LINE_BYTE_WIDTH );
 	#endif
 
 		// Encode fragments RS_K+1, RS_K+2, ..., RS_K+RS_P
@@ -252,39 +245,31 @@ int main(int argc, char *argv[]) {
 		rs_erasure_csr.survived_cells	= RS_PATTERN_MASK &  ((1 << RS_K) -1); // Bitmask for first k blocks
 		rs_erasure_csr.erasure_pattern	= RS_PATTERN_MASK & ~((1 << RS_K) -1); // Bitmask for last p blocks
 
-			// Call to kernel
-			// Don't measure latency for encoding
-			RunKernel (
-					0,			
-					NULL,
-					cell_length,
-					NUM_ERASURES,
-					rs_erasure_input,
-					reconstructed_blocks_out,
-					rs_erasure_csr
-				);
+		// Call to kernel
+		// Don't measure latency for encoding
+		RunKernel (
+				0,			
+				NULL,
+				cell_length,
+				NUM_ERASURES,
+				rs_erasure_input,
+				reconstructed_blocks_out,
+				rs_erasure_csr
+			);
 
-			// Pack results in fragments buffer
+		// Pack results in fragments buffer
 		for ( unsigned int e = 0; e < NUM_ERASURES; e++ ) {
-			for ( int l = 0; l < cell_length; l++ ) {
-				frag_ptrs[e + RS_K][l] = ((uint8_t(*)[cell_length])reconstructed_blocks_out)[e][l];
-			}
-		}	
+			memcpy(frag_ptrs[e + RS_K], ((uint8_t(*)[cell_length])reconstructed_blocks_out)[e], sizeof(uint8_t) * cell_length );
+		}
+
 	} // !encode_isal
 
 // Debug Complete cell array
 #ifdef DEBUG
 	printf("%s:%d: Complete cell array:\n", __FILE__, __LINE__);
 	for ( unsigned int i = 0; i < RS_K + RS_P; i++ ) {
-		for ( unsigned int l = 0; l < cell_length; l++ ) {
-			printf("%02x ", frag_ptrs[i][l]);
-			if ( ((l+1) % LINE_BYTE_WIDTH) == 0 ) {
-				printf("\n");
-			}
-		}
-		printf("\n");
+		print_contiguous_cell(stdout, (uint8_t*)frag_ptrs[i], 1, cell_length, LINE_BYTE_WIDTH );
 	}
-	printf("\n");
 #endif
 
 	printf("%s:%d: Decoding/Reconstructing blocks RS[%d:%d] cell_length=%d, using %s\n",
@@ -451,14 +436,8 @@ int main(int argc, char *argv[]) {
 		#ifdef DEBUG			
 			printf("%s:%d: reconstructed_blocks_out:\n", __FILE__, __LINE__);
 			for ( unsigned int i = 0; i < NUM_ERASURES; i++ ) {
-				for ( int l = 0; l < cell_length; l++ ) {
-					printf("%02x ", recover_outp[i][l]);
-					if ( ((l+1) % LINE_BYTE_WIDTH) == 0 ) {
-						printf("\n");
-					}
-				}
+				print_contiguous_cell(stdout, (uint8_t*)recover_outp[i], 1, cell_length, LINE_BYTE_WIDTH );
 			}
-			printf("\n");
 		#endif
 
 		} // decode_isal
@@ -469,9 +448,7 @@ int main(int argc, char *argv[]) {
 			for ( unsigned int i = 0; i < RS_K; i++ ){			// For each survived cell
 				for ( j = j_init; j < RS_M; j++ ){				// Scan the survival pattern
 					if ( survival_pattern_index[j] ) { 			// if high
-						for ( int l = 0; l < cell_length; l++ ) {	// copy buffer
-							((uint8_t(*)[cell_length])rs_erasure_input)[i][l] = frag_ptrs[j][l];
-						}
+						memcpy(((uint8_t(*)[cell_length])rs_erasure_input)[i], frag_ptrs[j], cell_length); // copy buffer
 						break;									// Break out of this loop
 					}
 				}
@@ -481,16 +458,7 @@ int main(int argc, char *argv[]) {
 
 		#ifdef DEBUG
 			printf("%s:%d: rs_erasure_input:\n", __FILE__, __LINE__);
-			for ( unsigned int i = 0; i < RS_K; i++ ) {
-				for ( unsigned int l = 0; l < cell_length; l++ ) {
-					printf("%02x ", ((uint8_t(*)[cell_length])rs_erasure_input)[i][l]);
-					if ( ((l+1) % LINE_BYTE_WIDTH) == 0 ) {
-						printf("\n");
-					}
-				}
-				printf("\n");
-			}
-			printf("\n");
+			print_contiguous_cell(stdout, (uint8_t*)rs_erasure_input, RS_K, cell_length, LINE_BYTE_WIDTH );
 		#endif
 
 			// Write input
@@ -511,15 +479,7 @@ int main(int argc, char *argv[]) {
 
 		#ifdef DEBUG			
 			printf("%s:%d: reconstructed_blocks_out:\n", __FILE__, __LINE__);
-			for ( unsigned int i = 0; i < NUM_ERASURES; i++ ) {
-				for ( int l = 0; l < cell_length; l++ ) {
-					printf("%02x ", ((uint8_t(*)[cell_length])reconstructed_blocks_out)[i][l]);
-					if ( ((l+1) % LINE_BYTE_WIDTH) == 0 ) {
-						printf("\n");
-					}
-				}
-			}
-			printf("\n");
+			print_contiguous_cell(stdout, (uint8_t*)reconstructed_blocks_out, NUM_ERASURES, cell_length, LINE_BYTE_WIDTH );
 		#endif
 
 			// Read data
@@ -546,22 +506,9 @@ int main(int argc, char *argv[]) {
 					// Debug frag_ptrs
 					#ifdef DEBUG
 						printf("%s:%d: Expected:\n", __FILE__, __LINE__);
-						for ( unsigned int l = 0; l < cell_length; l++ ) {
-							printf("%02x ", frag_ptrs[j][l]);
-							if ( ((l+1) % LINE_BYTE_WIDTH) == 0 ) {
-								printf("\n");
-							}
-						}
-						printf("\n");
-
+						print_contiguous_cell(stdout, (uint8_t*)frag_ptrs[i], 1, cell_length, LINE_BYTE_WIDTH );
 						printf("%s:%d: Given:\n", __FILE__, __LINE__);
-						for ( int l = 0; l < cell_length; l++ ) {
-							printf("%02x ", recover_outp[i][l]);
-							if ( ((l+1) % LINE_BYTE_WIDTH) == 0 ) {
-								printf("\n");
-							}
-						}
-						printf("\n");
+						print_contiguous_cell(stdout, (uint8_t*)recover_outp[i], 1, cell_length, LINE_BYTE_WIDTH );
 					#endif
 						return -1;
 					}

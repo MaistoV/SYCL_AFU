@@ -2,10 +2,10 @@ set(DEVICE_SOURCE_FILE rs_erasure/rs_erasure.cpp)
 set(RS_HEADER_FILE rs_erasure/rs_erasure.hpp)
 set(KERNEL_HEADER_FILE rs_erasure/rs_erasure_sycl.hpp)
 # For multi_erasure test
-if($ENV{MULTI_ERASURE})
+if($ENV{MULTI_ERASURE_SIMPLE})
     set(HOST_SOURCE_FILE host_multi_erasure.cpp)
 else()
-set(HOST_SOURCE_FILE host.cpp)
+    set(HOST_SOURCE_FILE host.cpp)
 endif()
 set(ROM_UTILS_SOURCE_FILE rs_erasure/roms/src/rs_rom_utils.cpp)
 set(ROM_UTILS_HEADER_FILE rs_erasure/roms/src/rs_rom_utils.h)
@@ -17,18 +17,23 @@ set(SIMULATOR_TARGET ${TARGET_NAME}.fpga_sim)
 set(FPGA_TARGET ${TARGET_NAME}.fpga)
 set(ISA_L_LINK_FLAG "-lisal")
 
+# Append user flags
+set(USER_FLAGS "")
 # Check if the target is a BSP
 if(IS_BSP MATCHES "1")
-    set(BSP_FLAGS "-DIS_BSP")
+    set(USER_FLAGS "-DIS_BSP")
     if(IS_USM MATCHES "1")
-        set(BSP_FLAGS "${BSP_FLAGS} -DIS_USM")
+        set(USER_FLAGS "${USER_FLAGS} -DIS_USM")
     endif()
-else()
-    set(BSP_FLAGS "")
 endif()
-
 if($ENV{SYCL_DEBUG})
-    set(DEBUG_FLAGS "-DDEBUG")
+    set(USER_FLAGS "${USER_FLAGS} -DDEBUG")
+endif()
+if($ENV{ASP_ZERO_COPY})
+    set(USER_FLAGS "${USER_FLAGS} -DASP_ZERO_COPY")
+endif()
+if($ENV{MULTI_ERASURE_SIMPLE})
+    set(USER_FLAGS "${USER_FLAGS} -DMULTI_ERASURE_SIMPLE")
 endif()
 
 # FPGA board selection
@@ -50,7 +55,7 @@ endif()
 # 1. The "compile" stage compiles the device code to an intermediate representation (SPIR-V).
 # 2. The "link" stage invokes the compiler's FPGA backend before linking.
 #    For this reason, FPGA backend flags must be passed as link flags in CMake.
-set(COMMON_COMPILE_FLAGS "-fsycl -fintelfpga -Wall ${BSP_FLAGS} ${WIN_FLAG} -D$ENV{RS_SCHEMA} -Wno-unused-label ${DEBUG_FLAGS}")
+set(COMMON_COMPILE_FLAGS "-fsycl -fintelfpga -Wall ${USER_FLAGS} ${WIN_FLAG} -D$ENV{RS_SCHEMA} -Wno-unused-label")
 # Temporary -Wno-unused-variable
 set(COMMON_COMPILE_FLAGS "${COMMON_COMPILE_FLAGS} -Wno-unused-variable -Wno-unused-but-set-variable")
 # Link against ISA-L
@@ -61,7 +66,7 @@ set(EMULATOR_LINK_FLAGS "${COMMON_LINK_FLAGS}")
 set(SIMULATOR_COMPILE_FLAGS "${COMMON_COMPILE_FLAGS} -Xssimulation -DFPGA_SIMULATOR")
 set(SIMULATOR_LINK_FLAGS "${COMMON_LINK_FLAGS} -Xssimulation -Xsghdl -Xstarget=${FPGA_DEVICE} ${USER_HARDWARE_FLAGS}")
 set(HARDWARE_COMPILE_FLAGS "${COMMON_COMPILE_FLAGS} -DFPGA_HARDWARE")
-set(HARDWARE_LINK_FLAGS "${COMMON_LINK_FLAGS} -Xshardware -Xstarget=${FPGA_DEVICE} ${USER_HARDWARE_FLAGS} ${BSP_FLAGS}")
+set(HARDWARE_LINK_FLAGS "${COMMON_LINK_FLAGS} -Xshardware -Xstarget=${FPGA_DEVICE} ${USER_HARDWARE_FLAGS} ${USER_FLAGS}")
 # use cmake -D USER_HARDWARE_FLAGS=<flags> to set extra flags for FPGA backend compilation
 
 ###############################################################################
@@ -72,7 +77,6 @@ target_include_directories(${PLAIN_C_TARGET} PRIVATE $ENV{ONEAPI_SAMPLES_INCLUDE
 set_target_properties(${PLAIN_C_TARGET} PROPERTIES COMPILE_FLAGS "${COMMON_COMPILE_FLAGS} -DNO_SYCL")
 set_target_properties(${PLAIN_C_TARGET} PROPERTIES LINK_FLAGS "${COMMON_LINK_FLAGS}")
 add_custom_target(plain_c DEPENDS ${PLAIN_C_TARGET})
-
 
 ###############################################################################
 ### FPGA Emulator

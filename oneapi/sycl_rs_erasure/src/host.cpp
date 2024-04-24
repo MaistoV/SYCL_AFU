@@ -7,12 +7,15 @@
 #include <iostream>
 #include <chrono>
 
+#ifdef MULTI_ERASURE_SIMPLE
+	#error "This source does not support multi-erasure!"
+#endif
+
 #ifndef NO_SYCL
 	#include <sycl/sycl.hpp>
 	#include <sycl/ext/intel/fpga_extensions.hpp>
 	#include "exception_handler.hpp"
 #endif // !NO_SYCL
-
 
 // Header for device code.
 #include "rs_erasure/rs_erasure_sycl.hpp"
@@ -64,6 +67,7 @@ int usage( char** argv ) {
 	exit(0);
 }
 
+
 // DEBUG: make selector global for now
 // Select either the FPGA emulator, FPGA simulator or FPGA device
 #ifndef NO_SYCL
@@ -87,7 +91,7 @@ int main(int argc, char *argv[]) {
 	int decode_isal = 0;
 	int decode_once = 0;
 	int measure_latency = 0;
-	int max_reconstruction = -1; // unlimited
+	unsigned int max_reconstruction = -1; // unlimited
 	unsigned int cell_length = CELL_LENGTH_DEFAULT;
 	unsigned long max_permutations = 0;
 
@@ -218,11 +222,10 @@ int main(int argc, char *argv[]) {
 	else { // !encode_isal
 		// Rearrange input in contiguous memory
 		for ( unsigned int i = 0; i < RS_K; i++ ) {
-			for ( int l = 0; l < cell_length; l++ ) {
-				((uint8_t(*)[cell_length])rs_erasure_input)[i][l] = frag_ptrs[i][l];
-			}
+			memcpy(((uint8_t(*)[cell_length])rs_erasure_input)[i], frag_ptrs[i], sizeof(uint8_t) * cell_length );
 		}
 
+	// Debug rs_erasure_input
 	#ifdef DEBUG
 		printf("%s:%d: rs_erasure_input\n", __FILE__, __LINE__);
 		for ( unsigned int i = 0; i < RS_K; i++ ) {
@@ -237,17 +240,17 @@ int main(int argc, char *argv[]) {
 	#endif
 
 		// Encode fragments RS_K+1, RS_K+2, ..., RS_K+RS_P
-		for ( unsigned int i = 0; i < RS_P; i++ ){
-			printf("%s:%d: Encoding parity cell %d [%d/%d] with SYCL_ASP kernel\n", __FILE__, __LINE__, i, i+1, RS_P);
+		for ( unsigned int e = 0; e < RS_P; e++ ){
+			printf("%s:%d: Encoding parity cell %d [%d/%d] with SYCL_ASP kernel\n", __FILE__, __LINE__, e, e+1, RS_P);
 
 			// Write input
 			rs_erasure_csr.survived_cells	= RS_PATTERN_MASK & ((1 << RS_K) -1); // Bitmask for first k blocks
-			rs_erasure_csr.erasure_pattern	= erasure_patterns[RS_K + i];
+			rs_erasure_csr.erasure_pattern	= erasure_patterns[RS_K + e];
 
 			// Call to kernel
 			// Don't measure latency for encoding
 			RunKernel (
-					0,			
+					0,
 					NULL,
 					cell_length,
 					ONE_ERASURE,
@@ -257,10 +260,8 @@ int main(int argc, char *argv[]) {
 				);
 
 			// Pack results in fragments buffer
-			for ( int l = 0; l < cell_length; l++ ) {
-				// Always read from first reconstructed block at index 0
-				frag_ptrs[i + RS_K][l] = ((uint8_t(*)[cell_length])reconstructed_blocks_out)[0][l];
-			}
+			// Always read from first reconstructed block at index 0
+			memcpy(frag_ptrs[e + RS_K], ((uint8_t(*)[cell_length])reconstructed_blocks_out)[0], sizeof(uint8_t) * cell_length );
 		}	
 	} // !encode_isal
 	
@@ -343,16 +344,8 @@ int main(int argc, char *argv[]) {
 					MEASURE_LATENCY_END_AND_PRINT(start, time_sec, fd_latency);
 				}
 			#ifdef DEBUG			
-				printf("%s:%d: reconstructed_blocks_out:\n", __FILE__, __LINE__);
-				for ( unsigned int i = 0; i < ONE_ERASURE; i++ ) {
-					for ( int l = 0; l < cell_length; l++ ) {
-						printf("%02x ", recover_outp[i][l]);
-						if ( ((l+1) % LINE_BYTE_WIDTH) == 0 ) {
-							printf("\n");
-						}
-					}
-				}
-				printf("\n");
+				printf("%s:%d: recover_outp:\n", __FILE__, __LINE__);
+				print_contiguous_cell(stdout, (uint8_t*)recover_outp, ONE_ERASURE, cell_length, LINE_BYTE_WIDTH );
 			#endif
 
 			} // decode_isal
@@ -360,23 +353,12 @@ int main(int argc, char *argv[]) {
 				// Decode with rs_erasures
 				// Rearrange input in contiguous memory
 				for ( unsigned int i = 0; i < RS_K; i++ ) {
-					for ( int l = 0; l < cell_length; l++ ) {
-						((uint8_t(*)[cell_length])rs_erasure_input)[i][l] = frag_ptrs[decode_index[permutation_index][survival_index][i]][l];
-					}
+					memcpy(((uint8_t(*)[cell_length])rs_erasure_input)[i], frag_ptrs[decode_index[permutation_index][survival_index][i]], cell_length); // copy buffer
 				}
 
 			#ifdef DEBUG
 				printf("%s:%d: rs_erasure_input:\n", __FILE__, __LINE__);
-				for ( unsigned int i = 0; i < RS_K; i++ ) {
-					for ( unsigned int l = 0; l < cell_length; l++ ) {
-						printf("%02x ", ((uint8_t(*)[cell_length])rs_erasure_input)[i][l]);
-						if ( ((l+1) % LINE_BYTE_WIDTH) == 0 ) {
-							printf("\n");
-						}
-					}
-					printf("\n");
-				}
-				printf("\n");
+				print_contiguous_cell(stdout, (uint8_t*)rs_erasure_input, RS_K, cell_length, LINE_BYTE_WIDTH );
 			#endif
 
 				// Write input
@@ -396,15 +378,7 @@ int main(int argc, char *argv[]) {
 	
 			#ifdef DEBUG			
 				printf("%s:%d: reconstructed_blocks_out:\n", __FILE__, __LINE__);
-				for ( unsigned int i = 0; i < ONE_ERASURE; i++ ) {
-					for ( int l = 0; l < cell_length; l++ ) {
-						printf("%02x ", ((uint8_t(*)[cell_length])reconstructed_blocks_out)[i][l]);
-						if ( ((l+1) % LINE_BYTE_WIDTH) == 0 ) {
-							printf("\n");
-						}
-					}
-				}
-				printf("\n");
+				print_contiguous_cell(stdout, (uint8_t*)reconstructed_blocks_out, ONE_ERASURE, cell_length, LINE_BYTE_WIDTH );
 			#endif
 
 				// Read data
@@ -419,19 +393,14 @@ int main(int argc, char *argv[]) {
 			for ( unsigned int i = 0; i < ONE_ERASURE; i++ ) {
 				ret_val = memcmp(recover_outp[i], frag_ptrs[permutation_index], cell_length);
 				if ( ret_val ) {
-					printf("%s:%d: Fail erasure recovery %d, frag %d\n", __FILE__, __LINE__, i, permutation_index);
+					printf("%s:%d: Fail reconstruction %d, frag %d\n", __FILE__, __LINE__, i, permutation_index);
 	
+					// Debug frag_ptrs
 				#ifdef DEBUG			
-					printf("%s:%d: expected:\n", __FILE__, __LINE__);
-					for ( unsigned int i = 0; i < ONE_ERASURE; i++ ) {
-						for ( int l = 0; l < cell_length; l++ ) {
-							printf("%02x ", frag_ptrs[permutation_index][l]);
-							if ( ((l+1) % LINE_BYTE_WIDTH) == 0 ) {
-								printf("\n");
-							}
-						}
-					}
-					printf("\n");
+					printf("%s:%d: Expected:\n", __FILE__, __LINE__);
+					print_contiguous_cell(stdout, (uint8_t*)frag_ptrs[permutation_index], 1, cell_length, LINE_BYTE_WIDTH );
+					printf("%s:%d: Given:\n", __FILE__, __LINE__);
+					print_contiguous_cell(stdout, (uint8_t*)recover_outp[i], 1, cell_length, LINE_BYTE_WIDTH );
 				#endif
 						return -1;
 					}

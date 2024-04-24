@@ -60,9 +60,9 @@ export OFS_ROOTDIR=$HTS_RELEASE/ofs-agx7-pcie-attach
 export OFS_BUILD_ROOT=$HTS_RELEASE/ofs-agx7-pcie-attach
 
 # OPAE_PLATFORM_ROOT to the PR build tree directory
-# export OPAE_PLATFORM_ROOT=$HTS_RELEASE/ofs-agx7-pcie-attach/work_htk_nc220_${FPGA}/pr_build_template
-export OPAE_PLATFORM_ROOT=$HTS_RELEASE/ofs-agx7-pcie-attach/work_htk_nc220_${FPGA}_$OFSS_CONFIG/pr_build_template
-# export OPAE_PLATFORM_ROOT=$HTS_RELEASE/prebuild_images/agf014/release_v1.1/pr_build_template
+# export OPAE_PLATFORM_ROOT=${OPAE_PLATFORM_ROOT=$HTS_RELEASE/ofs-agx7-pcie-attach/work_htk_nc220_${FPGA}/pr_build_template}
+export OPAE_PLATFORM_ROOT=${OPAE_PLATFORM_ROOT=$HTS_RELEASE/ofs-agx7-pcie-attach/work_htk_nc220_${FPGA}_${OFSS_CONFIG}/pr_build_template}
+# export OPAE_PLATFORM_ROOT=${OPAE_PLATFORM_ROOT=$HTS_RELEASE/prebuild_images/agf014/release_v1.1/pr_build_template}
 
 # FIM image ID
 export FIM_IMAGE_INFO=$(cat ${OPAE_PLATFORM_ROOT}/hw/lib/build/syn/board/htk-nc220-agf014/syn_top/user1_image_info.txt)
@@ -160,9 +160,10 @@ source ${ONEAPI_ROOT}/setvars.sh --force
 
 # SYCL IP names and working directories
 export SYCL_IP_NAME=${AFU_NAME} # Use same name as AFU
-export SYCL_IP_DIR=${ROOT_DIR}/oneapi/${SYCL_IP_NAME}
-export SYCL_IP_BUILD_DIR=${SYCL_IP_DIR}/build_ip
-export SYCL_ASP_BUILD_DIR=${SYCL_IP_DIR}/build_asp
+# Directory of sources
+export SYCL_SRC_DIR=${ROOT_DIR}/oneapi/${SYCL_IP_NAME}
+export SYCL_IP_BUILD_DIR=${SYCL_SRC_DIR}/build_ip
+export SYCL_ASP_BUILD_DIR=${SYCL_SRC_DIR}/build_asp
 # Append RS_SCHEMA (if set)
 if [[ "${RS_SCHEMA}" != "" ]]; then
     export SYCL_IP_NAME=${SYCL_IP_NAME}_${RS_SCHEMA}

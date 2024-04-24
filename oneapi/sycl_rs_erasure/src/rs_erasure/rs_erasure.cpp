@@ -20,7 +20,7 @@ void RunKernelLambda( sycl::queue& q,
 // If building in NO_SYCL mode, this function is a null macro
 #ifndef NO_SYCL
 
-// If targeting OneAPI BSP/ASP, using zero-copy data transfer design pattern
+// If targeting OneAPI BSP/ASP
 #ifdef IS_BSP
     // make sure the device supports USM host allocations
 	#ifdef IS_USM
@@ -33,7 +33,8 @@ void RunKernelLambda( sycl::queue& q,
 
 	// Derive cell length forom CSR input
 	uint64_t cell_length = rs_erasure_csr.cell_length_byte_width * LINE_BYTE_WIDTH;
-
+	
+// If using zero-copy data transfer design pattern
 #ifdef ASP_ZERO_COPY
     // Input and output data for the zero-copy version
     // malloc_host allocates memory specifically in the host's address space

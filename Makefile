@@ -23,8 +23,8 @@ fim_build_%:
 	${ROOT_DIR}/fim_flow/build_fim.sh --$* ${OFSS_CONFIG}
 
 FIM_IMAGE ?= ${FIM_IMAGE_USER1}
-FIM_DEBUG ?= 0
-ifeq (${FIM_DEBUG}, 1)
+FIM_UPDATE_DEBUG ?= 0
+ifeq (${FIM_UPDATE_DEBUG}, 1)
 	FPGASUPDATE_FLAGS += --log-level debug 
 endif
 fim_update: 
@@ -60,15 +60,15 @@ pac_hot_plug:
 	sudo pci_device ${PAC_PCIE_SBD}.0 unplug
 	sudo pci_device ${PAC_PCIE_SBD}.0 plug
 
-############################
-# ONE API CMake Envirnment #
-############################
-ONEAPI_DEBUG ?= 0
-ifeq (${FIM_DEBUG}, 1)
+#############################
+# ONE API CMake Environment #
+#############################
+MMD_DEBUG ?= 0
+ifeq (${MMD_DEBUG}, 1)
 	ONEAPI_DEBUG_ENV := MMD_ENABLE_DEBUG=1  \
 						MMD_PROGRAM_DEBUG=1
 endif
-SYCL_IP_CMAKE_SOURCES := ${SYCL_IP_DIR}/CMakeLists.txt ${SYCL_IP_DIR}/src/CMakeLists.txt
+SYCL_IP_CMAKE_SOURCES := ${SYCL_SRC_DIR}/CMakeLists.txt ${SYCL_SRC_DIR}/src/CMakeLists.txt
 
 # Wrap these variables in a single list
 SYCL_IP_ENV += RS_SCHEMA=${RS_SCHEMA} \
@@ -77,22 +77,22 @@ SYCL_IP_ENV += RS_SCHEMA=${RS_SCHEMA} \
 				SYCL_IP_PRJ=${SYCL_IP_PRJ}
 
 SYCL_DEBUG ?= 0
-FAST_COMPILE ?= 0
-CMAKE_FLAGS ?=
-ifeq (${FAST_COMPILE}, 1)
-	CMAKE_FLAGS += -DUSER_HARDWARE_FLAGS=-Xsfast-compile
+SYCL_FAST_COMPILE ?= 0
+SYCL_CMAKE_FLAGS ?=
+ifeq (${SYCL_FAST_COMPILE}, 1)
+	SYCL_CMAKE_FLAGS += -DUSER_HARDWARE_FLAGS=-Xsfast-compile
 endif
 ifeq (${SYCL_DEBUG}, 1)
-	CMAKE_FLAGS += --trace-expand
+	SYCL_CMAKE_FLAGS += --trace-expand
 endif
 
 # Environment setup for cmake
-MULTI_ERASURE ?= 1
+MULTI_ERASURE_SIMPLE ?= 1
 CMAKE_ENV = USER_HARDWARE_FLAGS=${USER_HARDWARE_FLAGS} \
 			SYCL_IP_NAME=${SYCL_IP_NAME} \
 			${SYCL_IP_ENV} \
-			MULTI_ERASURE=${MULTI_ERASURE}
-CMAKE = ${CMAKE_ENV} cmake .. ${CMAKE_FLAGS}
+			MULTI_ERASURE_SIMPLE=${MULTI_ERASURE_SIMPLE}
+CMAKE = ${CMAKE_ENV} cmake .. ${SYCL_CMAKE_FLAGS}
 
 ####################
 # ONE API ASP Flow #
@@ -213,11 +213,10 @@ ${AFU_SYNTH_DIR}: ${OPAE_PLATFORM_ROOT} #clean_gbs
 gbs_configure:
 #	Configure PR slot with GBS
 # sudo fpgaconf ${AFU_GBS_FILE}
-	sudo fpgasupdate ${AFU_GBS_FILE} ${PAC_PCIE_SBD}.0
+	sudo fpgasupdate  ${FPGASUPDATE_FLAGS} ${AFU_GBS_FILE} ${PAC_PCIE_SBD}.0
 
 # System Tests
 AFU_ELF_NAME ?= bin/${AFU_NAME}
-TEST_ARGS	 ?=
 
 test_sycl_afu: test_gbs
 test_gbs: afu_host #gbs_configure ${AFU_GBS_FILE}
