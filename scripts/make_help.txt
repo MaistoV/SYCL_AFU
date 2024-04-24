@@ -69,5 +69,5 @@ make variables:
     SYCL_DEBUG            Enable debug mode for SYCL builds
     SYCL_FAST_COMPILE     Set -Xsfast-compile for SYCL builds
     SYCL_CMAKE_FLAGS      Add user cmake flags for SYCL builds
-    MULTI_ERASURE_SIMPLE         Enable multi-erasure tb
+    MULTI_ERASURE_SIMPLE  Enable multi-erasure SYCL host code when setting up SYCL build
     ACL_DEVICE            Override default acl device for aocl_aocx_initalize

@@ -41,3 +41,4 @@ Each guide relies on sourcing `settings.sh` in this directory.
 4. [FIM OFSS flow](fim_flow/README.md)
 5. [OneAPI](oneapi/README.md) 
 6. [SYCL RS Erasure ROMs](oneapi/sycl_rs_erasure/src/rs_erasure/roms/README.md)
+7. [Measures](measures/latency/README.md)
