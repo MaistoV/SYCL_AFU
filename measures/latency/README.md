@@ -7,7 +7,7 @@ From `${ROOT_DIR}`:
 # cd $ROOT_DIR
 $ source measures/latency/scripts/measure_latency_top.sh \
     <make measure_* target> \
-    <num_reps> \   
+    <num_reps>              \
     <max_decode_flag>
 ```
 Or simply:
@@ -31,7 +31,7 @@ $ python -m pip install -r py_prerequisites.txt
 Plot with:
 ``` console
 $ cd plots
-$ python plot_latency.py
+$ python plot_latency.py <data_dir> <output_plot_dir>
 ```
 Or, from $ROOT_DIR
 

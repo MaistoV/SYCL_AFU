@@ -59,7 +59,7 @@ bash ${ROOT_DIR}/measures/latency/gen_experiments.sh $num_runs tmp.cell_length_e
 readarray -t experiment_list < tmp.cell_length_experiments.txt 
 
 # List of RS schemas
-declare -a RS_SCHEMA_list=("RS_6_3" "RS_3_2")
+declare -a RS_SCHEMA_list=("RS_3_2" "RS_6_3")
 
 # Run experiments
 for RS_SCHEMA in "${RS_SCHEMA_list[@]}"

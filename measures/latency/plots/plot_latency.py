@@ -2,61 +2,111 @@ import matplotlib.pyplot as plt
 import glob
 import pandas
 import numpy
-# from sklearn.linear_model import LinearRegression
-# import sys
+import sys
 import os
 
-data_dirs = ["", "", ""]
-
-# hw_configs = ["ISA-L", "SYCL_ASP", "SYCL_AFU", "PLAIN_C"]
-hw_configs = ["ISA-L", "SYCL_ASP", "PLAIN_C"]
-# hw_configs = ["ISA-L"]
-ISA_L		= 0
-SYCL_ASP  	= 1
-# SYCL_AFU  	= 2
-PLAIN_C		= 2 #3
-data_dirs[ISA_L]	= "../data/data_ISA_L/"
-data_dirs[SYCL_ASP] = "../data/data_SYCL_ASP/"
-# data_dirs[SYCL_AFU] = "./data/data_SYCL_AFU/"
-data_dirs[PLAIN_C] = "../data/data_PLAIN_C/"
+# Source data directory
+root_data_dir = "../data/"
+if len(sys.argv) >= 1:
+	root_data_dir = sys.argv[1]
 
 # Output directory for plots
 plot_dir = "./output_plots"
+if len(sys.argv) >= 2:
+	plot_dir = sys.argv[2]
+
+# Create output directory
 os.makedirs(plot_dir, exist_ok=True)
 
-# RS_SCHEMA_list = ["3_2", "6_3", "10_4"]
-# RS_SCHEMA_txt  = ["3:2", "6:3", "10:4"]
-RS_SCHEMA_list = ["3_2", "6_3"]
+###############
+# Set formats #
+###############
+
+# Hardware configurations
+hw_configs = ["ISA-L", "SYCL_ASP", "SYCL_AFU", "PLAIN_C"]
+ISA_L		= 0
+PLAIN_C		= 1
+SYCL_ASP  	= 2
+SYCL_AFU  	= 3
+
+# Plot formats
+hw_marker 		= ["" for _ in range(len(hw_configs)) ]
+hw_line 		= ["" for _ in range(len(hw_configs)) ]
+hw_linewidth	= ["" for _ in range(len(hw_configs)) ]
+hw_name			= ["" for _ in range(len(hw_configs)) ]
+
+# ISA-L format
+hw_marker		[ISA_L] = "*"
+hw_line	 		[ISA_L] = "--"
+hw_linewidth	[ISA_L] = 1
+hw_name			[ISA_L] = "ISA-L"
+
+# Plain C format
+hw_marker		[PLAIN_C] = "+"
+hw_line	 		[PLAIN_C] = "--"
+hw_linewidth	[PLAIN_C] = 1
+hw_name			[PLAIN_C] = "Plain C"
+
+# SYCL ASP format
+hw_marker		[SYCL_ASP] = "x"
+hw_line			[SYCL_ASP] = "-"
+hw_linewidth	[SYCL_ASP] = 1
+hw_name			[SYCL_ASP] = "SYCL ASP"
+
+# SYCL AFU format
+hw_marker		[SYCL_AFU] = "o"
+hw_line	 		[SYCL_AFU] = "-"
+hw_linewidth	[SYCL_AFU] = 2
+hw_name			[SYCL_AFU] = "SYCL AFU"
+
+
+###########################
+# Source data directories #
+###########################
+data_dirs 			= ["" for _ in range(len(hw_configs)) ]
+data_dirs[ISA_L   ]	= root_data_dir + "/data_ISA_L/"
+data_dirs[SYCL_ASP] = root_data_dir + "/data_SYCL_ASP/"
+data_dirs[PLAIN_C ] = root_data_dir + "/data_PLAIN_C/"
+data_dirs[SYCL_AFU] = root_data_dir + "/data_SYCL_AFU/"
+
+########################
+# Reed-Solomon formats #
+########################
+RS_SCHEMA_list = ["3_2", "6_3" ]
 RS_SCHEMA_txt  = ["3:2", "6:3" ]
-RS_SCHEMA_color = ["r", "g", "b"]
-# RS_10_4 = 2
+RS_color = ["r", "b"]
 RS_6_3 = 1
 RS_3_2 = 0
+# Arrays of K:P values
+RS_K_list = [3, 6]
+RS_P_list = [2, 3]
 
+###############
+# Cell length #
+###############
 cell_length = [ 
 				"64B"	,	"128B",	"256B",	"512B", 
 				"1KB"	,	"2KB"	,	"4KB"	,	"8KB"	,	"16KB"	,
 				"32KB"	,	"64KB"	,	"128KB"	, 	"256KB"	,	"512KB"	,
 				"1MB"	,	"2MB"	,	"4MB"	,	"8MB"	, 	"16MB"	,
 				 "32MB"	,	"64MB"#	,	"128MB"	, 	"256MB"	,	"512MB"	,
-				# "1GB"
 				]
 cell_length_int = [ 64				, 128			, 256			, 512			, 
 					1024           , 2*1024         , 4*1024         , 8*1024       , 16*1024 		,
 					32*1024        , 64*1024        , 128*1024       , 256*1024     , 512*1024 		,
 					1024*1024      , 2*1024*1024    , 4*1024*1024    , 8*1024*1024  , 16*1024*1024 	,
 					32*1024*1024  , 64*1024*1024   #, 128*1024*1024  , 256*1024*1024, 512*1024*1024 ,
-					# 1024*1024*1024 	
 				]
-index_1MB = 10
+index_1MB = cell_length.index("1MB")
 
+#############
+# Read data #
+#############
 # Preallocate arrays
 mean_latency_s 		= [[[0. for _ in range(len(cell_length)) ] for _ in range(len(hw_configs))] for _ in range(len(RS_SCHEMA_list))]
 # latency_s 			= [[[0. for _ in range(len(cell_length)) ] for _ in range(len(hw_configs))] for _ in range(len(RS_SCHEMA_list))]
 throughput_B_s 		= [[[0. for _ in range(len(cell_length)) ] for _ in range(len(hw_configs))] for _ in range(len(RS_SCHEMA_list))]
 afu_latency_s 		= [0. for _ in range(len(cell_length)) ]
-# median_latency_s 		= [[[0. for _ in range(len(cell_length)) ] for _ in range(len(hw_configs))] for _ in range(len(RS_SCHEMA_list))]
-# throughput_B_s_median 	= [[[0. for _ in range(len(cell_length)) ] for _ in range(len(hw_configs))] for _ in range(len(RS_SCHEMA_list))]
 
 # Figure Linear regression
 for hw in range(0,len(hw_configs)):
@@ -67,11 +117,16 @@ for hw in range(0,len(hw_configs)):
 			file_name_ref = glob.glob(afu_latency_s_file_name)
 			if ( len(file_name_ref) != 1 ): 
 				print("File name error: " + afu_latency_s_file_name)
+				afu_latency_s = numpy.inf
 				continue
-
+			
 			# Load data
-			afu_latency_s = pandas.read_csv(file_name_ref[0], sep=";", header=None)
-			# latency_s[rs][hw][l] = afu_latency_s
+			try:
+				afu_latency_s = pandas.read_csv(file_name_ref[0], sep=";", header=None)
+				# latency_s[rs][hw][l] = afu_latency_s
+			except:
+				print("File name error: " + afu_latency_s_file_name)
+				afu_latency_s = numpy.inf
 
 			# Save mean_latency_s
 			mean_latency_s[rs][hw][l] = numpy.average(afu_latency_s)
@@ -79,41 +134,24 @@ for hw in range(0,len(hw_configs)):
 
 			# Save throughput byte/second
 			throughput_B_s[rs][hw][l] = cell_length_int[l] / mean_latency_s[rs][hw][l]
+			# Multiply for P for multi-erasure reconstruction
+			if os.environ['MULTI_ERASURE_SIMPLE'] == "1":
+				throughput_B_s[rs][hw][l] *= RS_P_list[rs]
 
-
-# 		# Perform linear regression
-# 		x = numpy.array(cell_length_int).reshape(-1, 1)
-# 		model = LinearRegression().fit(x, numpy.array(mean_latency_s[rs][hw]).reshape(-1, 1))
-# 		y_pred = model.predict(x)
-# 		print(RS_SCHEMA_list[rs], " ", hw_configs[hw], ": Latency = ", model.intercept_ , " + ", model.coef_, " * cell_length")
-# 		plt.plot(cell_length_int, y_pred, label="RS[" + RS_SCHEMA_txt[rs] + "] " + hw_configs[hw])
-# 		plt.scatter(x, mean_latency_s[rs][hw], marker="x")
-# 		plt.xticks(cell_length_int, cell_length)
-# plt.ylabel("seconds")
-# plt.xlabel("Cell length")
-# plt.grid(visible=True, which="both")
-# plt.legend()
-# figname = plot_dir + "/" + "Linear regression" + ".png"
-# plt.savefig(figname, dpi=400, bbox_inches="tight")
-# print(figname)
-#
-# Raw histograms
-# for rs in range(0,len(RS_SCHEMA_list)):
-# 	# plt.figure("RS[" + RS_SCHEMA_txt[rs] + "]")
-# 	# for hw in range(0,len(hw_configs)):
-# 	pandas.DataFrame(latency_s[rs][0][len(cell_length)-1]).hist()
-# plt.show()
-# exit()
-
-# Figure Latency
+##################
+# Figure Latency #
+##################
 plt.figure("Latency", figsize=[16,9])
-for rs in range(0,len(RS_SCHEMA_list)):
-	plt.loglog(cell_length_int, mean_latency_s[rs][SYCL_ASP  ], RS_SCHEMA_color[rs]+"-o", label="RS[" + RS_SCHEMA_txt[rs] + "] SYCL ASP",   linewidth=2)
-for rs in range(0,len(RS_SCHEMA_list)):
-	plt.loglog(cell_length_int, mean_latency_s[rs][ISA_L], RS_SCHEMA_color[rs]+"-x", label="RS[" + RS_SCHEMA_txt[rs] + "] ISA-L"	)
-for rs in range(0,len(RS_SCHEMA_list)):
-	plt.loglog(cell_length_int, mean_latency_s[rs][PLAIN_C], RS_SCHEMA_color[rs]+":x", label="RS[" + RS_SCHEMA_txt[rs] + "] PLAIN C"	)
-plt.axvline(x = 1024*1024, linestyle='--') # Vertical line at 1MB
+for hw in range(0,len(hw_configs)):
+	for rs in range(0,len(RS_SCHEMA_list)):
+		plt.loglog(
+					cell_length_int, 
+			 		mean_latency_s[rs][hw],
+					RS_color[rs] + hw_line[hw] + hw_marker[hw],
+					label="RS[" + RS_SCHEMA_txt[rs] + "] " + hw_name[hw],
+					linewidth=hw_linewidth[hw]
+				)
+plt.axvline(x = 1024*1024, linestyle='--', color="g") # Vertical line at 1MB
 plt.xlabel("Cell length")
 plt.ylabel("seconds")
 plt.xticks(cell_length_int, cell_length)
@@ -121,81 +159,26 @@ plt.grid(visible=True)
 plt.legend()
 figname = plot_dir + "/" + "Latency" + ".png"
 plt.savefig(figname, dpi=400, bbox_inches="tight")
-print(figname)
-
-# # Figure Median Latency
-# plt.figure("Median Latency", figsize=[16,9])
-# for rs in range(0,len(RS_SCHEMA_list)):
-	# plt.loglog(cell_length_int, median_latency_s[rs][SYCL_ASP  ], RS_SCHEMA_color[rs]+"-o", label="RS[" + RS_SCHEMA_txt[rs] + "] SYCL_ASP",   linewidth=2)
-# for rs in range(0,len(RS_SCHEMA_list)):
-	# plt.loglog(cell_length_int, median_latency_s[rs][ISA_L], RS_SCHEMA_color[rs]+"-x", label="RS[" + RS_SCHEMA_txt[rs] + "] ISA-L", linestyle='dashed'	)
-# plt.xlabel("Cell length")
-# plt.ylabel("seconds")
-# plt.xticks(cell_length_int, cell_length)
-# plt.grid(visible=True)
-# plt.legend()
-# figname = plot_dir + "/" + "Latency_median" + ".png"
-# plt.savefig(figname, dpi=400, bbox_inches="tight")
-# print(figname)
-#
-# Figure SYCL_ASP / ISA-L slowdown
-# plt.figure("Relative slowdown SYCL_ASP / ISA-L", figsize=[16,9])
-# plt.title("Relative slowdown SYCL_ASP / ISA-L")
-# print("RS[K:P],W,Slowdown SYCL_ASP/ISA-L")
-# slowdown = [[0. for _ in range(len(cell_length)) ] for _ in range(len(RS_SCHEMA_list))]
-# for rs in range(0,len(RS_SCHEMA_list)):
-# 	for l in range(0,len(cell_length)):
-# 		# Compute relative speedup SYCL_ASP / ISA-L
-# 		slowdown[rs][l] = mean_latency_s[rs][SYCL_ASP][l] / mean_latency_s[rs][ISA_L][l]
-# 		# printRS_SCHEMA_txt[rs], ",", cell_length[l], ",", slowdown[rs][l]
-# 	plt.loglog(cell_length_int, slowdown[rs],  RS_SCHEMA_color[rs]+"-o", label="RS " + RS_SCHEMA_list[rs] )
-# 	print(RS_SCHEMA_txt[rs], ",", cell_length[index_1MB], ",", slowdown[rs][index_1MB])
-# plt.grid(visible=True, which="both")
-# plt.xticks(cell_length_int, cell_length)
-# plt.xlabel("Cell length")
-# plt.ylabel("SYCL_ASP/ISA-L latency")
-# # plt.ylim(bottom=1) 
-# plt.legend()
-# figname = plot_dir + "/" + "Relative_slowdown_SYCL_vs_ISA-L" + ".png"
-# plt.savefig(figname, dpi=400, bbox_inches="tight")
-# print(figname)
-
-# # Figure ISA-L / SYCL_ASP slowdown
-# plt.figure("Relative slowdown ISA-L / SYCL_ASP", figsize=[16,9])
-# plt.title("Relative slowdown ISA-L / SYCL_ASP")
-# print("RS[K:P],W,Slowdown ISA-L / SYCL_ASP")
-# slowdown = [[0. for _ in range(len(cell_length)) ] for _ in range(len(RS_SCHEMA_list))]
-# for rs in range(0,len(RS_SCHEMA_list)):
-# 	for l in range(0,len(cell_length)):
-# 		# Compute relative speedup ISA-L / SYCL_ASP
-# 		slowdown[rs][l] = mean_latency_s[rs][ISA_L][l] / mean_latency_s[rs][SYCL_ASP][l]
-# 		# printRS_SCHEMA_txt[rs], ",", cell_length[l], ",", slowdown[rs][l]
-# 	plt.loglog(cell_length_int, slowdown[rs],  RS_SCHEMA_color[rs]+"-o", label="RS " + RS_SCHEMA_list[rs] )
-# 	print(RS_SCHEMA_txt[rs], ",", cell_length[index_1MB], ",", slowdown[rs][index_1MB])
-# plt.grid(visible=True, which="both")
-# plt.xticks(cell_length_int, cell_length)
-# plt.xlabel("Cell length")
-# plt.ylabel("ISA-L/SYCL_ASP latency")
-# # plt.ylim(top=1) 
-# plt.legend()
-# figname = plot_dir + "/" + "Relative_slowdown_ISA-L_vs_SYCL" + ".png"
-# plt.savefig(figname, dpi=400, bbox_inches="tight")
-# print(figname)
+print("Figure available at " + figname)
 
 # Figure Throughput
 B_s		= [ "100MB/s", "1GB/s", "10GB/s"]
 B_s_int = [ 100*1024*1024, 1024*1024*1024, 10*1024*1024*1024]
 plt.figure("Throughput", figsize=[16,9])
-for rs in range(0,len(RS_SCHEMA_list)):
-	plt.loglog(cell_length_int, throughput_B_s[rs][SYCL_ASP  ],  RS_SCHEMA_color[rs]+"-o", label="RS[" + RS_SCHEMA_txt[rs] + "] SYCL_ASP", linewidth=2)
-	ax = plt.gca(); ax.set_xscale("log", base=2); ax.set_yscale("log", base=10)
-	print(throughput_B_s[rs][SYCL_ASP  ][len(cell_length)-1]/1024/1024/1024)
-for rs in range(0,len(RS_SCHEMA_list)):
-	plt.loglog(cell_length_int, throughput_B_s[rs][ISA_L],  RS_SCHEMA_color[rs]+"--x", label="RS[" + RS_SCHEMA_txt[rs] + "] ISA-L")
-	ax = plt.gca(); ax.set_xscale("log", base=2); ax.set_yscale("log", base=10)
-for rs in range(0,len(RS_SCHEMA_list)):
-	plt.loglog(cell_length_int, throughput_B_s[rs][PLAIN_C],  RS_SCHEMA_color[rs]+":*", label="RS[" + RS_SCHEMA_txt[rs] + "] PLAIN C")
-plt.axvline(x = 1024*1024, linestyle='--') # Vertical line at 1MB
+for hw in range(0,len(hw_configs)):
+	for rs in range(0,len(RS_SCHEMA_list)):
+		plt.loglog(
+					cell_length_int, 
+			 		throughput_B_s[rs][hw],
+					RS_color[rs] + hw_line[hw] + hw_marker[hw],
+					label="RS[" + RS_SCHEMA_txt[rs] + "] " + hw_name[hw],
+					linewidth=hw_linewidth[hw]
+				)
+		print(throughput_B_s[rs][hw][len(cell_length)-1]/1024/1024/1024)
+
+ax = plt.gca(); ax.set_xscale("log", base=2); ax.set_yscale("log", base=10)
+
+plt.axvline(x = 1024*1024, linestyle='--', color="g") # Vertical line at 1MB
 plt.grid(visible=True, which="both")
 plt.yticks(B_s_int, B_s)
 plt.xticks(cell_length_int, cell_length)
@@ -204,35 +187,6 @@ plt.ylabel("Throughput (B/s)")
 plt.legend()
 figname = plot_dir + "/" + "Throughput" + ".png"
 plt.savefig(figname, dpi=400, bbox_inches="tight")
-print(figname)
-
-# # Figure RS slowdown
-# plt.figure("RS slowdown", figsize=[16,9])
-# code_latency_ratio_6_3_SYCL 		= [0. for _ in range(len(cell_length))]
-# code_latency_ratio_10_4_SYCL 	= [0. for _ in range(len(cell_length))]
-# code_latency_ratio_6_3_ISAL 	= [0. for _ in range(len(cell_length))]
-# code_latency_ratio_10_4_ISAL 	= [0. for _ in range(len(cell_length))]
-# for l in range(0,len(cell_length)):
-# 	# Compute relative speedup VS RS[3:2]
-# 	code_latency_ratio_6_3_SYCL 		[l] 	= mean_latency_s[RS_6_3 ][SYCL_ASP  ][l] / mean_latency_s[RS_3_2][SYCL_ASP  ][l]
-# 	# code_latency_ratio_10_4_SYCL 	[l] 	= mean_latency_s[RS_10_4][SYCL_ASP  ][l] / mean_latency_s[RS_3_2][SYCL_ASP  ][l]
-# 	code_latency_ratio_6_3_ISAL 	[l] 	= mean_latency_s[RS_6_3 ][ISA_L][l] / mean_latency_s[RS_3_2][ISA_L][l]
-# 	# code_latency_ratio_10_4_ISAL 	[l] 	= mean_latency_s[RS_10_4][ISA_L][l] / mean_latency_s[RS_3_2][ISA_L][l]
-
-# plt.semilogx(cell_length_int, code_latency_ratio_6_3_SYCL 	, RS_SCHEMA_color[RS_6_3 ]+"-o", label="RS[6:3]")
-# # plt.semilogx(cell_length_int, code_latency_ratio_10_4_SYCL 	, RS_SCHEMA_color[RS_10_4]+"-o", label="RS[10:4]")
-# plt.semilogx(cell_length_int, code_latency_ratio_6_3_ISAL 	, RS_SCHEMA_color[RS_6_3 ]+"x", label="RS[6:3]"	, linestyle='dashed')
-# # plt.semilogx(cell_length_int, code_latency_ratio_10_4_ISAL 	, RS_SCHEMA_color[RS_10_4]+"x", label="RS[10:4]"	, linestyle='dashed')
-# plt.xticks(cell_length_int, cell_length)
-# plt.hlines(6/3., xmin=cell_length_int[0], xmax=cell_length_int[-1], colors=RS_SCHEMA_color[RS_6_3], label="K ratio 6/3")
-# # plt.hlines(10/3., xmin=cell_length_int[0], xmax=cell_length_int[-1],colors=RS_SCHEMA_color[RS_10_4], label="K ratio 10/3")
-# plt.xlabel("Cell length")
-# plt.ylabel("Slowdown w.r.t. RS[3:2]")
-# plt.legend()
-# figname = plot_dir + "/" + "RS slowdown" + ".png"
-# plt.savefig(figname, dpi=400, bbox_inches="tight")
-# print(figname)
-
-# plt.show()
+print("Figure available at " + figname)
 
 print("Plots are available at " + plot_dir)
