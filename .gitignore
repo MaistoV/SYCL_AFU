@@ -13,6 +13,7 @@ hitek_release/*
 
 # Auxiliary tmp files
 tmp*
+backup*
 
 # Results, data and plots
 *.csv
