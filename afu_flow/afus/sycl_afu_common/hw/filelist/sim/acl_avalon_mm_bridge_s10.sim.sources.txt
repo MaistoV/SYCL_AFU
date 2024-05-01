@@ -1,0 +1,1 @@
+${INTELFPGAOCLSDKROOT}/ip/board/acl_avalon_mm_bridge_s10/acl_avalon_mm_bridge_s10.v

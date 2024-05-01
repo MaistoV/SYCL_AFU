@@ -1,0 +1,11 @@
+# RTL sources
+${SYCL_AFU_COMMON}/hw/rtl/avalon_interrupt_proxy.sv 
+${SYCL_AFU_COMMON}/hw/rtl/bsp_host_mem_if_mux.sv 
+${SYCL_AFU_COMMON}/hw/rtl/dfl_csr_avalon.sv 
+${SYCL_AFU_COMMON}/hw/rtl/kernel_dfl_wrapper.sv
+
+# IPs
+# acl_avalon_mm_bridge_s10_0
+C:${SYCL_AFU_COMMON}/hw/filelist/synth/acl_avalon_mm_bridge_s10_0.sources.txt
+# AVMM Splitter in Qsys
+C:${SYCL_AFU_COMMON}/hw/filelist/synth/avmm_splitter_qsys.sources.txt

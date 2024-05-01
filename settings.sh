@@ -187,7 +187,7 @@ export SYCL_IP_PRJ_AFU_EXPORT=${AFU_HW_DIR}/${SYCL_IP_NAME}_report.prj
 # Non-BSP (non-ASP) OneAPI compilation flag
 export AGILEX7_PART_NUMBER=AGFB014R24C2E2V # C220 part number
 # Offset of the SYCL kernel CSR space
-export KERNEL_REGISTER_MAP_OFFSET_HEX=40
+export KERNEL_REGISTER_MAP_OFFSET_HEX=100
 export DISABLE_AVMM_INTERRUPT=0
 
 ##############

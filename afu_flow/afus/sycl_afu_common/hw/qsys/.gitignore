@@ -1,0 +1,8 @@
+# Platform Designer output
+avmm_splitter/*
+# Keep Platform Designer sources
+!avmm_splitter/avmm_splitter_qsys.qsys
+
+# TODO: also import tcl script
+#!avmm_splitter/avmm_splitter_qsys.tcl
+

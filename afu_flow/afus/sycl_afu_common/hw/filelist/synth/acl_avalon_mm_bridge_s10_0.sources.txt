@@ -1,0 +1,4 @@
+# In QIP for acl_avalon_mm_bridge_s10_0
+# NOTE: this is a dirty workaround, since this file should be built and exported autonomously,
+#       instead it is taken from a previous ASP build
+${OFS_ASP_ROOT}/build/bringup/ofs_nc220/fim_platform/build/syn/board/htk-nc220-agf014/syn_top/ip/ddr_board/acl_avalon_mm_bridge_s10_0/acl_avalon_mm_bridge_s10_0.qip

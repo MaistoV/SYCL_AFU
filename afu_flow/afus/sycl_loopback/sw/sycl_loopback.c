@@ -26,7 +26,7 @@
 #define CL_ALIGN(phy_addr)      (phy_addr / CACHELINE_BYTES)    // Cache-line aligned physical address
 #define SIZE_BUFFERS(n)         (CACHELINE_BYTES * (n))         // Size of I/O buffers in cache lines
 
-// #define INTERRUPT_EVENTS
+#define INTERRUPT_EVENTS
 
 int main(int argc, char *argv[]) {
     static const uint32_t max_handles = 32;
@@ -52,9 +52,9 @@ int main(int argc, char *argv[]) {
     }
 
     // Find and connect to the accelerators
-    uint64_t* ptr_mmio;
+    uint64_t* mmio_ptr;
     res = connect_to_matching_accels(AFU_ACCEL_UUID, &num_handles, accel_handles,
-                                   &is_ase_sim, &ptr_mmio);
+                                   &is_ase_sim, &mmio_ptr);
     if ( (res != FPGA_OK) || (0 == num_handles) ) {
         exit(1);
     }
@@ -65,7 +65,7 @@ int main(int argc, char *argv[]) {
     #endif // INTERRUPT_EVENTS
     }
     else {
-        // assert(ptr_mmio);
+        // assert(mmio_ptr);
     }
 
     printf("Found %d instance(s) of AFU:\n", num_handles);
@@ -73,18 +73,18 @@ int main(int argc, char *argv[]) {
 
     // Access mapped MMIO space
     if ( !is_ase_sim ) {
-        // printf("%s:%d read AFU_DFH_REG      @%016lx: \n", __FILE__, __LINE__, ptr_mmio[AFU_DFH_REG]);
-        // printf("%s:%d read AFU_ID_LO        @%016lx: \n", __FILE__, __LINE__, ptr_mmio[AFU_ID_LO]);
-        // printf("%s:%d read AFU_ID_HI        @%016lx: \n", __FILE__, __LINE__, ptr_mmio[AFU_ID_HI]);
-        // printf("%s:%d read AFU_NEXT         @%016lx: \n", __FILE__, __LINE__, ptr_mmio[AFU_NEXT]);
-        // printf("%s:%d read AFU_RESET        @%016lx: \n", __FILE__, __LINE__, ptr_mmio[AFU_RESET]);
-        // printf("%s:%d read AFU_IRQ_EN       @%016lx: \n", __FILE__, __LINE__, ptr_mmio[AFU_IRQ_EN]);
-        // printf("%s:%d read KERNEL_STATUS    @%016lx: \n", __FILE__, __LINE__, ptr_mmio[KERNEL_STATUS]);
-        // // printf("%s:%d read KERNEL_START @%016lx: \n", __FILE__, __LINE__, ptr_mmio[AFU_RESET]);
+        // printf("%s:%d read AFU_DFH_REG      @%016lx: \n", __FILE__, __LINE__, mmio_ptr[AFU_DFH_REG]);
+        // printf("%s:%d read AFU_ID_LO        @%016lx: \n", __FILE__, __LINE__, mmio_ptr[AFU_ID_LO]);
+        // printf("%s:%d read AFU_ID_HI        @%016lx: \n", __FILE__, __LINE__, mmio_ptr[AFU_ID_HI]);
+        // printf("%s:%d read AFU_NEXT         @%016lx: \n", __FILE__, __LINE__, mmio_ptr[AFU_NEXT]);
+        // printf("%s:%d read AFU_RESET        @%016lx: \n", __FILE__, __LINE__, mmio_ptr[AFU_RESET]);
+        // printf("%s:%d read AFU_IRQ_EN       @%016lx: \n", __FILE__, __LINE__, mmio_ptr[AFU_IRQ_EN]);
+        // printf("%s:%d read KERNEL_STATUS    @%016lx: \n", __FILE__, __LINE__, mmio_ptr[KERNEL_STATUS]);
+        // // printf("%s:%d read KERNEL_START @%016lx: \n", __FILE__, __LINE__, mmio_ptr[AFU_RESET]);
         // // Read-any
-        // printf("%s:%d read KERNEL_ARG_DEVICE_READ_REG     @%016lx: \n", __FILE__, __LINE__, ptr_mmio[KERNEL_ARG_DEVICE_READ_REG]);
-        // printf("%s:%d read KERNEL_ARG_DEVICE_WRITE_REG    @%016lx: \n", __FILE__, __LINE__, ptr_mmio[KERNEL_ARG_DEVICE_WRITE_REG]);
-        // printf("%s:%d read KERNEL_ARG_RS_LENGTH_LINES_REG @%016lx: \n", __FILE__, __LINE__, ptr_mmio[KERNEL_ARG_RS_LENGTH_LINES_REG]);
+        // printf("%s:%d read KERNEL_ARG_DEVICE_READ_REG     @%016lx: \n", __FILE__, __LINE__, mmio_ptr[KERNEL_ARG_DEVICE_READ_REG]);
+        // printf("%s:%d read KERNEL_ARG_DEVICE_WRITE_REG    @%016lx: \n", __FILE__, __LINE__, mmio_ptr[KERNEL_ARG_DEVICE_WRITE_REG]);
+        // printf("%s:%d read KERNEL_ARG_RS_LENGTH_LINES_REG @%016lx: \n", __FILE__, __LINE__, mmio_ptr[KERNEL_ARG_RS_LENGTH_LINES_REG]);
     }
     else {
         // Disable interrupts in simluation
@@ -209,6 +209,13 @@ int main(int argc, char *argv[]) {
     else {
         printf("Poll success. Return = %d\n", poll_res);
     }
+
+    // Clear interrupt
+    printf("%s:%d Read from KERNEL_CLEAR_INTERRUPT...\n", __FILE__, __LINE__);
+    res = fpgaReadMMIO64(accel_handles[0], 0, KERNEL_CLEAR_INTERRUPT, &status_val);
+    fpga_assert(res);
+    printf("%s:%d read @%08x, value = %016lx\n", __FILE__, __LINE__, KERNEL_CLEAR_INTERRUPT, status_val);
+
 #else // !INTERRUPT_EVENTS
     // Active polling on AFU
     printf("%s:%d Wait for DONE...\n", __FILE__, __LINE__);
@@ -218,13 +225,6 @@ int main(int argc, char *argv[]) {
         fpga_assert(res);
         print_kernel_status(status_val);
     } while ( !(status_val & KERNEL_REGISTER_MAP_DONE_MASK) );
-
-    // Clear interrupt
-    printf("%s:%d Read from KERNEL_CLEAR_INTERRUPT...\n", __FILE__, __LINE__);
-    res = fpgaReadMMIO64(accel_handles[0], 0, KERNEL_CLEAR_INTERRUPT, &status_val);
-    fpga_assert(res);
-    printf("%s:%d read @%08x, value = %016lx\n", __FILE__, __LINE__, KERNEL_CLEAR_INTERRUPT, status_val);
-    
 #endif // !INTERRUPT_EVENTS
 
     // Print-out buffers content

@@ -27,3 +27,9 @@ else
     export AFU_ASE_DIR=${AFU_BUILD_DIR}/${AFU_NAME}_ase
 fi
 export ASE_WORKDIR=${AFU_ASE_DIR}/work
+
+##############
+# IP imports #
+##############
+export SYCL_AFU_COMMON=${AFU_FLOW_DIR}/afus/sycl_afu_common
+export AVMM_SPLITTER_PRJ=${SYCL_AFU_COMMON}/hw/qsys/avmm_splitter

@@ -1,0 +1,7 @@
+# Quartus IPs
+${AVMM_SPLITTER_PRJ}/avmm_splitter_qsys/avmm_splitter_qsys.qip
+${AVMM_SPLITTER_PRJ}/ip/avmm_splitter_qsys/avmm_splitter_qsys_avmm_agent_1/avmm_splitter_qsys_avmm_agent_1.qip
+${AVMM_SPLITTER_PRJ}/ip/avmm_splitter_qsys/avmm_splitter_qsys_avmm_agent_0/avmm_splitter_qsys_avmm_agent_0.qip
+${AVMM_SPLITTER_PRJ}/ip/avmm_splitter_qsys/avmm_splitter_qsys_reset_in/avmm_splitter_qsys_reset_in.qip
+${AVMM_SPLITTER_PRJ}/ip/avmm_splitter_qsys/avmm_splitter_qsys_avmm_host_0/avmm_splitter_qsys_avmm_host_0.qip
+${AVMM_SPLITTER_PRJ}/ip/avmm_splitter_qsys/avmm_splitter_qsys_clock_in/avmm_splitter_qsys_clock_in.qip
