@@ -5,7 +5,7 @@ fpga_result connect_to_matching_accels(
                            uint32_t *num_handles,
                            fpga_handle *accel_handles,
                            bool *is_ase_sim,
-                           uint64_t** ptr_mmio
+                           volatile uint64_t** mmio_ptr
                            ) {
     fpga_properties filter = NULL;
     fpga_guid guid;
@@ -74,14 +74,13 @@ fpga_result connect_to_matching_accels(
         fpga_assert(res);
 
         // Map MMIO address space
-        // res = fpgaMapMMIO(accel_handles[i], 0, NULL); // Deprecated without a pointer
         if ( !( *is_ase_sim ) ) {
-            // printf("%s:%d Mapping MMIO space\n", __FILE__, __LINE__);
-            // uint64_t *tmp_ptr;
-            // res = fpgaMapMMIO(accel_handles[i], 0, &tmp_ptr);
-            // fpga_assert(res);
-            // assert(tmp_ptr != NULL);
-            // *ptr_mmio = tmp_ptr;
+            printf("%s:%d Mapping MMIO space\n", __FILE__, __LINE__);
+            volatile uint64_t * tmp_ptr;
+            res = fpgaMapMMIO(accel_handles[i], 0, ((uint64_t **)&tmp_ptr));
+            fpga_assert(res);
+            assert(tmp_ptr != NULL);
+            mmio_ptr[i] = tmp_ptr;
         } 
 
         // Reset AFU
@@ -91,20 +90,22 @@ fpga_result connect_to_matching_accels(
 
         // AFU reset via CSR
         printf("%s:%d Reset AFU via CSR write...\n", __FILE__, __LINE__);
-        res = fpgaWriteMMIO64(accel_handles[i], 0, AFU_RESET, AFU_RESET_VALUE);
-        fpga_assert(res);
+        // res = fpgaWriteMMIO64(accel_handles[i], 0, AFU_RESET, AFU_RESET_VALUE);
+        // fpga_assert(res);
+        MAPPED_MMIO(mmio_ptr[i], AFU_RESET) = AFU_RESET_VALUE;
         printf("%s:%d write @%08x, value = %016lx\n", __FILE__, __LINE__, AFU_RESET, AFU_RESET_VALUE);
         
         // Enable AFU interrupts via CSR
         printf("%s:%d Enable AFU interrupts via CSR write...\n", __FILE__, __LINE__);
-        res = fpgaWriteMMIO64(accel_handles[i], 0, AFU_IRQ_EN, AFU_IRQ_EN_VALUE);
-        fpga_assert(res);
+        // res = fpgaWriteMMIO64(accel_handles[i], 0, AFU_IRQ_EN, AFU_IRQ_EN_VALUE);
+        // fpga_assert(res);
+        MAPPED_MMIO(mmio_ptr[i], AFU_IRQ_EN) = AFU_IRQ_EN_VALUE;
         printf("%s:%d write @%08x, value = %016lx\n", __FILE__, __LINE__, AFU_IRQ_EN, AFU_IRQ_EN_VALUE);
         
-        ////////////////////////////////
-        // Debug reads from DFL CSRs
-        ////////////////////////////////
-        debug_read_dfl( accel_handles[i] );
+        ///////////////////////////////
+        // Debug reads from DFL CSRs //
+        ///////////////////////////////
+        debug_read_dfl( accel_handles[i], mmio_ptr[i] );
     }
     *num_handles = num_found;
     if (0 != num_found) res = FPGA_OK;
@@ -141,7 +142,7 @@ volatile void* alloc_buffer(fpga_handle accel_handle,
     return buf;
 }
 
-void debug_read_dfl( fpga_handle accel_handle ) {
+void debug_read_dfl( fpga_handle accel_handle, volatile uint64_t* mmio_ptr ) {
     fpga_result res = FPGA_OK;
     uint64_t data = 0;
     // DFL
@@ -160,4 +161,11 @@ void debug_read_dfl( fpga_handle accel_handle ) {
     res = fpgaReadMMIO64(accel_handle, 0, AFU_RESERVED, &data);
     fpga_assert(res);
     printf("AFU RESERVED = %016lx\n", data);
+
+    // Mapped MMIO access
+    printf("AFU_DFH_REG     %016lx\n", MAPPED_MMIO(mmio_ptr, AFU_DFH_REG  ) );
+    printf("AFU_ID_LO       %016lx\n", MAPPED_MMIO(mmio_ptr, AFU_ID_LO    ) );
+    printf("AFU_ID_HI       %016lx\n", MAPPED_MMIO(mmio_ptr, AFU_ID_HI    ) );
+    printf("AFU_NEXT        %016lx\n", MAPPED_MMIO(mmio_ptr, AFU_NEXT     ) );
+    printf("AFU_RESERVED    %016lx\n", MAPPED_MMIO(mmio_ptr, AFU_RESERVED ) );
 }

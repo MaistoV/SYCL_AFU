@@ -33,7 +33,7 @@ fpga_result connect_to_matching_accels(
                            uint32_t *num_handles,
                            fpga_handle *accel_handles,
                            bool *is_ase_sim,
-                           uint64_t** ptr_mmio
+                           volatile uint64_t** mmio_ptr
                            );
 
 // Allocate a buffer in I/O memory, shared with the FPGA.
@@ -41,10 +41,9 @@ volatile void* alloc_buffer(fpga_handle accel_handle,
             ssize_t size,
             uint64_t *wsid,
             uint64_t *io_addr);
-
                
 // Debug reads from DFL and Kernel CSRs
-void debug_read_dfl( fpga_handle accel_handle );
+void debug_read_dfl( fpga_handle accel_handle, volatile uint64_t* mmio_ptr );
 
 #endif // __UTILS_H__
 
