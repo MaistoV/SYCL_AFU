@@ -4,44 +4,10 @@
 // SPDX-License-Identifier: MIT
 // =============================================================
 
-#include <iostream>
-#include <chrono>
-
 #ifndef MULTI_ERASURE_SIMPLE
 	#error "This source only supports simple multi-erasure!"
 #endif
 
-#ifndef NO_SYCL
-	#include <sycl/sycl.hpp>
-	#include <sycl/ext/intel/fpga_extensions.hpp>
-	#include "exception_handler.hpp"
-#endif // !NO_SYCL
-
-// Header for device code.
-#include "rs_erasure/rs_erasure_sycl.hpp"
-
-// For verification
-#include <getopt.h>
-// For ISA-L
-// #include <isa-l.h>
-// For compute_max_erasure_patterns, gf_gen_cauchy1_matrix, compute_num_vectors_per_erasure_pattern, gf_gen_decode_matrix_simple
-#include "rs_erasure/roms/src/rs_rom_utils.h"
-
-// Measure macros for latency
-#include "measure_latency.h"
-
-using namespace sycl;
-
-// Utility function wrapping the complexity of the SYCL_ASP call
-void RunKernel(
-		int measure_latency,
-		FILE* fd_latency,
-		unsigned int cell_length,
-		unsigned int NUM_ERASURES,
-		device_read_t rs_erasure_input,
-		device_write_t reconstructed_blocks_out,
-		rs_erasure_csr_t rs_erasure_csr
-	);
 
 // Decode cell_length for Bytes, KBs or MBs
 int decode_cell_length (
@@ -66,18 +32,6 @@ int usage( char** argv ) {
 	);
 	exit(0);
 }
-
-// DEBUG: make selector global for now
-// Select either the FPGA emulator, FPGA simulator or FPGA device
-#ifndef NO_SYCL
-#if FPGA_SIMULATOR
-	auto selector = sycl::ext::intel::fpga_simulator_selector_v;
-#elif FPGA_HARDWARE
-	auto selector = sycl::ext::intel::fpga_selector_v;
-#else	// #if FPGA_EMULATOR
-	auto selector = sycl::ext::intel::fpga_emulator_selector_v;
-#endif
-#endif // ! NO_SYCL
 
 // Number of erasures for this test
 #define NUM_ERASURES RS_P
@@ -144,15 +98,84 @@ int main(int argc, char *argv[]) {
 		}
 	}
 
-	// Interface arguments for IP
-	line_t* rs_erasure_input		 = (line_t*)malloc( RS_INPUT_SIZE(cell_length)					);
-	line_t* reconstructed_blocks_out = (line_t*)malloc( RS_OUTPUT_SIZE(cell_length, NUM_ERASURES)	);
-
-	// CSR input to IP under test
+	// OPAE-related variables
+    fpga_handle accel_handle;
+    bool is_ase_sim = false;
+    // MMIO pointers and metadata
+    volatile uint8_t * rs_erasure_input        ;
+	volatile uint8_t * reconstructed_blocks_out;
+    uint64_t wsid_in, wsid_out;
+    uint64_t buf_pa_in, buf_pa_out;
+    uint64_t cell_length_byte = 128;
+    // FPGA error code
+    volatile fpga_result res = FPGA_OK;
+	// FPGA interrupts
+    fpga_event_handle fpgaInterruptEvent;
+	// MMIO mapped pointer
+    volatile uint64_t * mmio_ptr;
+	// CSR word for AFU
 	rs_erasure_csr_t rs_erasure_csr;
-	rs_erasure_csr.erasure_pattern	= -1;
-	rs_erasure_csr.survived_cells	= -1;
-	rs_erasure_csr.cell_length_byte_width = cell_length / LINE_BYTE_WIDTH;
+	// Cell length is constant across AFU calls in this test
+	rs_erasure_csr.cell_length_byte_width	= cell_length_byte / LINE_BYTE_WIDTH;
+
+	// Discover/Grab FPGA Resources
+	uint32_t num_handles;
+    res = connect_to_matching_accels(AFU_ACCEL_UUID, 
+									&num_handles,
+									&accel_handle,
+                                   	&is_ase_sim,
+									1,	// Grub just one AFU
+									(volatile uint64_t**)&mmio_ptr
+									);
+    if ( (res != FPGA_OK) || (0 == num_handles) ) {
+        exit(1);
+    }
+	// res = OPAE_SIMPLE_WRAPPER_init( &accel_handle, AFU_ACCEL_UUID );
+	fpga_assert(res);
+
+
+	///////////////////////////
+	// Allocate MMIO buffers //
+	///////////////////////////
+	res = OPAE_SIMPLE_WRAPPER_allocate_io_buffers ( 
+										accel_handle,
+										mmio_ptr,
+										RS_INPUT_SIZE(cell_length), 
+										(void **)&rs_erasure_input, 
+										&wsid_in,
+										RS_OUTPUT_SIZE(cell_length, NUM_ERASURES), 
+										(void **)&reconstructed_blocks_out, 
+										&wsid_out
+									);	
+	// rs_erasure_input         = (volatile uint8_t*)alloc_buffer(accel_handle, RS_INPUT_SIZE (cell_length_byte), &wsid_in , &buf_pa_in );
+	// reconstructed_blocks_out = (volatile uint8_t*)alloc_buffer(accel_handle, RS_OUTPUT_SIZE(cell_length_byte, NUM_ERASURES), &wsid_out, &buf_pa_out);
+
+	// Check pointers
+	assert(NULL != rs_erasure_input);
+	assert(NULL != reconstructed_blocks_out);
+
+	/////////////////////////
+	// Load AFU parameters //
+	/////////////////////////
+	// Write physical address to AFU CSR
+	if ( is_ase_sim ) {
+        res = fpgaWriteMMIO64(accel_handle, 0, KERNEL_ARG_DEVICE_READ_REG, buf_pa_in);
+        fpga_assert(res);
+	}
+	else {
+		MAPPED_MMIO(mmio_ptr, KERNEL_ARG_DEVICE_READ_REG) = buf_pa_in;
+	}
+	printf("%s:%d write @%x, value = %lx\n", __FILE__, __LINE__, KERNEL_ARG_DEVICE_READ_REG, buf_pa_in);
+
+	// Write physical address to AFU CSR
+	if ( is_ase_sim ) {
+        res = fpgaWriteMMIO64(accel_handle, 0, KERNEL_ARG_DEVICE_WRITE_REG, buf_pa_out);
+        fpga_assert(res);
+	}
+	else {
+		MAPPED_MMIO(mmio_ptr, KERNEL_ARG_DEVICE_WRITE_REG) = buf_pa_out;
+	}
+	printf("%s:%d write @%x, value = %lx\n", __FILE__, __LINE__, KERNEL_ARG_DEVICE_WRITE_REG, buf_pa_out);
 	
 	// Seed the PRNG
 	srand(prng_seed);
@@ -213,7 +236,7 @@ int main(int argc, char *argv[]) {
 	}
 
 	printf("%s:%d: Encoding parity cells for RS[%d:%d] cell_length=%d, using %s\n",
-		 __FILE__, __LINE__, RS_K, RS_P, cell_length, (encode_isal) ? "ISA-L" : "SYCL kernel");
+		 __FILE__, __LINE__, RS_K, RS_P, cell_length, (encode_isal) ? "ISA-L" : "SYCL_AFU kernel");
 	
 	// Encode with ISA-L
 	if ( encode_isal ) {
@@ -236,23 +259,25 @@ int main(int argc, char *argv[]) {
 	#endif
 
 		// Encode fragments RS_K+1, RS_K+2, ..., RS_K+RS_P
-		printf("%s:%d: Encoding parity cells with SYCL_ASP kernel\n", __FILE__, __LINE__);
+		printf("%s:%d: Encoding parity cells with SYCL_AFU kernel\n", __FILE__, __LINE__);
 
 		// Write input
 		rs_erasure_csr.survived_cells	= RS_PATTERN_MASK &  ((1 << RS_K) -1); // Bitmask for first k blocks
 		rs_erasure_csr.erasure_pattern	= RS_PATTERN_MASK & ~((1 << RS_K) -1); // Bitmask for last p blocks
 
-		// Call to kernel
-		// Don't measure latency for encoding
-		RunKernel (
-				0,			
-				NULL,
-				cell_length,
-				NUM_ERASURES,
-				rs_erasure_input,
-				reconstructed_blocks_out,
-				rs_erasure_csr
-			);
+		// Call to FPGA AFU
+		res = OPAE_SIMPLE_WRAPPER_call_afu (
+											accel_handle,
+											rs_erasure_csr.erasure_pattern,
+											rs_erasure_csr.survived_cells,
+											cell_length,
+											SLEEP_TIME_US,
+											&fpgaInterruptEvent,
+											measure_latency,
+											mmio_ptr,
+											fd_latency
+									);
+		fpga_assert(res);
 
 		// Pack results in fragments buffer
 		for ( unsigned int e = 0; e < NUM_ERASURES; e++ ) {
@@ -270,7 +295,7 @@ int main(int argc, char *argv[]) {
 #endif
 
 	printf("%s:%d: Decoding/Reconstructing blocks RS[%d:%d] cell_length=%d, using %s\n",
-		 __FILE__, __LINE__, RS_K, RS_P, cell_length, (decode_isal) ? "ISA-L" : "SYCL_ASP kernel");
+		 __FILE__, __LINE__, RS_K, RS_P, cell_length, (decode_isal) ? "ISA-L" : "SYCL_AFU kernel");
 
 	int num_vectors_per_erasure_pattern = compute_num_vectors_per_erasure_pattern (RS_K, RS_P);
 
@@ -285,7 +310,7 @@ int main(int argc, char *argv[]) {
 
 		#define BASE_FILENAME "latency"
 		// Open output file
-		sprintf( filename, "%s_%d_%d_%d%s_%s.txt", BASE_FILENAME, RS_K, RS_P, cell_length_byte, cell_length_byte_power, (decode_isal) ? "ISA-L" : "SYCL_ASP");
+		sprintf( filename, "%s_%d_%d_%d%s_%s.txt", BASE_FILENAME, RS_K, RS_P, cell_length_byte, cell_length_byte_power, (decode_isal) ? "ISA-L" : "SYCL_AFU");
 		strcpy( tmp_string, filedir );
 		strcat( tmp_string, "/" );
 		strcat( tmp_string, filename );
@@ -463,17 +488,20 @@ int main(int argc, char *argv[]) {
 			// Just flip erasure_pattern
 			rs_erasure_csr.survived_cells	= survival_pattern;
 
-			// Call to kernel
-			RunKernel (
-					measure_latency,
-					fd_latency,
-					cell_length,
-					NUM_ERASURES,
-					rs_erasure_input,
-					reconstructed_blocks_out,
-					rs_erasure_csr
-				);
-
+			
+			// Call to FPGA AFU
+			res = OPAE_SIMPLE_WRAPPER_call_afu (
+												accel_handle,
+												rs_erasure_csr.erasure_pattern,
+												rs_erasure_csr.survived_cells,
+												cell_length,
+												SLEEP_TIME_US,
+												&fpgaInterruptEvent,
+												measure_latency,
+												mmio_ptr,
+												fd_latency
+										);
+			fpga_assert(res);
 		#ifdef DEBUG			
 			printf("%s:%d: reconstructed_blocks_out:\n", __FILE__, __LINE__);
 			print_contiguous_cell(stdout, (uint8_t*)reconstructed_blocks_out, NUM_ERASURES, cell_length, LINE_BYTE_WIDTH );
@@ -536,111 +564,10 @@ int main(int argc, char *argv[]) {
 	// Test summary
 	printf("%s:%d: Test passed\n RS[%d:%d]\n cell_length=%d,\n encodind with %s,\n decoding with %s,\n PRNG seed=%u\n",
 		 __FILE__, __LINE__, RS_K, RS_P, cell_length,
-		 (encode_isal) ? "ISA-L" : "SYCL kernel",
-		 (decode_isal) ? "ISA-L" : "SYCL kernel",
+		 (encode_isal) ? "ISA-L" : "SYCL_AFU kernel",
+		 (decode_isal) ? "ISA-L" : "SYCL_AFU kernel",
 		 prng_seed
 		 );
 
 	return ret_val;
 }
-
-void RunKernel(
-		int measure_latency,
-		FILE* fd_latency,
-		unsigned int cell_length,
-		unsigned int num_erasures,
-		device_read_t rs_erasure_input,
-		device_write_t reconstructed_blocks_out,
-		rs_erasure_csr_t rs_erasure_csr
-	){
-
-#ifdef NO_SYCL
-	// Start measure by macro
-	std::chrono::time_point<std::chrono::steady_clock, std::chrono::nanoseconds> start, end;
-	double time_sec = 0.0;
-	if ( measure_latency ) {
-		MEASURE_LATENCY_START(start);
-	}
-
-	rs_erasure (
-                 rs_erasure_input,
-                 reconstructed_blocks_out,
-                 rs_erasure_csr
-                );
-
-	// End measure by macro
-	if ( measure_latency ) {
-		MEASURE_LATENCY_END_AND_PRINT(start, time_sec, fd_latency);
-	}
-
-#else // ! NO_SYCL
-
-	try {
-		// Create a queue bound to the chosen device.
-		// If the device is unavailable, a SYCL_ASP runtime exception is thrown.
-		queue q(selector, fpga_tools::exception_handler);
-
-		auto device = q.get_device();
-
-		std::cout << "Running on device: "
-							<< device.get_info<sycl::info::device::name>().c_str()
-							<< std::endl;
-
-		// Run kernel
-		RunKernelLambda(
-						q,
-						measure_latency,
-						fd_latency,
-						num_erasures,
-						rs_erasure_input,
-						reconstructed_blocks_out,
-						rs_erasure_csr
-					);
-					
-		
-	} catch (exception const &e) {
-		// Catches exceptions in the host code
-		std::cerr << "Caught a SYCL_ASP host exception:\n" << e.what() << "\n";
-
-		// Most likely the runtime couldn't find FPGA hardware!
-		if (e.code().value() == CL_DEVICE_NOT_FOUND) {
-			std::cerr << "CL_DEVICE_NOT_FOUND\n";
-		}
-		std::terminate();
-
-	} // try/catch
-#endif // !NO_SYCL
-
-} // RunKernel
-
-
-int decode_cell_length ( char cell_length_byte_power[2], unsigned int* cell_length_byte, const unsigned int cell_length ) {
-	unsigned int byte_power = 0;
-
-	*cell_length_byte = cell_length;
-	while ( (*cell_length_byte / 1024) != 0 ) {
-		*cell_length_byte /= 1024;
-		byte_power++;
-	}
-
-	cell_length_byte_power[1] = 'B';
-	switch ( byte_power ) {
-	case 0:
-		cell_length_byte_power[0] = 'B';
-		cell_length_byte_power[1] = '\0';
-		break;
-	case 1:
-		cell_length_byte_power[0] = 'K';
-		break;
-	case 2:
-		cell_length_byte_power[0] = 'M';
-		break;
-	default:
-		printf("Error decoding cell_length, aborting");
-		return -1;
-		break;
-	}
-	cell_length_byte_power[2] = '\0';
-
-	return 0;
-};

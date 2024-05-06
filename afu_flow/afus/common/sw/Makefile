@@ -20,8 +20,8 @@ CFLAGS += -I./$(OBJDIR) -I$(SYCL_AFU_COMMON_SW)
 CPPFLAGS += -I./$(OBJDIR) -I$(SYCL_AFU_COMMON_SW)
 
 # Files and folders
-SRCS = $(TEST).c
-OBJS = $(addprefix $(OBJDIR)/,$(patsubst %.c,%.o,$(SRCS)))
+SRCS += $(TEST).c
+OBJS += $(addprefix $(OBJDIR)/,$(patsubst %.c,%.o,$(SRCS)))
 
 all: $(BINDIR)/$(TEST)
 

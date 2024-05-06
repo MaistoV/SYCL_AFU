@@ -33,6 +33,7 @@ fpga_result connect_to_matching_accels(
                            uint32_t *num_handles,
                            fpga_handle *accel_handles,
                            bool *is_ase_sim,
+                           unsigned int max_handles,
                            volatile uint64_t** mmio_ptr
                            );
 
@@ -43,7 +44,7 @@ volatile void* alloc_buffer(fpga_handle accel_handle,
             uint64_t *io_addr);
                
 // Debug reads from DFL and Kernel CSRs
-void debug_read_dfl( fpga_handle accel_handle, volatile uint64_t* mmio_ptr );
+void debug_read_dfl( fpga_handle accel_handle, volatile uint64_t* mmio_ptr, bool is_ase_sim );
 
 #endif // __UTILS_H__
 

@@ -193,8 +193,22 @@ test_ip_%:
 #######
 
 # Build host application
+AFU_HOST_DEFINES ?=
+ifeq (${DEBUG}, 1)
+	AFU_HOST_DEFINES += -DDEBUG
+endif
+INTERRUPT_EVENTS ?= 0
+ifeq (${INTERRUPT_EVENTS}, 1)
+	AFU_HOST_DEFINES += -DINTERRUPT_EVENTS
+endif
+ifeq (${MULTI_ERASURE_SIMPLE}, 1)
+	AFU_HOST_DEFINES += -DMULTI_ERASURE_SIMPLE
+endif
+
 afu_host:
-	${MAKE} -C ${AFU_SW_DIR} clean all RS_SCHEMA=${RS_SCHEMA};
+	${MAKE} -C ${AFU_SW_DIR} clean all \
+		RS_SCHEMA=${RS_SCHEMA} \
+		AFU_HOST_DEFINES="${AFU_HOST_DEFINES}"
 
 # Build and launch simulation
 ase_setup: clean_ase ${OPAE_PLATFORM_ROOT}

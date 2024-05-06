@@ -72,21 +72,7 @@ int main(int argc, char *argv[]) {
     printf("Using handle 0\n\n");
 
     // Access mapped MMIO space
-    if ( !is_ase_sim ) {
-        // printf("%s:%d read AFU_DFH_REG      @%016lx: \n", __FILE__, __LINE__, mmio_ptr[AFU_DFH_REG]);
-        // printf("%s:%d read AFU_ID_LO        @%016lx: \n", __FILE__, __LINE__, mmio_ptr[AFU_ID_LO]);
-        // printf("%s:%d read AFU_ID_HI        @%016lx: \n", __FILE__, __LINE__, mmio_ptr[AFU_ID_HI]);
-        // printf("%s:%d read AFU_NEXT         @%016lx: \n", __FILE__, __LINE__, mmio_ptr[AFU_NEXT]);
-        // printf("%s:%d read AFU_RESET        @%016lx: \n", __FILE__, __LINE__, mmio_ptr[AFU_RESET]);
-        // printf("%s:%d read AFU_IRQ_EN       @%016lx: \n", __FILE__, __LINE__, mmio_ptr[AFU_IRQ_EN]);
-        // printf("%s:%d read KERNEL_STATUS    @%016lx: \n", __FILE__, __LINE__, mmio_ptr[KERNEL_STATUS]);
-        // // printf("%s:%d read KERNEL_START @%016lx: \n", __FILE__, __LINE__, mmio_ptr[AFU_RESET]);
-        // // Read-any
-        // printf("%s:%d read KERNEL_ARG_DEVICE_READ_REG     @%016lx: \n", __FILE__, __LINE__, mmio_ptr[KERNEL_ARG_DEVICE_READ_REG]);
-        // printf("%s:%d read KERNEL_ARG_DEVICE_WRITE_REG    @%016lx: \n", __FILE__, __LINE__, mmio_ptr[KERNEL_ARG_DEVICE_WRITE_REG]);
-        // printf("%s:%d read KERNEL_ARG_RS_LENGTH_LINES_REG @%016lx: \n", __FILE__, __LINE__, mmio_ptr[KERNEL_ARG_RS_LENGTH_LINES_REG]);
-    }
-    else {
+    if ( is_ase_sim ) {
         // Disable interrupts in simluation
         printf("%s:%d Disable AFU interrupts via CSR write...\n", __FILE__, __LINE__);
         res = fpgaWriteMMIO64(accel_handles[0], 0, AFU_IRQ_EN, ~(AFU_IRQ_EN_VALUE));

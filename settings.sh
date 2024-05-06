@@ -42,27 +42,30 @@ export FPGA="$BOARD_VAR"
 #################
 
 export FIM_NUM_PF0_VFS=10
-export OFSS_CONFIG=pf0_${FIM_NUM_PF0_VFS}vf
-export FIRST_AFU_VF=5
-# export OFSS_CONFIG=pf0_${FIM_NUM_PF0_VFS}vf_no_hems
-# export FIRST_AFU_VF=?
+# export OFSS_CONFIG=pf0_${FIM_NUM_PF0_VFS}vf
+# export FIRST_AFU_VF=5
+export OFSS_CONFIG=pf0_${FIM_NUM_PF0_VFS}vf_no_hems
+export FIRST_AFU_VF=1
 
 export OFSS_CONFIG_DIR=${ROOT_DIR}/fim_flow/ofss_configs/ofss_config_${OFSS_CONFIG}
 
 #####################
 # FIM/AFU synthesis #
 #####################
-export FIM_BUILD_DIR=$HTS_RELEASE/ofs-agx7-pcie-attach/work_htk_nc220_${FPGA}_$OFSS_CONFIG/
-
-export OFS_ROOTDIR=$HTS_RELEASE/ofs-agx7-pcie-attach
-
 # OFS_BUILD_ROOT to the top level directory for AFU development
-export OFS_BUILD_ROOT=$HTS_RELEASE/ofs-agx7-pcie-attach
+# Some synonyms for different flows here
+export OFS_ROOTDIR=${HTS_RELEASE}/ofs-agx7-pcie-attach
+export OFS_BUILD_ROOT=${OFS_ROOTDIR}
+export BUILD_ROOT_REL=${OFS_ROOTDIR}
+
+# Targer build directory for FIM
+export FIM_BUILD_DIR=${OFS_ROOTDIR}/work_htk_nc220_${FPGA}_${OFSS_CONFIG}/
 
 # OPAE_PLATFORM_ROOT to the PR build tree directory
-# export OPAE_PLATFORM_ROOT=${OPAE_PLATFORM_ROOT=$HTS_RELEASE/ofs-agx7-pcie-attach/work_htk_nc220_${FPGA}/pr_build_template}
-export OPAE_PLATFORM_ROOT=${OPAE_PLATFORM_ROOT=$HTS_RELEASE/ofs-agx7-pcie-attach/work_htk_nc220_${FPGA}_${OFSS_CONFIG}/pr_build_template}
-# export OPAE_PLATFORM_ROOT=${OPAE_PLATFORM_ROOT=$HTS_RELEASE/prebuild_images/agf014/release_v1.1/pr_build_template}
+# export OPAE_PLATFORM_ROOT=${OPAE_PLATFORM_ROOT=${OFS_ROOTDIR}/work_htk_nc220_${FPGA}/pr_build_template}
+# export OPAE_PLATFORM_ROOT=${OPAE_PLATFORM_ROOT=${OFS_ROOTDIR}/work_htk_nc220_${FPGA}_${OFSS_CONFIG}/pr_build_template}
+# export OPAE_PLATFORM_ROOT=${OPAE_PLATFORM_ROOT=${HTS_RELEASE}/prebuild_images/agf014/release_v1.1/pr_build_template}
+export OPAE_PLATFORM_ROOT=${OPAE_PLATFORM_ROOT=$FIM_BUILD_DIR/pr_build_template}
 
 # FIM image ID
 export FIM_IMAGE_INFO=$(cat ${OPAE_PLATFORM_ROOT}/hw/lib/build/syn/board/htk-nc220-agf014/syn_top/user1_image_info.txt)
@@ -124,7 +127,8 @@ export PATH=$MTI_HOME/linux_x86_64/:$MTI_HOME/bin/:$PATH
 # Target AFU
 export AFU_NAME=${AFU_NAME="sycl_rs_erasure"}
 # Don't export RS_SCHEMA for AFUs other than sycl_rs_erasure
-if [ "${AFU_NAME}" == "sycl_rs_erasure" ]; then
+if [ "${AFU_NAME}" == "sycl_rs_erasure" ] ||
+    [ "${AFU_NAME}" == "sycl_rs_erasure_array" ]; then
     export RS_SCHEMA=${RS_SCHEMA=RS_3_2}
 else 
     unset RS_SCHEMA
@@ -205,7 +209,7 @@ if [[ "${OFS_ASP_BOARD_VARIANT}" == *"usm"* ]]; then
     export OFS_ASP_USM_FLAG="-DIS_USM=1"
 fi
 
-export OFS_ASP_ROOT="$HTS_RELEASE/oneapi/oneapi-asp_agf014/nc220"
+export OFS_ASP_ROOT="${HTS_RELEASE}/oneapi/oneapi-asp_agf014/nc220"
 
 export AOCX_PR_INTERFACE_ID=$(cat ${OFS_ASP_ROOT}/pr_build_template/hw/lib/fme-ifc-id.txt)
 
@@ -228,7 +232,7 @@ export MEASURE_MAX_DECODE=${MEASURE_MAX_DECODE=20}
 #################
 
 # Use multi-erasure source code
-export MULTI_ERASURE_SIMPLE=1
+export MULTI_ERASURE_SIMPLE=${MULTI_ERASURE_SIMPLE=0}
 # Append MULTI_ERASURE_SIMPLE_SUFFIX (if MULTI_ERASURE_SIMPLE is set)
 if [[ ${MULTI_ERASURE_SIMPLE} == 1 ]]; then
     export MULTI_ERASURE_SIMPLE_SUFFIX="_multi_erasure"
@@ -252,10 +256,10 @@ echo ""
 gcc --version | grep gcc --color=none
 echo ""
 
-echo "RS_SCHEMA             : $RS_SCHEMA"
 echo "PAC_PCIE_SBD          : $PAC_PCIE_SBD"
-echo "OPAE_PLATFORM_ROOT    : $(basename $(dirname $OPAE_PLATFORM_ROOT))"
 echo "OFSS_CONFIG           : $OFSS_CONFIG"
+echo "OPAE_PLATFORM_ROOT    : $(basename $(dirname $OPAE_PLATFORM_ROOT))"
 echo "OFS_ASP_BOARD_VARIANT : $OFS_ASP_BOARD_VARIANT"
 echo "AOCX_PR_INTERFACE_ID  : $AOCX_PR_INTERFACE_ID"
+echo "RS_SCHEMA             : $RS_SCHEMA"
 echo "AFU_ENV                 $AFU_ENV"
