@@ -66,7 +66,6 @@ module ofs_plat_afu (
           // Host memory interface
           ofs_plat_avalon_mem_rdwr_if # (
             `HOST_CHAN_AVALON_MEM_RDWR_PARAMS,
-            // .BURST_CNT_WIDTH(4), // TODO: tune this
             .LOG_CLASS(ofs_plat_log_pkg::HOST_CHAN)
           )
           host_mem();
@@ -109,7 +108,14 @@ module ofs_plat_afu (
           // Instantiate the SCYL IP wrapper //
           /////////////////////////////////////
           
-          kernel_dfl_wrapper kernel_dfl_wrapper_inst (
+          kernel_dfl_wrapper # (
+          `ifdef DISABLE_AVMM_INTERRUPT
+            .DISABLE_AVMM_INTERRUPT     ( `DISABLE_AVMM_INTERRUPT         ),
+          `endif // DISABLE_AVMM_INTERRUPT
+          `ifdef KERNEL_REGISTER_MAP_OFFSET_HEX
+            .KERNEL_REGISTER_MAP_OFFSET ( `KERNEL_REGISTER_MAP_OFFSET_HEX )
+          `endif // KERNEL_REGISTER_MAP_OFFSET_HEX
+          ) kernel_dfl_wrapper_inst (
             .clock_i           ( clk               ), 
             .reset_ni          ( reset_n           ),
             .host_mem_plat     ( host_mem          ), // to_sink
