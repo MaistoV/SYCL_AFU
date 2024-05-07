@@ -11,15 +11,22 @@ help:
 #######
 # FIM #
 #######
+
+# For custom AFUs as FIM defaults, add AFU synthesis setup as requirement for FIM builds
+FIM_BUILD_REQUIRED_TARGETS =
+ifeq (${UPDATE_DEFAULT_AFU}, 1)
+	FIM_BUILD_REQUIRED_TARGETS += ${AFU_SYNTH_DIR}
+endif
+
 fim_build_pr:
 fim_build_flat:
-fim_build_%:
+fim_build_%: ${FIM_BUILD_REQUIRED_TARGETS}
 #	Copy OFSS configuration files
 	if [ -d ${OFSS_CONFIG_DIR} ]; then \
 		cp -vr ${OFSS_CONFIG_DIR}/* ${OFS_BUILD_ROOT}/tools/ofss_config/; \
 	fi
-	cd ${HTS_RELEASE}; \
-	./setup_env.sh; \
+#	TODO: remove the need to source this script from HTS
+	cd ${HTS_RELEASE}; ./setup_env.sh; \
 	${ROOT_DIR}/fim_flow/build_fim.sh --$* ${OFSS_CONFIG}
 
 FIM_IMAGE ?= ${FIM_IMAGE_USER1}
@@ -230,11 +237,14 @@ ase_waves: ${AFU_ASE_DIR}/work/vsim.wlf
 		-do ${ROOT_DIR}/scripts/add_waves.do 	\
 		-debugdb # ${AFU_ASE_DIR}/work/vsim.dbg
 
+# Setup AFU sysnthesis environment
+${AFU_SYNTH_DIR}: ${OPAE_PLATFORM_ROOT}
+	${SYCL_IP_ENV} ${AFU_FLOW_DIR}/afu_synth_setup.sh
+
 # Build Green Bitstream
 # This takes around 40 minutes...
 gbs: ${AFU_SYNTH_DIR} #oneapi_ip
-${AFU_SYNTH_DIR}: ${OPAE_PLATFORM_ROOT} #clean_gbs
-	${SYCL_IP_ENV} ${AFU_FLOW_DIR}/afu_synth.sh
+	${SYCL_IP_ENV} ${AFU_FLOW_DIR}/afu_synth_build.sh
 
 gbs_configure:
 #	Configure PR slot with GBS

@@ -52,9 +52,14 @@ export OFSS_CONFIG_DIR=${ROOT_DIR}/fim_flow/ofss_configs/ofss_config_${OFSS_CONF
 #####################
 # FIM/AFU synthesis #
 #####################
-# OFS_BUILD_ROOT to the top level directory for AFU development
+# Import custom AFU build as default
+# Useful for flat FIM builds
+export UPDATE_DEFAULT_AFU=${UPDATE_DEFAULT_AFU=0}
+
 # Some synonyms for different flows here
 export OFS_ROOTDIR=${HTS_RELEASE}/ofs-agx7-pcie-attach
+
+# OFS_BUILD_ROOT to the top level directory for AFU development
 export OFS_BUILD_ROOT=${OFS_ROOTDIR}
 export BUILD_ROOT_REL=${OFS_ROOTDIR}
 
@@ -125,7 +130,8 @@ export PATH=$MTI_HOME/linux_x86_64/:$MTI_HOME/bin/:$PATH
 # export AFU_NAME=${AFU_NAME="sycl_loopback_qsys"}
 
 # Target AFU
-export AFU_NAME=${AFU_NAME="sycl_rs_erasure"}
+# export AFU_NAME=${AFU_NAME="sycl_rs_erasure"}
+export AFU_NAME=${AFU_NAME="sycl_rs_erasure_array"}
 # Don't export RS_SCHEMA for AFUs other than sycl_rs_erasure
 if [ "${AFU_NAME}" == "sycl_rs_erasure" ] ||
     [ "${AFU_NAME}" == "sycl_rs_erasure_array" ]; then
@@ -136,6 +142,11 @@ fi
 
 # AFU-specific settings
 source ${ROOT_DIR}/afu_flow/settings_afu.sh
+
+# Hook AFU into FIM
+if [[ $UPDATE_DEFAULT_AFU == 1 ]]; then
+    export AFU_WITH_PIM=${AFU_SOURCE_LIST}
+fi
 
 # Utility IDs and paths
 export AFU_GBS_FILE=${AFU_SYNTH_DIR}/${AFU_NAME}.gbs
