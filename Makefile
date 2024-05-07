@@ -297,8 +297,11 @@ clean_measure:
 ############
 # Clean up #
 ############
-# clean_fim:
-# 	rm -rf ${FIM_BUILD_DIR}/
+# clean_fim_pr:
+# 	rm -rf ${FIM_PR_BUILD_DIR}/
+
+# clean_fim_flat:
+# 	rm -rf ${FIM_PR_BUILD_DIR}/
 
 clean_ase:
 	rm -rf ${AFU_ASE_DIR}

@@ -7,6 +7,8 @@
 # 2. Never PCIE_SMALL
 # 3. Extend for custom OFSS flow
 # 4. Extend for null HEMs instantiation
+# 5. Import custom AFUs in flat FIM
+# 6. Import custom or default pr_assignment.tcl script
 #######################################
 
 # Parse ARGS and variables
@@ -43,26 +45,28 @@ fi
 
 #---------------------------------------------
 
-ARGS="htk-nc220-${FPGA}"
-WORK_DIR="work_htk_nc220_${FPGA}${OFSS_CONFIG}"
-OFSS_FILE="ofs-agx7-pcie-attach/tools/ofss_config/htk-nc220-${FPGA}${OFSS_CONFIG}.ofss"
+ARGS="htk-nc220-${FPGA}:"
+BOARD="htk-nc220-${FPGA}"
+OFSS_FILE="ofs-agx7-pcie-attach/tools/ofss_config/${BOARD}${OFSS_CONFIG}.ofss"
 
 case "$1" in
   --flat)
     BUILD_ARG=""
-    ARGS=$ARGS":flat,no_hssi" # Always assume no_hssi
-    WORK_DIR=$WORK_DIR"_flat"
+    ARGS=$ARGS"flat,"
+    WORK_DIR=$FIM_FLAT_BUILD_DIR
     ;;
 
   --pr)
     BUILD_ARG="-p"
-    ARGS=$ARGS":no_hssi" # Always assume no_hssi
+    WORK_DIR=$FIM_PR_BUILD_DIR
     ;;
 
   *)
     echo "Usage: $0 <--flat|--pr>"
     exit -1
 esac
+# Always assume no_hssi
+ARGS=$ARGS"no_hssi" # Always assume no_hssi
 
 # Parse NULL_HEMS
 if [ "$NULL_HEMS" == "1" ]; then
@@ -71,8 +75,19 @@ if [ "$NULL_HEMS" == "1" ]; then
   # - null_he_lb - Replaces the Host Exerciser Loopback (HE_LBK) with he_null .
   # - null_he_mem - Replaces the Host Exerciser Memory (HE_MEM) with he_null.
   # - null_he_mem_tg - Replaces the Host Exerciser Memory Traffic Generator with he_null.    
-    WORK_DIR=$WORK_DIR"_NULL_HEMS"
 fi
+
+# Parse RESIZE_PR
+TARGET_PR_ASSIGNMENTS_TCL=${OFS_ROOTDIR}/syn/board/${BOARD}/setup/pr_assignments.tcl
+if [ $RESIZE_PR == 1 ]; then
+  # Select script
+  SOURCE_PR_ASSIGNMENTS_TCL=${ROOT_DIR}/fim_flow/resize_pr/resize_pr_assignments.tcl
+else
+  # Select default script
+  SOURCE_PR_ASSIGNMENTS_TCL=${ROOT_DIR}/fim_flow/resize_pr/default_pr_assignments.tcl
+fi
+# Override script
+cp -v ${SOURCE_PR_ASSIGNMENTS_TCL} ${TARGET_PR_ASSIGNMENTS_TCL}
 
 # Launch build
 cd $HTS_RELEASE

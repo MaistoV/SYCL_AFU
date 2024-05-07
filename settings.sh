@@ -52,6 +52,9 @@ export OFSS_CONFIG_DIR=${ROOT_DIR}/fim_flow/ofss_configs/ofss_config_${OFSS_CONF
 #####################
 # FIM/AFU synthesis #
 #####################
+# import script fim/resize_pr/resize_pr_assignments.tcl
+export RESIZE_PR=${RESIZE_PR=1}
+
 # Import custom AFU build as default
 # Useful for flat FIM builds
 export UPDATE_DEFAULT_AFU=${UPDATE_DEFAULT_AFU=0}
@@ -63,14 +66,21 @@ export OFS_ROOTDIR=${HTS_RELEASE}/ofs-agx7-pcie-attach
 export OFS_BUILD_ROOT=${OFS_ROOTDIR}
 export BUILD_ROOT_REL=${OFS_ROOTDIR}
 
-# Targer build directory for FIM
-export FIM_BUILD_DIR=${OFS_ROOTDIR}/work_htk_nc220_${FPGA}_${OFSS_CONFIG}/
+# Target build directory for FIM
+FIM_BASE_BUILD_DIR=${OFS_ROOTDIR}/work_htk_nc220_${FPGA}_${OFSS_CONFIG}
+# For flat builds
+export FIM_FLAT_BUILD_DIR=${FIM_BASE_BUILD_DIR}_flat
+# For PR builds
+export FIM_PR_BUILD_DIR=${FIM_BASE_BUILD_DIR}
+if [[ $RESIZE_PR == 1 ]]; then
+    export FIM_PR_BUILD_DIR=${FIM_PR_BUILD_DIR}_RESIZE_PR
+fi
 
 # OPAE_PLATFORM_ROOT to the PR build tree directory
 # export OPAE_PLATFORM_ROOT=${OPAE_PLATFORM_ROOT=${OFS_ROOTDIR}/work_htk_nc220_${FPGA}/pr_build_template}
 # export OPAE_PLATFORM_ROOT=${OPAE_PLATFORM_ROOT=${OFS_ROOTDIR}/work_htk_nc220_${FPGA}_${OFSS_CONFIG}/pr_build_template}
 # export OPAE_PLATFORM_ROOT=${OPAE_PLATFORM_ROOT=${HTS_RELEASE}/prebuild_images/agf014/release_v1.1/pr_build_template}
-export OPAE_PLATFORM_ROOT=${OPAE_PLATFORM_ROOT=$FIM_BUILD_DIR/pr_build_template}
+export OPAE_PLATFORM_ROOT=${OPAE_PLATFORM_ROOT=$FIM_PR_BUILD_DIR/pr_build_template}
 
 # FIM image ID
 export FIM_IMAGE_INFO=$(cat ${OPAE_PLATFORM_ROOT}/hw/lib/build/syn/board/htk-nc220-agf014/syn_top/user1_image_info.txt)
@@ -143,9 +153,16 @@ fi
 # AFU-specific settings
 source ${ROOT_DIR}/afu_flow/settings_afu.sh
 
-# Hook AFU into FIM
+# Import custom AFU flow into FIM
 if [[ $UPDATE_DEFAULT_AFU == 1 ]]; then
+    # Hook AFU into FIM
     export AFU_WITH_PIM=${AFU_SOURCE_LIST}
+    # Append AFU_NAME
+    export FIM_FLAT_BUILD_DIR=${FIM_FLAT_BUILD_DIR}_${AFU_NAME}
+    # Append RS_SCHEMA
+    if [ "${RS_SCHEMA}" != "" ]; then
+        export FIM_FLAT_BUILD_DIR=${FIM_FLAT_BUILD_DIR}_${RS_SCHEMA}
+    fi
 fi
 
 # Utility IDs and paths
