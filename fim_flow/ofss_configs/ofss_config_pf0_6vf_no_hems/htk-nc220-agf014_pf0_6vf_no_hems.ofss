@@ -1,0 +1,7 @@
+[include]
+"$OFS_ROOTDIR"/tools/ofss_config/htk-nc220-agf014_base.ofss
+"$OFS_ROOTDIR"/tools/ofss_config/pcie/pcie_host_pf0_6vf_no_hems.ofss
+"$OFS_ROOTDIR"/tools/ofss_config/iopll/iopll.ofss
+"$OFS_ROOTDIR"/tools/ofss_config/memory/memory_htk_nc220.ofss
+"$OFS_ROOTDIR"/tools/ofss_config/hssi/htk_nc220_hssi_8x25_ftile.ofss
+
