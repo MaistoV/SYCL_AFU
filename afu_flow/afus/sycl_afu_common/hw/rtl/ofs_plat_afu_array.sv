@@ -46,10 +46,24 @@ module ofs_plat_afu (
         else $fatal(1, "NULL_PORT (%d) must be less than 8", NULL_PORT);
     assert property ( ( top_cfg_pkg::PG_NUM_PORT +  top_cfg_pkg::NUM_SR_PORTS) < 16 ) 
         else $fatal(1, "Unsupported (for now) PG_NUM_PORT (%d) + NUM_SR_PORTS (%d) > 16", NULL_PORT);
+  
+  `ifdef AFU_MAX_NUM
+    // Limit the maximum number of port used
+    // - Adjust for NULL_PORT
+    localparam AFU_MAX_NUM_ADJUSTED = ( `AFU_MAX_NUM >= NULL_PORT )
+                            ? `AFU_MAX_NUM + 1
+                            : `AFU_MAX_NUM;
+    // - Sanitize w.r.t. the available ports OFS_PLAT_PARAM_HOST_CHAN_NUM_PORTS
+    localparam MAX_PORTS = ( AFU_MAX_NUM_ADJUSTED > `OFS_PLAT_PARAM_HOST_CHAN_NUM_PORTS )
+                            ? `OFS_PLAT_PARAM_HOST_CHAN_NUM_PORTS
+                            : AFU_MAX_NUM_ADJUSTED;
+  `else // ! AFU_MAX_NUM
+    // Limit only wr.t. the number of available ports
+    localparam MAX_PORTS = `OFS_PLAT_PARAM_HOST_CHAN_NUM_PORTS;
+  `endif // ! AFU_MAX_NUM
 
     generate
-      for ( genvar port = 0; port < `OFS_PLAT_PARAM_HOST_CHAN_NUM_PORTS; port++ ) begin : afu_array
-
+      for ( genvar port = 0; port < MAX_PORTS; port++ ) begin : afu_array
         // Tie-off buggy port
         if ( port == NULL_PORT ) begin : tie_off
           // Instatiate a tie-off module

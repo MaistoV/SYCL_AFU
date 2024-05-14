@@ -41,13 +41,21 @@ export FPGA="$BOARD_VAR"
 # OFSS FIM flow # 
 #################
 
-export FIM_NUM_PF0_VFS=10
+export FIM_NUM_PF0_VFS=${FIM_NUM_PF0_VFS=10}
 # export OFSS_CONFIG=pf0_${FIM_NUM_PF0_VFS}vf
-# export FIRST_AFU_VF=5
 export OFSS_CONFIG=pf0_${FIM_NUM_PF0_VFS}vf_no_hems
-export FIRST_AFU_VF=1
+
+# First VF number exposing AFU logic
+export FIRST_AFU_VF=5
+# If HEMs are removed
+if [ ${OFSS_CONFIG} == *"no_hems"* ]; then
+    export FIRST_AFU_VF=1
+fi
 
 export OFSS_CONFIG_DIR=${ROOT_DIR}/fim_flow/ofss_configs/ofss_config_${OFSS_CONFIG}
+
+# Adjust max number of AFUs
+export AFU_MAX_NUM=${AFU_MAX_NUM=$FIM_NUM_PF0_VFS}
 
 #####################
 # FIM/AFU synthesis #
@@ -55,13 +63,14 @@ export OFSS_CONFIG_DIR=${ROOT_DIR}/fim_flow/ofss_configs/ofss_config_${OFSS_CONF
 # import script fim/resize_pr/resize_pr_assignments.tcl
 export RESIZE_PR=${RESIZE_PR=1}
 
-# Import custom AFU build as default
-# Useful for flat FIM builds
+# Import custom AFU as default
+# Both for flat and PR FIM builds
 export UPDATE_DEFAULT_AFU=${UPDATE_DEFAULT_AFU=0}
+
+unset RESEED_FITTER
 
 # Some synonyms for different flows here
 export OFS_ROOTDIR=${HTS_RELEASE}/ofs-agx7-pcie-attach
-
 # OFS_BUILD_ROOT to the top level directory for AFU development
 export OFS_BUILD_ROOT=${OFS_ROOTDIR}
 export BUILD_ROOT_REL=${OFS_ROOTDIR}
@@ -80,7 +89,7 @@ fi
 # export OPAE_PLATFORM_ROOT=${OPAE_PLATFORM_ROOT=${OFS_ROOTDIR}/work_htk_nc220_${FPGA}/pr_build_template}
 # export OPAE_PLATFORM_ROOT=${OPAE_PLATFORM_ROOT=${OFS_ROOTDIR}/work_htk_nc220_${FPGA}_${OFSS_CONFIG}/pr_build_template}
 # export OPAE_PLATFORM_ROOT=${OPAE_PLATFORM_ROOT=${HTS_RELEASE}/prebuild_images/agf014/release_v1.1/pr_build_template}
-export OPAE_PLATFORM_ROOT=${OPAE_PLATFORM_ROOT=$FIM_PR_BUILD_DIR/pr_build_template}
+export OPAE_PLATFORM_ROOT=${OPAE_PLATFORM_ROOT=${FIM_PR_BUILD_DIR}/pr_build_template}
 
 # FIM image ID
 export FIM_IMAGE_INFO=$(cat ${OPAE_PLATFORM_ROOT}/hw/lib/build/syn/board/htk-nc220-agf014/syn_top/user1_image_info.txt)
@@ -137,7 +146,6 @@ export PATH=$MTI_HOME/linux_x86_64/:$MTI_HOME/bin/:$PATH
 # Utility AFUs
 # export AFU_NAME=${AFU_NAME="my_custom_afu"}
 # export AFU_NAME=${AFU_NAME="mixed_intf_afu_array"}
-# export AFU_NAME=${AFU_NAME="sycl_loopback_qsys"}
 
 # Target AFU
 # export AFU_NAME=${AFU_NAME="sycl_rs_erasure"}
@@ -151,18 +159,17 @@ else
 fi
 
 # AFU-specific settings
+# Sets AFU_PARAMS
 source ${ROOT_DIR}/afu_flow/settings_afu.sh
 
 # Import custom AFU flow into FIM
+unset AFU_WITH_PIM
 if [[ $UPDATE_DEFAULT_AFU == 1 ]]; then
     # Hook AFU into FIM
     export AFU_WITH_PIM=${AFU_SOURCE_LIST}
-    # Append AFU_NAME
-    export FIM_FLAT_BUILD_DIR=${FIM_FLAT_BUILD_DIR}_${AFU_NAME}
-    # Append RS_SCHEMA
-    if [ "${RS_SCHEMA}" != "" ]; then
-        export FIM_FLAT_BUILD_DIR=${FIM_FLAT_BUILD_DIR}_${RS_SCHEMA}
-    fi
+    # Append AFU_PARAMS
+    export FIM_FLAT_BUILD_DIR=${FIM_FLAT_BUILD_DIR}_${AFU_PARAMS}
+    export FIM_PR_BUILD_DIR=${FIM_FLAT_BUILD_DIR}_${AFU_PARAMS}
 fi
 
 # Utility IDs and paths
@@ -173,6 +180,7 @@ export AFU_PR_INTERFACE_ID=$(grep "FME_IFC_ID=" ${AFU_SYNTH_DIR}/build/quartus_p
 # Collect in a single variable
 export AFU_ENV="
     - AFU_NAME            = ${AFU_NAME}
+    - AFU_PARAMS          = ${AFU_PARAMS}
     - AFU_ID              = ${AFU_ID}
     - AFU_FIM_IMAGE_INFO  = ${AFU_FIM_IMAGE_INFO}
     - AFU_PR_INTERFACE_ID = ${AFU_PR_INTERFACE_ID}
@@ -220,6 +228,7 @@ export SYCL_IP_PRJ_AFU_EXPORT=${AFU_HW_DIR}/${SYCL_IP_NAME}_report.prj
 export AGILEX7_PART_NUMBER=AGFB014R24C2E2V # C220 part number
 # Offset of the SYCL kernel CSR space
 export KERNEL_REGISTER_MAP_OFFSET_HEX=100
+# Disable AVMM interrupt injection
 export DISABLE_AVMM_INTERRUPT=0
 
 ##############
@@ -239,7 +248,9 @@ fi
 
 export OFS_ASP_ROOT="${HTS_RELEASE}/oneapi/oneapi-asp_agf014/nc220"
 
+# Utility IDs
 export AOCX_PR_INTERFACE_ID=$(cat ${OFS_ASP_ROOT}/pr_build_template/hw/lib/fme-ifc-id.txt)
+export AOCX_FIM_IMAGE_INFO=$(cat ${OFS_ASP_ROOT}/pr_build_template/hw/lib/build/syn/board/htk-nc220-agf014/syn_top/user1_image_info.txt)
 
 # ASP BSP OneAPI compilation flag
 export OFS_ASP_FPGA_DEVICE=$OFS_ASP_ROOT:$OFS_ASP_BOARD_VARIANT
@@ -289,5 +300,6 @@ echo "OFSS_CONFIG           : $OFSS_CONFIG"
 echo "OPAE_PLATFORM_ROOT    : $(basename $(dirname $OPAE_PLATFORM_ROOT))"
 echo "OFS_ASP_BOARD_VARIANT : $OFS_ASP_BOARD_VARIANT"
 echo "AOCX_PR_INTERFACE_ID  : $AOCX_PR_INTERFACE_ID"
+echo "AOCX_FIM_IMAGE_INFO   : $AOCX_FIM_IMAGE_INFO"
 echo "RS_SCHEMA             : $RS_SCHEMA"
 echo "AFU_ENV                 $AFU_ENV"

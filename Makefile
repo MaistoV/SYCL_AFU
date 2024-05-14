@@ -1,7 +1,16 @@
 # Default variables value
 TEST_ARGS ?=
-
-# NOTE: Most of this flow does rely on file timestamps, therefore, it is going to build most of the targets for every call
+RESEED_FITTER ?= 0
+INTERRUPT_EVENTS ?= 0
+AFU_HOST_DEFINES ?=
+ACL_DEVICE ?= acl0 # Assuming only one device connected
+SYCL_DEBUG ?= 0
+SYCL_FAST_COMPILE ?= 0
+SYCL_CMAKE_FLAGS ?=
+MMD_DEBUG ?= 0
+FIM_IMAGE ?= ${FIM_IMAGE_USER1}
+FIM_UPDATE_DEBUG ?= 0
+RSU_DEBUG ?= 0
 
 all: help
 
@@ -12,25 +21,32 @@ help:
 # FIM #
 #######
 
-# For custom AFUs as FIM defaults, add AFU synthesis setup as requirement for FIM builds
-FIM_BUILD_REQUIRED_TARGETS =
-ifeq (${UPDATE_DEFAULT_AFU}, 1)
-	FIM_BUILD_REQUIRED_TARGETS += ${AFU_SYNTH_DIR}
-endif
+SEED_DEFAULT = 3
+restore_fitter_seed:
+	sed -E -i "s/SEED .+/SEED ${SEED_DEFAULT}/g" \
+		${OFS_BUILD_ROOT}/syn/board/htk-nc220-agf014/syn_top/ofs_top.qsf
+
+# Reseed fitter
+reseed_fitter:
+	if [ ${RESEED_FITTER} -eq 1 ]; then \
+		sed -E -i "s/SEED .+/SEED $(shell bash -c 'echo $$RANDOM')/g" \
+			${OFS_BUILD_ROOT}/syn/board/htk-nc220-agf014/syn_top/ofs_top.qsf; \
+	fi
+
+# Copy OFSS configuration files
+# NOTE: this requires th OFSS configuration to be exposed in ${OFSS_CONFIG_DIR} 
+ofss_config: ${OFSS_CONFIG_DIR}
+	cp -vr ${OFSS_CONFIG_DIR}/* ${OFS_BUILD_ROOT}/tools/ofss_config/
 
 fim_build_pr:
 fim_build_flat:
-fim_build_%: ${FIM_BUILD_REQUIRED_TARGETS}
-#	Copy OFSS configuration files
-	if [ -d ${OFSS_CONFIG_DIR} ]; then \
-		cp -vr ${OFSS_CONFIG_DIR}/* ${OFS_BUILD_ROOT}/tools/ofss_config/; \
-	fi
+fim_build_%: ofss_config reseed_fitter
 #	TODO: remove the need to source this script from HTS
 	cd ${HTS_RELEASE}; ./setup_env.sh; \
-	${ROOT_DIR}/fim_flow/build_fim.sh --$* ${OFSS_CONFIG}
+		${ROOT_DIR}/fim_flow/build_fim.sh --$* ${OFSS_CONFIG}
+# 	Restore fitter seed
+	${MAKE} restore_fitter_seed
 
-FIM_IMAGE ?= ${FIM_IMAGE_USER1}
-FIM_UPDATE_DEBUG ?= 0
 ifeq (${FIM_UPDATE_DEBUG}, 1)
 	FPGASUPDATE_FLAGS += --log-level debug 
 endif
@@ -40,8 +56,6 @@ fim_update:
 	@echo "To configure the new FIM, powercycle the PAC with:"
 	@echo "    ${MAKE} pac_powercycle_<bootpage>"
 
-
-RSU_DEBUG ?= 0
 ifeq (${RSU_DEBUG}, 1)
 	RSU_FLAGS += --debug fpga
 endif
@@ -70,7 +84,6 @@ pac_hot_plug:
 #############################
 # ONE API CMake Environment #
 #############################
-MMD_DEBUG ?= 0
 ifeq (${MMD_DEBUG}, 1)
 	ONEAPI_DEBUG_ENV := MMD_ENABLE_DEBUG=1  \
 						MMD_PROGRAM_DEBUG=1
@@ -83,9 +96,6 @@ SYCL_IP_ENV += RS_SCHEMA=${RS_SCHEMA} \
 				SYCL_IP_BUILD_DIR=${SYCL_IP_BUILD_DIR} \
 				SYCL_IP_PRJ=${SYCL_IP_PRJ}
 
-SYCL_DEBUG ?= 0
-SYCL_FAST_COMPILE ?= 0
-SYCL_CMAKE_FLAGS ?=
 ifeq (${SYCL_FAST_COMPILE}, 1)
 	SYCL_CMAKE_FLAGS += -DUSER_HARDWARE_FLAGS=-Xsfast-compile
 endif
@@ -129,7 +139,6 @@ aocl_bsp_install:
 aocl_bsp_uninstall:
 	${ONEAPI_DEBUG_ENV} aocl uninstall ${OFS_ASP_ROOT}
 
-ACL_DEVICE ?= acl0 # Assuming only one device connected
 aocl_aocx_initalize: opae.io_bind_one 
 	${ONEAPI_DEBUG_ENV} aocl initialize ${ACL_DEVICE} ${OFS_ASP_BOARD_VARIANT} 
 
@@ -200,11 +209,9 @@ test_ip_%:
 #######
 
 # Build host application
-AFU_HOST_DEFINES ?=
 ifeq (${DEBUG}, 1)
 	AFU_HOST_DEFINES += -DDEBUG
 endif
-INTERRUPT_EVENTS ?= 0
 ifeq (${INTERRUPT_EVENTS}, 1)
 	AFU_HOST_DEFINES += -DINTERRUPT_EVENTS
 endif
@@ -242,7 +249,7 @@ ${AFU_SYNTH_DIR}: ${OPAE_PLATFORM_ROOT}
 	${SYCL_IP_ENV} ${AFU_FLOW_DIR}/afu_synth_setup.sh
 
 # Build Green Bitstream
-# This takes around 40 minutes...
+# This takes at least 40 minutes...
 gbs: ${AFU_SYNTH_DIR} #oneapi_ip
 	${SYCL_IP_ENV} ${AFU_FLOW_DIR}/afu_synth_build.sh
 
@@ -255,7 +262,7 @@ gbs_configure:
 AFU_ELF_NAME ?= bin/${AFU_NAME}
 
 test_sycl_afu: test_gbs
-test_gbs: afu_host #gbs_configure ${AFU_GBS_FILE}
+test_gbs:
 #	Run host application
 	cd ${AFU_SW_DIR}; ./${AFU_ELF_NAME} ${TEST_ARGS}
 
@@ -297,11 +304,11 @@ clean_measure:
 ############
 # Clean up #
 ############
-# clean_fim_pr:
-# 	rm -rf ${FIM_PR_BUILD_DIR}/
+clean_fim_pr:
+	rm -rf ${FIM_PR_BUILD_DIR}
 
-# clean_fim_flat:
-# 	rm -rf ${FIM_PR_BUILD_DIR}/
+clean_fim_flat:
+	rm -rf ${FIM_FLAT_BUILD_DIR}
 
 clean_ase:
 	rm -rf ${AFU_ASE_DIR}

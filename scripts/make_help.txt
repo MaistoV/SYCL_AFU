@@ -27,7 +27,7 @@ OneAPI IP flow:
     oneapi_ip_fpga_emu    Build fpga_emu target
     oneapi_ip_plain_c     Build plain_c (C-only, no SYCL)
     test_ip_fpga_emu      Run fpga_emu binary
-    test_ip_fpga_plain_c  Run plain_c binary
+    test_ip_plain_c       Run plain_c binary
 
 AFU flow:
     afu_host              Build AFU host application in ${AFU_SW_DIR}
@@ -37,6 +37,7 @@ AFU flow:
     gbs                   Build green bitstream (takes around 40 minutes)
     gbs_configure         Configure GBS in PR-slot. On error, you must first make pac_hot_plug
     test_gbs              Run host application against hadware
+    test_sycl_afu         Synonim as test_gbs
     test_ase              Run host application against ASE simulator (requires make ase_setup or make ase_launch in another terminal)
 
 Measure targets:
@@ -48,6 +49,8 @@ Measure targets:
     measure_plots        Run data plot scripts
 
 Clean targets:
+    clean_fim_pr          Clean FIM PR build
+    clean_fim_flat        Clean FIM flat build
     clean_oneapi_asp      Clean OneAPI ASP build
     clean_oneapi_ip       Clean OneAPI IP build
     clean_oneapi_ip_report Clean only generated and exported OneAPI IP 
@@ -59,15 +62,20 @@ Clean targets:
     clean_all             TBD
 
 make variables:
-    OFSS_CONFIG           Suffix to identify FIM build and OFSS flow
-    RS_SCHEMA             Reed-Solomon code schema in [RS_3_2, RS_6_3, RS_10_4]
-    TEST_ARGS             Arguments to pass to the host elf in oneapi_ip_emu, test_gbs and test_ase, start with -h
-    MMD_DEBUG             Enable debug mode for OneAPI/OpenCL MMD driver
-    RSU_DEBUG             Enable debug mode for RSU operation (pac_powercycle_*)
-    FIM_UPDATE_DEBUG      Enable debug mode for fpgasupdate operation (fim_update, gbs_config)
-    FIM_IMAGE             Override default FIM image for fim_update
-    SYCL_DEBUG            Enable debug mode for SYCL builds
-    SYCL_FAST_COMPILE     Set -Xsfast-compile for SYCL builds
-    SYCL_CMAKE_FLAGS      Add user cmake flags for SYCL builds
-    MULTI_ERASURE_SIMPLE  Enable multi-erasure SYCL host code when setting up SYCL build
-    ACL_DEVICE            Override default acl device for aocl_aocx_initalize
+    RS_SCHEMA             [RS] Reed-Solomon code schema in [RS_3_2, RS_6_3, RS_10_4]
+    FIM_IMAGE             [FIM] Override default FIM image for fim_update
+    TEST_ARGS             [Host] Arguments to pass to the host elf in oneapi_ip_emu, test_gbs and test_ase, start with -h
+    MULTI_ERASURE_SIMPLE  [Host] Enable multi-erasure SYCL host code when setting up SYCL build
+    OFSS_CONFIG           [FIM] Suffix to identify FIM build and OFSS flow
+    UPDATE_DEFAULT_AFU    [FIM] For FIM PR or flat builds, build ${AFU_NAME} in FIM afu_main
+    FIM_NUM_PF0_VFS       [FIM] Select OFSS configuration by the number of PF0 VFs, i.e. AFU's
+    RESEED_FITTER         [FIM] Randomly reseed fitter for FIM builds
+    AFU_MAX_NUM           [FIM/GBS] Override default number of AFUs for AFU arrays
+    AFU_MAX_NUM           [AFU] Override number of used VFs, defaults to ${FIM_NUM_PF0_VFS}
+    ACL_DEVICE            [ASP] Override default acl device for aocl_aocx_initalize
+    SYCL_FAST_COMPILE     [SYCL] Set -Xsfast-compile for SYCL builds
+    SYCL_CMAKE_FLAGS      [SYCL] Add user cmake flags for SYCL builds
+    MMD_DEBUG             [Debug] Enable debug mode for OneAPI/OpenCL MMD driver
+    RSU_DEBUG             [Debug] Enable debug mode for RSU operation (pac_powercycle_*)
+    FIM_UPDATE_DEBUG      [Debug] Enable debug mode for fpgasupdate operation (fim_update, gbs_config)
+    SYCL_DEBUG            [Debug] Enable debug mode for SYCL builds

@@ -1,5 +1,7 @@
 sycl_rs_erasure_array.json
 ../../../sycl_afu_common/hw/rtl/ofs_plat_afu_array.sv
+# Max number of AFUs
++define+AFU_MAX_NUM=${AFU_MAX_NUM}
 
 # kernel_dfl_wrapper
 C:${SYCL_AFU_COMMON}/hw/filelist/synth/kernel_dfl_wrapper.sources.txt
