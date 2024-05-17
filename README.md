@@ -6,6 +6,29 @@ Installation steps for Intel OFS for Hitek C220 card on Ubuntu 22.04.
 > * may not run automously due to underlying assumptions, hence, you should keep an eye on the single commands;
 > * perform the builds in this directory, where you need r/w access; if you want to change this: `export INSTALL_BUILD_DIR=<your dir>`
 
+## Software and OFS version Summary
+These are the target versions of the project's submodules:
+* OFS 2023.2-1
+* Hadoop 3.4.0 (latest release to date)
+* JMS 2.0
+* ActiveMQ 5.16.6
+* Java 1.8
+* OPAE-SDK 2.8.0-1
+* Kernel Linux DFL 6.1.41-dfl
+* RHEL 8.9
+* ASP oneapi-asp ofs-2023.2-1
+* intel-fpga-bbb ofs-2023.2-1
+* examples-afu ofs-2023.2-1
+* ASE opae-sim 2.8.0
+* Quartus 23.2.0 Build 94 06/14/2023 Patches 0.02,0.11,0.19,0.02iofs SC Pro Edition
+* OneAPI Base Toolkit 2024.0.2
+* OneAPI Samples 2024.0.0
+
+
+
+
+
+
 ## References
 * OFS github https://github.com/OFS/ofs-agx7-pcie-attach/releases/tag/ofs-2023.2-1
 * Hitek SFTP
