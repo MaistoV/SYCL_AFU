@@ -71,7 +71,7 @@ time sudo make -j `nproc` install
 # Update grub boot config
 # Add following selection string to /etc/default/grub:GRUB_CMDLINE_LINUX
 # NOTE: this assumes GRUB_CMDLINE_LINUX to be empty, hence it may only work only the first time you set up a system
-sudo sed "s/GRUB_CMDLINE_LINUX=\"\"/GRUB_CMDLINE_LINUX=\"intel_iommu=on pcie=realloc hugepagesz=2M hugepages=200\"/g" /etc/default/grub
+sudo sed "s/GRUB_CMDLINE_LINUX=\"\"/GRUB_CMDLINE_LINUX=\"intel_iommu=on pcie=realloc default_hugepagesz=2MB hugepagesz=1G hugepages=2 hugepagesz=2M hugepages=200\"/g" /etc/default/grub
 
 # Update default grub entry
 sudo sed -i "s/GRUB_DEFAULT=.+/GRUB_DEFAULT=\"Advanced options for Ubuntu>Ubuntu, with Linux 6.1.41-dfl-dirty\"/g" /etc/default/grub

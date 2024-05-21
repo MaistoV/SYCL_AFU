@@ -14,7 +14,7 @@ cd $PACKAGE_DIR/rpm/linux-dfl
 
 sudo dnf localinstall -y kernel-*.rpm
 
-sudo sed -i 's/GRUB_CMDLINE_LINUX="[^"]*/& intel_iommu=on pcie=realloc hugepagesz=2M hugepages=200/' /etc/default/grub
+sudo sed -i 's/GRUB_CMDLINE_LINUX="[^"]*/& intel_iommu=on pcie=realloc default_hugepagesz=2MB hugepagesz=1G hugepages=2 hugepagesz=2M hugepages=200/' /etc/default/grub
 sudo grub2-mkconfig > /dev/null
 
 echo "Reboot system and check:"
