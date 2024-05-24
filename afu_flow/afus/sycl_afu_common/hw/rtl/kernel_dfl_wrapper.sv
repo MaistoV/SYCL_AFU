@@ -1,22 +1,26 @@
 // Wrapper module for kernel_system:
 // - injecting AVMM interrupts on the host mem interface
 // - implementing also the necessart CSR space for DFL
-//                                                                                                                                                          ________________  
-//                                                                                      _______________________                                            |                |
-//                         ________________________                                    |                       |----> csr_mmio64_to_csr ------------------>| dfl_csr_avalon |----> reset_n_kernel_csr
-//                        |                        |                                   |                       |                                           |________________|
-//  csr_mmio64_to_afu --->|  kernel_cra_bridge     |---> csr_mmio64_to_afu_bridge ---> |    avmm_splitter      |
-//                        |________________________|                                   |                       |                                            ________________
-//                                                                                     |_______________________|----> csr_mmio64_to_kernel --------------->| cra            |
-//                         ________________________                                     _______________________                                            |                |
-//                        |                        |                                   |                       |                                       /-->| mem1_r         |
-//  host_mem_plat ------->| avalon_interrupt_proxy |---> host_mem_plat_bridge -------> | kernel_[rd/wr]_bridge |---> host_mem_kernel ---------------->|    |                |
-//                        |________________________|                                   |_______________________|                                       \-->| mem2_w         |
-//                                                                                                                                                         |                |
-//                                                                                                                     ----> reset_n_kernel_csr --\        |                |
-//                                                                                                                                               AND ----> | reset_n        |
-//                                                                                                                     reset_n -------------------/        |________________|
-//                                                                                                                                                           kernel_system
+// NOTE:
+// - Not adding AVMM bridges on host_mem_plat due to observed buggy mis-synchronization
+// - Not adding AVMM bridge on csr_mmio64_to_afu for simplicity
+// - The bridges-realted code is still in this source as comments for future reference
+//                                                                                              ________________  
+//                          _______________________                                            |                |
+//                         |                       |----> csr_mmio64_to_csr ------------------>| dfl_csr_avalon |----> reset_n_kernel_csr
+//                         |                       |                                           |________________|
+//  csr_mmio64_to_afu ---> |    avmm_splitter      |
+//                         |                       |                                            ________________
+//                         |_______________________|----> csr_mmio64_to_kernel --------------->| cra            |
+//                         ________________________                                            |                |
+//                        |                        |                                       /-->| mem1_r         |
+//  host_mem_plat ------->| avalon_interrupt_proxy | --> host_mem_kernel ---------------->|    |                |
+//                        |________________________|                                       \-->| mem2_w         |
+//                                                                                             |                |
+//                                                         ----> reset_n_kernel_csr --\        |                |
+//                                                                                   AND ----> | reset_n        |
+//                                                         reset_n -------------------/        |________________|
+//                                                                                               kernel_system
 
 `include "ofs_plat_if.vh" 
 
@@ -54,22 +58,22 @@ module kernel_dfl_wrapper #(
     // How many bits to extend
     localparam KERNEL_CRA_ADDR_EXTEND_BITS = KERNEL_SYSTEM_CRA_ADDR_WIDTH - AVMM_SPLITTER_SLAVE_1_ADDR_WIDTH - 3;
 
-    // Host_chan bridges
-    localparam KERNEL_WRAPPER_HOST_CHAN_DATA_WIDTH = ofs_plat_host_chan_pkg::DATA_WIDTH;
-    localparam KERNEL_WRAPPER_HOST_CHAN_ADDR_WIDTH = ofs_plat_host_chan_pkg::ADDR_WIDTH_LINES;
-    // From dc_bsp_pkg
-    localparam KERNELWRAPPER_HOST_CHAN_PIPELINE_DISABLEWAITREQBUFFERING = 1;
-    localparam KERNELWRAPPER_HOST_CHAN_PIPELINE_STAGES = 2;
-    localparam KERNEL_WRAPPER_HOST_CHAN_BURSTCOUNT_WIDTH = 7;
+    // // Host_chan bridges
+    // localparam KERNEL_WRAPPER_HOST_CHAN_DATA_WIDTH = ofs_plat_host_chan_pkg::DATA_WIDTH;
+    // localparam KERNEL_WRAPPER_HOST_CHAN_ADDR_WIDTH = ofs_plat_host_chan_pkg::ADDR_WIDTH_LINES;
+    // // From dc_bsp_pkg
+    // localparam KERNELWRAPPER_HOST_CHAN_PIPELINE_DISABLEWAITREQBUFFERING = 1;
+    // localparam KERNELWRAPPER_HOST_CHAN_PIPELINE_STAGES = 2;
+    // localparam KERNEL_WRAPPER_HOST_CHAN_BURSTCOUNT_WIDTH = 7;
 
-    // CRA bridge
-    localparam CRA_BRIDGE_DATA_WIDTH      = $bits(csr_mmio64_to_afu.writedata );
-    localparam CRA_BRIDGE_ADDR_WIDTH      = $bits(csr_mmio64_to_afu.address   );
-    localparam CRA_BRIDGE_BURST_CNT_WIDTH = $bits(csr_mmio64_to_afu.burstcount);
-    localparam CRA_BRIDGE_RESPONSE_WIDTH  = $bits(csr_mmio64_to_afu.response  );
-    // From dc_bsp_pkg
-    localparam CRA_BRIDGE_PIPELINE_DISABLEWAITREQBUFFERING = 1;
-    localparam CRA_BRIDGE_PIPELINE_STAGES_RDDATA           = 2;
+    // // CRA bridge
+    // localparam CRA_BRIDGE_DATA_WIDTH      = $bits(csr_mmio64_to_afu.writedata );
+    // localparam CRA_BRIDGE_ADDR_WIDTH      = $bits(csr_mmio64_to_afu.address   );
+    // localparam CRA_BRIDGE_BURST_CNT_WIDTH = $bits(csr_mmio64_to_afu.burstcount);
+    // localparam CRA_BRIDGE_RESPONSE_WIDTH  = $bits(csr_mmio64_to_afu.response  );
+    // // From dc_bsp_pkg
+    // localparam CRA_BRIDGE_PIPELINE_DISABLEWAITREQBUFFERING = 1;
+    // localparam CRA_BRIDGE_PIPELINE_STAGES_RDDATA           = 2;
 
     ///////////////////
     // Local signals //
@@ -84,6 +88,10 @@ module kernel_dfl_wrapper #(
     logic kernel_irq;
     // AVMM write acks for kernel_system write port
     logic kernel_system_mem2_w_writeack;
+    // Out-of-interfaces signals
+    logic csr_mmio64_to_kernel_enable;
+    logic csr_mmio64_to_kernel_debugaccess;
+    logic cc_snoop_clk_clk;
 
     //////////////////////
     // Local interfaces //
@@ -119,11 +127,11 @@ module kernel_dfl_wrapper #(
     
     // Host memory interface
     // avalon_interrupt_proxy <--> kernel_[rd/wr]_bridge 
-    ofs_plat_avalon_mem_rdwr_if # (
-        `HOST_CHAN_AVALON_MEM_RDWR_PARAMS,
-        .LOG_CLASS(ofs_plat_log_pkg::HOST_CHAN)
-    )
-    host_mem_plat_bridge();
+    // ofs_plat_avalon_mem_rdwr_if # (
+    //     `HOST_CHAN_AVALON_MEM_RDWR_PARAMS,
+    //     .LOG_CLASS(ofs_plat_log_pkg::HOST_CHAN)
+    // )
+    // host_mem_plat_bridge();
     
     // kernel_[rd/wr]_bridge <--> kernel_system
     ofs_plat_avalon_mem_rdwr_if # (
@@ -182,74 +190,74 @@ module kernel_dfl_wrapper #(
     // );
     
     // Connect user ports, not implemented by bridge
-    assign host_mem_plat_bridge.rd_user = host_mem_kernel.rd_user;
-    assign host_mem_plat_bridge.wr_user = host_mem_kernel.wr_user;
+    // assign host_mem_plat_bridge.rd_user = host_mem_kernel.rd_user;
+    // assign host_mem_plat_bridge.wr_user = host_mem_kernel.wr_user;
 
     // avmm pipeline for kernel rd
-    acl_avalon_mm_bridge_s10 #(
-        .DATA_WIDTH                     ( KERNEL_WRAPPER_HOST_CHAN_DATA_WIDTH                      ),
-        .SYMBOL_WIDTH                   ( 8                                                        ),
-        .HDL_ADDR_WIDTH                 ( KERNEL_WRAPPER_HOST_CHAN_ADDR_WIDTH                      ),
-        .BURSTCOUNT_WIDTH               ( KERNEL_WRAPPER_HOST_CHAN_BURSTCOUNT_WIDTH                ),
-        .SYNCHRONIZE_RESET              ( 1                                                        ),
-        .DISABLE_WAITREQUEST_BUFFERING  ( KERNELWRAPPER_HOST_CHAN_PIPELINE_DISABLEWAITREQBUFFERING ),
-        .READDATA_PIPE_DEPTH            ( KERNELWRAPPER_HOST_CHAN_PIPELINE_STAGES                  )
-    ) kernel_rd_bridge_inst (
-        .clk               ( clock_i                                       ),
-        .reset             ( !reset_ni                                     ),
-        .s0_waitrequest    ( host_mem_kernel.rd_waitrequest                ),
-        .s0_readdata       ( host_mem_kernel.rd_readdata                   ),
-        .s0_readdatavalid  ( host_mem_kernel.rd_readdatavalid              ),
-        .s0_burstcount     ( host_mem_kernel.rd_burstcount                 ),
-        .s0_writedata      ( {(KERNEL_WRAPPER_HOST_CHAN_DATA_WIDTH){1'b0}} ),
-        .s0_address        ( host_mem_kernel.rd_address                    ),
-        .s0_write          ( 1'b0                                          ),
-        .s0_read           ( host_mem_kernel.rd_read                       ),
-        .s0_byteenable     ( host_mem_kernel.rd_byteenable                 ),
-        .s0_debugaccess    ( 1'b0                                          ),
-        .m0_waitrequest    ( host_mem_plat_bridge.rd_waitrequest           ),
-        .m0_readdata       ( host_mem_plat_bridge.rd_readdata              ),
-        .m0_readdatavalid  ( host_mem_plat_bridge.rd_readdatavalid         ),
-        .m0_burstcount     ( host_mem_plat_bridge.rd_burstcount            ),
-        .m0_writedata      (  /* open */                                   ),
-        .m0_address        ( host_mem_plat_bridge.rd_address               ),
-        .m0_write          (  /* open */                                   ),
-        .m0_read           ( host_mem_plat_bridge.rd_read                  ),
-        .m0_byteenable     ( host_mem_plat_bridge.rd_byteenable            )
-    );
+    // acl_avalon_mm_bridge_s10 #(
+    //     .DATA_WIDTH                     ( KERNEL_WRAPPER_HOST_CHAN_DATA_WIDTH                      ),
+    //     .SYMBOL_WIDTH                   ( 8                                                        ),
+    //     .HDL_ADDR_WIDTH                 ( KERNEL_WRAPPER_HOST_CHAN_ADDR_WIDTH                      ),
+    //     .BURSTCOUNT_WIDTH               ( KERNEL_WRAPPER_HOST_CHAN_BURSTCOUNT_WIDTH                ),
+    //     .SYNCHRONIZE_RESET              ( 1                                                        ),
+    //     .DISABLE_WAITREQUEST_BUFFERING  ( KERNELWRAPPER_HOST_CHAN_PIPELINE_DISABLEWAITREQBUFFERING ),
+    //     .READDATA_PIPE_DEPTH            ( KERNELWRAPPER_HOST_CHAN_PIPELINE_STAGES                  )
+    // ) kernel_rd_bridge_inst (
+    //     .clk               ( clock_i                                       ),
+    //     .reset             ( !reset_ni                                     ),
+    //     .s0_waitrequest    ( host_mem_kernel.rd_waitrequest                ),
+    //     .s0_readdata       ( host_mem_kernel.rd_readdata                   ),
+    //     .s0_readdatavalid  ( host_mem_kernel.rd_readdatavalid              ),
+    //     .s0_burstcount     ( host_mem_kernel.rd_burstcount                 ),
+    //     .s0_writedata      ( {(KERNEL_WRAPPER_HOST_CHAN_DATA_WIDTH){1'b0}} ),
+    //     .s0_address        ( host_mem_kernel.rd_address                    ),
+    //     .s0_write          ( 1'b0                                          ),
+    //     .s0_read           ( host_mem_kernel.rd_read                       ),
+    //     .s0_byteenable     ( host_mem_kernel.rd_byteenable                 ),
+    //     .s0_debugaccess    ( 1'b0                                          ),
+    //     .m0_waitrequest    ( host_mem_plat_bridge.rd_waitrequest           ),
+    //     .m0_readdata       ( host_mem_plat_bridge.rd_readdata              ),
+    //     .m0_readdatavalid  ( host_mem_plat_bridge.rd_readdatavalid         ),
+    //     .m0_burstcount     ( host_mem_plat_bridge.rd_burstcount            ),
+    //     .m0_writedata      (  /* open */                                   ),
+    //     .m0_address        ( host_mem_plat_bridge.rd_address               ),
+    //     .m0_write          (  /* open */                                   ),
+    //     .m0_read           ( host_mem_plat_bridge.rd_read                  ),
+    //     .m0_byteenable     ( host_mem_plat_bridge.rd_byteenable            )
+    // );
 
     // avmm pipeline for kernel wr
-    acl_avalon_mm_bridge_s10 #(
-        .DATA_WIDTH                     ( KERNEL_WRAPPER_HOST_CHAN_DATA_WIDTH                      ),
-        .SYMBOL_WIDTH                   ( 8                                                        ),
-        .HDL_ADDR_WIDTH                 ( KERNEL_WRAPPER_HOST_CHAN_ADDR_WIDTH                      ),
-        .BURSTCOUNT_WIDTH               ( KERNEL_WRAPPER_HOST_CHAN_BURSTCOUNT_WIDTH                ),
-        .SYNCHRONIZE_RESET              ( 1                                                        ),
-        .DISABLE_WAITREQUEST_BUFFERING  ( KERNELWRAPPER_HOST_CHAN_PIPELINE_DISABLEWAITREQBUFFERING ),
-        .READDATA_PIPE_DEPTH            ( KERNELWRAPPER_HOST_CHAN_PIPELINE_STAGES                  )
-    ) kernel_wr_bridge_inst (
-        .clk               ( clock_i                                       ),
-        .reset             ( !reset_ni                                     ),
-        .s0_waitrequest    ( host_mem_kernel.wr_waitrequest                ),
-        .s0_readdata       (  /* open */                                   ),
-        .s0_readdatavalid  (  /* open */                                   ),
-        .s0_burstcount     ( host_mem_kernel.wr_burstcount                 ),
-        .s0_writedata      ( host_mem_kernel.wr_writedata                  ),
-        .s0_address        ( host_mem_kernel.wr_address                    ),
-        .s0_write          ( host_mem_kernel.wr_write                      ),
-        .s0_read           (  1'b0                                         ),
-        .s0_byteenable     ( host_mem_kernel.wr_byteenable                 ),
-        .s0_debugaccess    ( 1'b0                                          ),
-        .m0_waitrequest    ( host_mem_plat_bridge.wr_waitrequest           ),
-        .m0_readdata       ( {(KERNEL_WRAPPER_HOST_CHAN_DATA_WIDTH){1'b0}} ),
-        .m0_readdatavalid  (  1'b0                                         ),
-        .m0_burstcount     ( host_mem_plat_bridge.wr_burstcount            ),
-        .m0_writedata      ( host_mem_plat_bridge.wr_writedata             ),
-        .m0_address        ( host_mem_plat_bridge.wr_address               ),
-        .m0_write          ( host_mem_plat_bridge.wr_write                 ),
-        .m0_read           (  /* open */                                   ),
-        .m0_byteenable     ( host_mem_plat_bridge.wr_byteenable            )
-    );
+    // acl_avalon_mm_bridge_s10 #(
+    //     .DATA_WIDTH                     ( KERNEL_WRAPPER_HOST_CHAN_DATA_WIDTH                      ),
+    //     .SYMBOL_WIDTH                   ( 8                                                        ),
+    //     .HDL_ADDR_WIDTH                 ( KERNEL_WRAPPER_HOST_CHAN_ADDR_WIDTH                      ),
+    //     .BURSTCOUNT_WIDTH               ( KERNEL_WRAPPER_HOST_CHAN_BURSTCOUNT_WIDTH                ),
+    //     .SYNCHRONIZE_RESET              ( 1                                                        ),
+    //     .DISABLE_WAITREQUEST_BUFFERING  ( KERNELWRAPPER_HOST_CHAN_PIPELINE_DISABLEWAITREQBUFFERING ),
+    //     .READDATA_PIPE_DEPTH            ( KERNELWRAPPER_HOST_CHAN_PIPELINE_STAGES                  )
+    // ) kernel_wr_bridge_inst (
+    //     .clk               ( clock_i                                       ),
+    //     .reset             ( !reset_ni                                     ),
+    //     .s0_waitrequest    ( host_mem_kernel.wr_waitrequest                ),
+    //     .s0_readdata       (  /* open */                                   ),
+    //     .s0_readdatavalid  (  /* open */                                   ),
+    //     .s0_burstcount     ( host_mem_kernel.wr_burstcount                 ),
+    //     .s0_writedata      ( host_mem_kernel.wr_writedata                  ),
+    //     .s0_address        ( host_mem_kernel.wr_address                    ),
+    //     .s0_write          ( host_mem_kernel.wr_write                      ),
+    //     .s0_read           (  1'b0                                         ),
+    //     .s0_byteenable     ( host_mem_kernel.wr_byteenable                 ),
+    //     .s0_debugaccess    ( 1'b0                                          ),
+    //     .m0_waitrequest    ( host_mem_plat_bridge.wr_waitrequest           ),
+    //     .m0_readdata       ( {(KERNEL_WRAPPER_HOST_CHAN_DATA_WIDTH){1'b0}} ),
+    //     .m0_readdatavalid  (  1'b0                                         ),
+    //     .m0_burstcount     ( host_mem_plat_bridge.wr_burstcount            ),
+    //     .m0_writedata      ( host_mem_plat_bridge.wr_writedata             ),
+    //     .m0_address        ( host_mem_plat_bridge.wr_address               ),
+    //     .m0_write          ( host_mem_plat_bridge.wr_write                 ),
+    //     .m0_read           (  /* open */                                   ),
+    //     .m0_byteenable     ( host_mem_plat_bridge.wr_byteenable            )
+    // );
 
     ////////////////////////////
     // Address space splitter //
@@ -344,7 +352,8 @@ module kernel_dfl_wrapper #(
         .reset_ni        ( reset_ni              ),
         .enable_i        ( enable_kernel_irq_csr ),
         .kernel_irq_i    ( kernel_irq            ),
-        .host_mem_kernel ( host_mem_plat_bridge  ), // to_source
+        // .host_mem_kernel ( host_mem_plat_bridge  ), // to_source
+        .host_mem_kernel ( host_mem_kernel       ), // to_source
         .host_mem_plat   ( host_mem_plat         )  // to_sink
     );        
 
@@ -352,10 +361,10 @@ module kernel_dfl_wrapper #(
     // SYCL kernel IP //
     ////////////////////
     // Adapt signals to kernel_system    
-    // NOTE: burstcount interfaces are not going to match with submodule rs_sycl_ip_RS_3_2_report_di
+    // NOTE: burstcount interfaces are not going to match with submodule rs_sycl_ip_<RS_SCHEMA>_report_di
 
     // Kernel reset
-    // Reset from system (synchronized and from CSR)
+    // Reset from system (input and from CSR)
     assign reset_n_kernel = reset_ni & reset_n_kernel_csr;    
     
     // Align the host_chan address
@@ -375,10 +384,9 @@ module kernel_dfl_wrapper #(
     assign host_mem_kernel.wr_address = {{(KERNEL_DISCARD_ADDR_BITS){1'b0}}, host_mem_kernel_wr_address_high};
 
     // Tie-off ports not driven by kernel
-    assign host_mem_kernel.rd_readresponseuser = '0;
+    // assign host_mem_kernel.rd_readresponseuser = '0;
     assign host_mem_kernel.rd_user             = '0;
     assign host_mem_kernel.wr_user             = '0;
-
 
     // Manipulate the kernel CRA address
     // We need to:
@@ -391,16 +399,23 @@ module kernel_dfl_wrapper #(
                                             3'b000
                                             };
     
-    // TODO: do we need to implement this?
+    // Tie-off stale or constant signals
+    // No need to implement these
     assign kernel_system_mem2_w_writeack = 1'b0;
+    // Safe to keep to 1'b1
+    assign csr_mmio64_to_kernel_enable = 1'b1;
+    // Safe to keep to 1'b0
+    assign csr_mmio64_to_kernel_debugaccess = 1'b0;
+    // Unused internally by kernel_system
+    assign cc_snoop_clk_clk = 1'b0;
 
     // SYCL IP wrapper instantiation
     kernel_system kernel_system_inst (
         .clock_reset_clk           ( clock_i                                  ),  // input logic
         .clock_reset_reset_reset_n ( reset_n_kernel                           ),  // input logic
-        .cc_snoop_clk_clk          ( /* Unused */                             ),  // input logic
+        .cc_snoop_clk_clk          ( kernel_system_cc_snoop_clk_clk           ),  // input logic
         // AVM mem1_r
-        .mem1_r_enable             ( /* TBD: keep open? */                    ),  // output logic 
+        .mem1_r_enable             ( /* keep open */                          ),  // output logic 
         .mem1_r_read               ( host_mem_kernel.rd_read                  ),  // output logic
         .mem1_r_address            ( host_mem_kernel_rd_address_kernel        ),  // output logic [40:0]
         .mem1_r_byteenable         ( host_mem_kernel.rd_byteenable            ),  // output logic [63:0]
@@ -409,18 +424,18 @@ module kernel_dfl_wrapper #(
         .mem1_r_readdatavalid      ( host_mem_kernel.rd_readdatavalid         ),  // input logic
         .mem1_r_burstcount         ( host_mem_kernel.rd_burstcount            ),  // output logic [63:0]
         // AVM mem2_w
-        .mem2_w_enable             ( /* TBD: keep open? */                    ),  // output logic 
+        .mem2_w_enable             ( /* keep open */                          ),  // output logic 
         .mem2_w_write              ( host_mem_kernel.wr_write                 ),  // output logic
         .mem2_w_address            ( host_mem_kernel_wr_address_kernel        ),  // output logic [40:0]
         .mem2_w_writedata          ( host_mem_kernel.wr_writedata             ),  // output logic [511:0]
         .mem2_w_byteenable         ( host_mem_kernel.wr_byteenable            ),  // output logic [63:0]
         .mem2_w_waitrequest        ( host_mem_kernel.wr_waitrequest           ),  // input logic
         .mem2_w_burstcount         ( host_mem_kernel.wr_burstcount            ),  // output logic [63:0]
-        .mem2_w_writeack           ( kernel_system_mem2_w_writeack /* TBD */  ),  // input logic
+        .mem2_w_writeack           ( kernel_system_mem2_w_writeack            ),  // input logic
         // AVS kernel_cra
-        .kernel_cra_debugaccess    ( 1'b0                                     ),  // input logic
+        .kernel_cra_debugaccess    ( csr_mmio64_to_kernel_debugaccess         ),  // input logic
         .kernel_cra_burstcount     ( csr_mmio64_to_kernel.burstcount          ),  // input logic
-        .kernel_cra_enable         ( 1'b1  /* TBD */                          ),  // input logic
+        .kernel_cra_enable         ( csr_mmio64_to_kernel_enable              ),  // input logic
         .kernel_cra_read           ( csr_mmio64_to_kernel.read                ),  // input logic
         .kernel_cra_write          ( csr_mmio64_to_kernel.write               ),  // input logic
         .kernel_cra_address        ( kernel_cra_address_extended              ),  // input logic [29:0]
