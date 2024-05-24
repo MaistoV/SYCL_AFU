@@ -42,9 +42,6 @@ int decode_cell_length (
 		const unsigned int cell_length
 		);
 
-// Microseconds wait for AFU CSR polling
-#define SLEEP_TIME_US 10000
-
 #ifdef MULTI_ERASURE_SIMPLE
     #pragma message "[INFO] Importing sycl_rs_erasure_multi_erasure.cpp"
     #include "sycl_rs_erasure_multi_erasure.cpp"

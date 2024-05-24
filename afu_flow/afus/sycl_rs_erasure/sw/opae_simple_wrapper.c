@@ -24,7 +24,6 @@
 
 #include "opae_simple_wrapper.h"
 
-// Helping function for MMIO writes, assuming ASE not supporting mapped MMIO access
 void mmio64_write (
 					fpga_handle 		accel_handle,
 					volatile uint64_t * mmio_ptr,
@@ -58,7 +57,6 @@ void mmio32_write (
 }
 
 
-// Helping function for MMIO reads, assuming ASE not supporting mapped MMIO access
 void mmio64_read (
 					fpga_handle 		accel_handle,
 					volatile uint64_t * mmio_ptr,
@@ -75,7 +73,10 @@ void mmio64_read (
 		*dest = MAPPED_MMIO(mmio_ptr, offset);
 }
 
-fpga_result OPAE_SIMPLE_WRAPPER_debug_read ( fpga_handle accel_handle, volatile uint64_t* mmio_ptr ) {
+fpga_result OPAE_SIMPLE_WRAPPER_debug_read ( 
+							fpga_handle accel_handle,
+							volatile uint64_t* mmio_ptr
+							) {
 	fpga_result res = FPGA_OK;
 
     // Mapped MMIO access
@@ -109,86 +110,77 @@ fpga_result OPAE_SIMPLE_WRAPPER_debug_read ( fpga_handle accel_handle, volatile 
 	return res;
 }
 
-// fpga_result
-// OPAE_SVC_WRAPPER::findAndOpenAccel(const char* accel_uuid){
-// fpga_result OPAE_SIMPLE_WRAPPER_init ( fpga_handle* accel_handle, const char *accel_uuid ) {
-//     fpga_result res = FPGA_OK;
+fpga_result OPAE_SIMPLE_WRAPPER_init ( 
+							fpga_handle* accel_handle,
+							const char *accel_uuid,
+                           	volatile uint64_t** mmio_ptr
+						) {
+    fpga_result res = FPGA_OK;
 	
-// 	if ( accel_handle == NULL ) {									
-// 		return FPGA_INVALID_PARAM;
-// 	}
-// 	// Compose the filter object
-// 	fpga_properties filter = NULL;
-//     res = fpgaGetProperties(NULL, &filter);
-// 	ON_ERR_GOTO_local(res, out_exit, "creating properties object");
-//     res = fpgaPropertiesSetObjectType(filter, FPGA_ACCELERATOR);
-// 	ON_ERR_GOTO_local(res, out_destroy_prop, "setting object type");
-
-//     // Add the desired UUID to the filter
-//     fpga_guid guid;
-// 	if (uuid_parse(accel_uuid, guid) < 0) {
-// 		fprintf(stderr, "Error parsing guid '%s'\n", accel_uuid);
-// 		goto out_exit;
-// 	}	
-// 	res = fpgaPropertiesSetGUID(filter, guid);
-// 	ON_ERR_GOTO_local(res, out_destroy_prop, "setting GUID");
-
-//     // How many accelerators match the requested properties?
-//     uint32_t max_tokens;
-//     res = fpgaEnumerate(&filter, 1, NULL, 0, &max_tokens);
-// 	ON_ERR_GOTO_local(res, out_destroy_prop, "enumerating AFCs");
-
-//     // Now that the number of matches is known, allocate a token vector large enough to hold them.
-//     fpga_token* tokens = (fpga_token*)malloc(sizeof(fpga_token) * max_tokens);
-//     if ( NULL == tokens ) {
-//         res = fpgaDestroyProperties(&filter);
-//         return FPGA_NO_MEMORY;
-//     }
-
-//     // Enumerate and get the tokens
-//     uint32_t num_matches;
-//     res = fpgaEnumerate(&filter, 1, tokens, max_tokens, &num_matches);
-// 	ON_ERR_GOTO_local(res, out_destroy_prop, "enumerating AFCs");
-//     fpga_token accel_token;
-//     res = FPGA_NOT_FOUND;
-//     for ( uint32_t i = 0; i < num_matches; i++ ) {
-//         accel_token = tokens[i];
-//         res = fpgaOpen(accel_token, accel_handle, 0);
-// 		ON_ERR_GOTO_local(res, out_destroy_tok, "opening AFC");
-//         // Success?
-//         if (FPGA_OK == res) break;
-//     }
-
-// 	// Map MMOP address space
-// 	res = fpgaMapMMIO(*accel_handle, 0, NULL);
-// 	ON_ERR_GOTO_local(res, out_close, "mapping MMIO space");
-
-// 	// Set up interrupts
-// 	uint64_t data = 0;
-// 	res = fpgaReadMMIO64(*accel_handle, 0, HLS_INT_ENABLE, &data);
-// 	ON_ERR_GOTO_local(res, out_unmap_mmio, "reading from MMIO");
-// #ifdef DEBUG_OSW
-// 	printf("Interrupt enabled = %08lx\n", data);
-// #endif
-
-// 	int interruptEnabled = data & 0x1u;
-// 	if ( !interruptEnabled ) {
-// 		uint64_t enableWrite = data | 0x1u;
-// 		res = fpgaWriteMMIO64(*accel_handle, 0, HLS_INT_ENABLE, enableWrite);
-// 		ON_ERR_GOTO_local(res, out_unmap_mmio, "setting interrupt enable");
-// 		res = fpgaReadMMIO64(*accel_handle, 0, HLS_INT_ENABLE, &data);
-// 		ON_ERR_GOTO_local(res, out_unmap_mmio, "reading from MMIO");
-// 	}
-
-// #ifdef DEBUG_OSW
-// 	res = OPAE_SIMPLE_WRAPPER_debug_read( *accel_handle );
-// #endif // DEBUG_OSW
-
-// 	// Reset AFU
-// 	// res = fpgaReset( *accel_handle );
+	if ( accel_handle == NULL ) {									
+		return FPGA_INVALID_PARAM;
+	}
 	
-//     return res;
-// }
+	// Compose the filter object
+	fpga_properties filter = NULL;
+    res = fpgaGetProperties(NULL, &filter);
+	fpga_assert(res);
+    res = fpgaPropertiesSetObjectType(filter, FPGA_ACCELERATOR);
+	fpga_assert(res);
+
+    // Add the desired UUID to the filter
+    fpga_guid guid;
+	if (uuid_parse(accel_uuid, guid) < 0) {
+		fprintf(stderr, "Error parsing guid '%s'\n", accel_uuid);
+		return FPGA_INVALID_PARAM;
+	}	
+	res = fpgaPropertiesSetGUID(filter, guid);
+	fpga_assert(res);
+
+    // Enumerate and get the tokens
+    uint32_t num_matches;
+	const uint32_t max_tokens = 1; // We need just one
+    fpga_token accel_token;
+    res = fpgaEnumerate(&filter, 1, &accel_token, max_tokens, &num_matches);
+	fpga_assert(res);
+    if ( num_matches < 1 ) {
+        fprintf(stderr, "Accelerator %s not found!\n", accel_uuid);
+		return FPGA_INVALID_PARAM;
+	}
+
+    // Open match
+	res = fpgaOpen(accel_token, accel_handle, 0);
+	fpga_assert(res);
+
+
+	// Map MMIO address space
+	volatile uint64_t * tmp_ptr;
+	res = fpgaMapMMIO(*accel_handle, 0, ((uint64_t **)&tmp_ptr));
+	fpga_assert(res);
+	assert(tmp_ptr != NULL);
+	*mmio_ptr = tmp_ptr;
+
+	// AFU reset via CSR
+	mmio64_write ( accel_handle, *mmio_ptr, AFU_RESET, AFU_RESET_VALUE );
+	mmio64_write ( accel_handle, *mmio_ptr, AFU_IRQ_EN, AFU_IRQ_EN_VALUE );
+
+#ifdef DEBUG_OSW
+	res = OPAE_SIMPLE_WRAPPER_debug_read( *accel_handle, *mmio_ptr );
+#endif // DEBUG_OSW
+
+	// Reset AFU
+	// Not supported by vfio plugin
+	// res = fpgaReset( *accel_handle );
+	// fpga_assert(res);
+	
+    // Clean up
+    res = fpgaDestroyProperties(&filter);
+    fpga_assert(res);
+	res = fpgaDestroyToken(&accel_token);
+	fpga_assert(res);
+
+    return res;
+}
 
 
 volatile void * OPAE_SIMPLE_WRAPPER_allocate_io_buffer (
@@ -255,6 +247,9 @@ fpga_result OPAE_SIMPLE_WRAPPER_call_afu (
 
 	mmio64_write ( accel_handle, mmio_ptr, KERNEL_ARG_RS_ERASURE_CSR_REG, rs_erasure_csrs );
 #ifdef DEBUG_OSW
+	printf("%s:%d erasure_pattern_64  0x%016lx\n", __FILE__, __LINE__, erasure_pattern_64);
+	printf("%s:%d survived_cells_64   0x%016lx\n", __FILE__, __LINE__, survived_cells_64);
+	printf("%s:%d cell_length_64      %lu\n", __FILE__, __LINE__, cell_length_64);
 	printf("%s:%d write @%x, value = %lx\n", __FILE__, __LINE__, KERNEL_ARG_RS_ERASURE_CSR_REG, rs_erasure_csrs);
 #endif // DEBUG_OSW
 
@@ -266,7 +261,7 @@ fpga_result OPAE_SIMPLE_WRAPPER_call_afu (
 	res = fpgaCreateEventHandle(fpgaInterruptEvent);
 	fpga_assert(res);
 	uint32_t flags = 0; // uses IRQ bit 0, see instantiation of acmm_ccip_host_wr in afu.sv
-	res = fpgaRegisterEvent(accel_handle, FPGA_EVENT_INTERRUPT, fpgaInterruptEvent, flags);
+	res = fpgaRegisterEvent(accel_handle, FPGA_EVENT_INTERRUPT, *fpgaInterruptEvent, flags);
 	fpga_assert(res);
 #endif // INTERRUPT_EVENTS
 
@@ -276,9 +271,8 @@ fpga_result OPAE_SIMPLE_WRAPPER_call_afu (
 	// Poll on busy register
 	// TODO: is there a cleaner way?
 	uint64_t status_val;
-	#define SLEEP_TIME_US 10000
 	do {
-		usleep( SLEEP_TIME_US );
+		sleep( SLEEP_TIME_US );
 		mmio64_read ( accel_handle, mmio_ptr, KERNEL_STATUS, &status_val );
 	#ifdef DEBUG_OSW
 		print_kernel_status(status_val);
@@ -288,17 +282,17 @@ fpga_result OPAE_SIMPLE_WRAPPER_call_afu (
 	////////////////////////
 	// Start and wait AFU //
 	////////////////////////
+	// fpga_result start_and_wait_afu(fpga_handle afc_handle, struct pollfd *pfd, int *poll_res)
+#ifdef INTERRUPT_EVENTS
+	pfd.events = POLLIN;
+	res = fpgaGetOSObjectFromEventHandle(*fpgaInterruptEvent, &pfd.fd);
+	fpga_assert(res);
+#endif // INTERRUPT_EVENTS
+
 	// Start measure by macro
 	if ( measure_latency ) {
 		MEASURE_LATENCY_START(start);
 	}
-
-	// fpga_result start_and_wait_afu(fpga_handle afc_handle, struct pollfd *pfd, int *poll_res)
-#ifdef INTERRUPT_EVENTS
-	pfd.events = POLLIN;
-	res = fpgaGetOSObjectFromEventHandle(fpgaInterruptEvent, &pfd.fd);
-	fpga_assert(res);
-#endif // INTERRUPT_EVENTS
 
 	// Start the AFU by writing a '1' into the start register
 	mmio32_write(accel_handle, mmio_ptr, KERNEL_START, KERNEL_START_VALUE);
@@ -308,21 +302,24 @@ fpga_result OPAE_SIMPLE_WRAPPER_call_afu (
 
 #ifdef INTERRUPT_EVENTS
 	// Wait for interrupt with poll()
+	// NOTE: the current Linux driver implementation of poll()
+	// has a minimum latency of 0.1 seconds
 	poll_res = poll(&pfd, 1, POLL_TIMEOUT_MS);
 #ifdef DEBUG_OSW
 	printf("%s:%d poll_res = %d\n", __FILE__, __LINE__, poll_res);
 	// Check poll errors
 	if ( poll_res <= 0 ) {
-		printf("Poll error errno = %s\n", strerror(errno));
+		fprintf(stderr, "Poll error errno = %s\n", strerror(errno));
+		return FPGA_EXCEPTION;
 	}
 	else if ( poll_res == 0 ) {
-		printf("Error: Poll timeout \n");
+		fprintf(stderr, "Error: Poll timeout \n");
+		return FPGA_EXCEPTION;
 	}
 	else {
 		printf("Poll success. Return = %d\n", poll_res);
 	}
 #endif // DEBUG_OSW
-
 #else // !INTERRUPT_EVENTS
 	// Active polling on AFU
 	do {
@@ -334,6 +331,11 @@ fpga_result OPAE_SIMPLE_WRAPPER_call_afu (
 	} while ( !(status_val & KERNEL_REGISTER_MAP_DONE_MASK) );
 #endif // INTERRUPT_EVENTS
 
+	// End measure by macro
+	if ( measure_latency ) {
+		MEASURE_LATENCY_END_AND_PRINT(start, time_sec, fd_latency);
+	}
+
 	// Clear interrupt
 	// NOTE: this is necessary across calls regardless of INTERRUPT_EVENTS
 	mmio64_read ( accel_handle, mmio_ptr, KERNEL_CLEAR_INTERRUPT, &status_val );
@@ -342,41 +344,39 @@ fpga_result OPAE_SIMPLE_WRAPPER_call_afu (
 	print_kernel_status(status_val);
 #endif // DEBUG_OSW
 
-	// End measure by macro
-	if ( measure_latency ) {
-		MEASURE_LATENCY_END_AND_PRINT(start, time_sec, fd_latency);
-	}
-
 	return res;
 }
 
 
-// fpga_result OPAE_SIMPLE_WRAPPER_cleanup( fpga_handle accel_handle, 
-// 											fpga_event_handle *fpgaInterruptEvent, 
-// 											uint64_t workspace_id_in,  
-// 											uint64_t workspace_id_out 
-// // 											){
-// 	fpga_result res = FPGA_OK;
+fpga_result OPAE_SIMPLE_WRAPPER_cleanup( 
+											fpga_handle accel_handle, 
+											fpga_event_handle *fpgaInterruptEvent, 
+											uint64_t workspace_id_in,  
+											uint64_t workspace_id_out 
+										){	
+	fpga_result res = FPGA_OK;
 
-// 	if ( accel_handle == NULL ) {									
-// 		return FPGA_INVALID_PARAM;
-// 	}
+	if ( accel_handle == NULL ) {									
+		return FPGA_INVALID_PARAM;
+	}
 
-// 	// Cleanup event accel_handle			
-// 	if ( fpgaInterruptEvent != NULL ) {									
-// 		res = fpgaUnregisterEvent(accel_handle, FPGA_EVENT_INTERRUPT, *fpgaInterruptEvent);
-// 		res = fpgaDestroyEventHandle(fpgaInterruptEvent);
-// 	}
+#ifdef INTERRUPT_EVENTS
+	// Cleanup event accel_handle			
+	if ( fpgaInterruptEvent != NULL ) {									
+		res = fpgaUnregisterEvent(accel_handle, FPGA_EVENT_INTERRUPT, *fpgaInterruptEvent);
+		res = fpgaDestroyEventHandle(fpgaInterruptEvent);
+	}
+#endif // INTERRUPT_EVENTS
 
-// 	// Release I/O buffers
-// 	res = fpgaReleaseBuffer(accel_handle, workspace_id_out);
-// 	res = fpgaReleaseBuffer(accel_handle, workspace_id_in);
+	// Release I/O buffers
+	res = fpgaReleaseBuffer(accel_handle, workspace_id_out);
+	res = fpgaReleaseBuffer(accel_handle, workspace_id_in);
 
-// 	// Unmap MMIO space 
-// 	res = fpgaUnmapMMIO(accel_handle, 0);
+	// Unmap MMIO space 
+	res = fpgaUnmapMMIO(accel_handle, 0);
 
-// 	// Release accelerator 
-// 	res = fpgaClose(accel_handle);
+	// Release accelerator 
+	res = fpgaClose(accel_handle);
 
-// 	return res;
-// }
+	return res;
+}

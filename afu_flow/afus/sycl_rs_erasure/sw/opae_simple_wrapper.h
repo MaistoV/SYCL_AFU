@@ -2,12 +2,41 @@
 #define _OPAE_SIMPLE_WRAPPER_
 
 #define POLL_TIMEOUT_MS 100
+// Microseconds wait for AFU CSR polling
+#define SLEEP_TIME_US 1
 
-/// @brief Initialize FPGA AFU
+// Helping function for MMIO writes, assuming ASE not supporting mapped MMIO access
+void mmio64_write (
+					fpga_handle 		accel_handle,
+					volatile uint64_t * mmio_ptr,
+					uint64_t			offset,
+					uint64_t 			value
+				);
+// Helping function for MMIO writes, assuming ASE not supporting mapped MMIO access
+void mmio32_write (
+					fpga_handle 		accel_handle,
+					volatile uint64_t * mmio_ptr,
+					uint64_t			offset,
+					uint32_t 			value
+				);
+// Helping function for MMIO reads, assuming ASE not supporting mapped MMIO access
+void mmio64_read (
+					fpga_handle 		accel_handle,
+					volatile uint64_t * mmio_ptr,
+					uint64_t			offset,
+					uint64_t * 			dest
+				);
+
+/// @brief Grub and initialize FPGA AFU
 /// @param accel_handle Handle to the AFU accelerator
 /// @param accel_uuid UUID of the target AFU
+/// @param mmio_ptr Pointer to mapped MMIO space
 /// @return fpga_result-encoded exit code
-fpga_result OPAE_SIMPLE_WRAPPER_init(fpga_handle * accel_handle, const char * accel_uuid);
+fpga_result OPAE_SIMPLE_WRAPPER_init ( 
+							fpga_handle* accel_handle,
+							const char *accel_uuid,
+                           	volatile uint64_t** mmio_ptr
+						);
 
 /// @brief Allocate the input and output buffers for AFU
 /// @param accel_handle Handle to the AFU accelerator

@@ -2,6 +2,7 @@
 TEST_ARGS ?=
 RESEED_FITTER ?= 0
 INTERRUPT_EVENTS ?= 0
+NO_ASE_SUPPORT ?= 0
 AFU_HOST_DEFINES ?=
 ACL_DEVICE ?= acl0 # Assuming only one device connected
 SYCL_DEBUG ?= 0
@@ -164,7 +165,8 @@ aocl_bsp_install:
 aocl_bsp_uninstall:
 	${ONEAPI_DEBUG_ENV} aocl uninstall ${OFS_ASP_ROOT}
 
-aocl_aocx_initalize: #opae.io_bind_one 
+# Make sure to make opae.io_bind_one with the correct VF number
+aocl_aocx_initialize:
 	${ONEAPI_DEBUG_ENV} aocl initialize ${ACL_DEVICE} ${OFS_ASP_BOARD_VARIANT} 
 
 CMAKE_ASP_FLAGS = -DFPGA_DEVICE=${OFS_ASP_FPGA_DEVICE} \
@@ -249,6 +251,9 @@ endif
 ifeq (${INTERRUPT_EVENTS}, 1)
 	AFU_HOST_DEFINES += -DINTERRUPT_EVENTS
 endif
+ifeq (${NO_ASE_SUPPORT}, 1)
+	AFU_HOST_DEFINES += -DNO_ASE_SUPPORT
+endif
 ifeq (${MULTI_ERASURE_SIMPLE}, 1)
 	AFU_HOST_DEFINES += -DMULTI_ERASURE_SIMPLE
 endif
@@ -317,9 +322,12 @@ oneapi_isal: oneapi_ip_plain_c
 
 measure_all: measure_isal measure_asp_fpga measure_asp_plain_c measure_sycl_afu
 
-measure_plots:
+measure_plots_latency:
 	cd ${MEASURE_LATENCY_DIR}/plots; \
 	python plot_latency.py ${MEASURE_LATENCY_DATA_DIR} ${PLOT_OUT_DIR};
+
+measure_plots_power:
+	cd ${MEASURE_LATENCY_DIR}/plots; \
 	python plot_power.py ${MEASURE_LATENCY_DATA_DIR} ${PLOT_OUT_DIR}
 
 measure_isal:

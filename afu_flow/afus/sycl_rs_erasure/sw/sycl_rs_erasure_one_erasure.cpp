@@ -90,7 +90,6 @@ int main(int argc, char *argv[]) {
 
 	// OPAE-related variables
     fpga_handle accel_handle;
-    bool is_ase_sim = false;
     // MMIO pointers and metadata
     volatile uint8_t * rs_erasure_input        ;
 	volatile uint8_t * reconstructed_blocks_out;
@@ -108,18 +107,14 @@ int main(int argc, char *argv[]) {
 	rs_erasure_csr.cell_length_byte_width	= cell_length / LINE_BYTE_WIDTH;
 
 	// Discover/Grab FPGA Resources
-	uint32_t num_handles = 1;
-    res = connect_to_matching_accels(AFU_ACCEL_UUID, 
-									&num_handles,
-									&accel_handle,
-                                   	&is_ase_sim,
-									1,	// Grub just one AFU
-									(volatile uint64_t**)&mmio_ptr
-									);
-	// res = OPAE_SIMPLE_WRAPPER_init( &accel_handle, AFU_ACCEL_UUID );
+	res = OPAE_SIMPLE_WRAPPER_init ( 
+								&accel_handle, 
+								AFU_ACCEL_UUID,
+								(volatile uint64_t**)&mmio_ptr
+							);
 	fpga_assert(res);
 
-    if ( is_ase_sim ) {
+	if ( getenv("WITH_ASE") != NULL ) {
         printf("   *** ASE only detects a single AFU (port 0) ***\n");
     }
 
@@ -146,23 +141,11 @@ int main(int argc, char *argv[]) {
 	// Load AFU parameters //
 	/////////////////////////
 	// Write physical address to AFU CSR
-	if ( is_ase_sim ) {
-        res = fpgaWriteMMIO64(accel_handle, 0, KERNEL_ARG_DEVICE_READ_REG, buf_pa_in);
-        fpga_assert(res);
-	}
-	else {
-		MAPPED_MMIO(mmio_ptr, KERNEL_ARG_DEVICE_READ_REG) = buf_pa_in;
-	}
+	mmio64_write ( accel_handle, mmio_ptr, KERNEL_ARG_DEVICE_READ_REG, buf_pa_in );
 	printf("%s:%d write @%x, value = 0x%lx\n", __FILE__, __LINE__, KERNEL_ARG_DEVICE_READ_REG, buf_pa_in);
 
 	// Write physical address to AFU CSR
-	if ( is_ase_sim ) {
-        res = fpgaWriteMMIO64(accel_handle, 0, KERNEL_ARG_DEVICE_WRITE_REG, buf_pa_out);
-        fpga_assert(res);
-	}
-	else {
-		MAPPED_MMIO(mmio_ptr, KERNEL_ARG_DEVICE_WRITE_REG) = buf_pa_out;
-	}
+	mmio64_write ( accel_handle, mmio_ptr, KERNEL_ARG_DEVICE_WRITE_REG, buf_pa_out );
 	printf("%s:%d write @%x, value = 0x%lx\n", __FILE__, __LINE__, KERNEL_ARG_DEVICE_WRITE_REG, buf_pa_out);
 
 	max_permutations = compute_max_erasure_patterns( RS_K, RS_P, ONE_ERASURE );
@@ -260,7 +243,7 @@ int main(int argc, char *argv[]) {
 												&fpgaInterruptEvent,
 												false, // Don't measure here
 												mmio_ptr,
-												fd_latency
+												NULL	// Don't pass any fd	
 										);
 			fpga_assert(res);
 
@@ -292,7 +275,7 @@ int main(int argc, char *argv[]) {
 
 	// Prepare latency measurements
     if ( measure_latency ) {
-		// Decode cell_elgth for Bytes, KBs or MBs
+		// Decode cell_length for Bytes, KBs or MBs
 		unsigned int cell_length_byte;
 		char cell_length_byte_power[3];
 		decode_cell_length ( cell_length_byte_power, &cell_length_byte, cell_length );
@@ -435,6 +418,15 @@ int main(int argc, char *argv[]) {
 		fclose(fd_latency);
 		printf("%s:%d: New latency data appended on file %s\n", __FILE__, __LINE__, tmp_string);
 	}
+
+	// Clean up
+	res = OPAE_SIMPLE_WRAPPER_cleanup ( 
+										accel_handle, 
+										&fpgaInterruptEvent, 
+										wsid_in,  
+										wsid_out 
+									);
+	fpga_assert(res);
 
 	// Test summary
 	printf("%s:%d: Test passed\n RS[%d:%d]\n cell_length=%d,\n encodind with %s,\n decoding with %s,\n PRNG seed=%u\n",

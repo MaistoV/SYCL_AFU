@@ -37,14 +37,14 @@ fpga_result connect_to_matching_accels(
     res = fpgaPropertiesSetGUID(filter, guid);
     fpga_assert(res);
 
-    // Do the search across the available FPGA contexts
+    // Search across the available FPGA contexts
     res = fpgaEnumerate(&filter, 1, accel_tokens, *num_handles, &num_matches);
     fpga_assert(res);
-    if (*num_handles > num_matches)
+    if (*num_handles > num_matches) {
         *num_handles = num_matches;
+    }
 
-    if ((FPGA_OK != res) || (num_matches < 1))
-    {
+    if ((FPGA_OK != res) || (num_matches < 1)) {
         fprintf(stderr, "Accelerator %s not found!\n", accel_uuid);
         res = fpgaDestroyProperties(&filter);
         fpga_assert(res);
