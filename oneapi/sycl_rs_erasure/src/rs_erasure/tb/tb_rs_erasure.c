@@ -81,13 +81,13 @@ int main(int argc, char *argv[]) {
 	// Allocate coding matrices
 	uint8_t encode_matrix 	[RS_M * RS_K];		// Coefficient matrices
 	uint8_t g_tbls			[RS_K * RS_P * 32];	// Intermediate table for ISA-L
-	uint8_t *frag_ptrs	 	[RS_M];				// Fragment buffer pointers
+	uint8_t *cell_ptrs	 	[RS_M];				// Fragment buffer pointers
 	uint8_t *recover_outp	[RS_P];				// Reconstructed cells
 	uint8_t *recover_srcs	[RS_K];
 
 	// Allocate the src & parity buffers
 	for ( unsigned int i = 0; i < RS_M; i++ ) {
-		if (NULL == (frag_ptrs[i] = (uint8_t*)malloc(cell_length))) {
+		if (NULL == (cell_ptrs[i] = (uint8_t*)malloc(cell_length))) {
 			printf("%s:%d Test failure! Error with malloc\n", __FILE__, __LINE__);
 			return -1;
 		}
@@ -104,15 +104,15 @@ int main(int argc, char *argv[]) {
 	// Fill sources with random data
 	for ( unsigned int i = 0; i < RS_K; i++ ) {
 		for ( unsigned int l = 0; l < cell_length; l++ ) {
-			frag_ptrs[i][l] = rand();
+			cell_ptrs[i][l] = rand();
 		}
 	}
 
 #ifdef DEBUG
-	printf("%s:%d: frag_ptrs\n", __FILE__, __LINE__);
+	printf("%s:%d: cell_ptrs\n", __FILE__, __LINE__);
 	for ( unsigned int i = 0; i < RS_K; i++ ) {
 		for ( unsigned int l = 0; l < cell_length; l++ ) {
-			printf("%02x ", frag_ptrs[i][l]);
+			printf("%02x ", cell_ptrs[i][l]);
 			if ( ((l+1) % BYTE_WIDTH) == 0 ) {
 				printf("\n");
 			}
@@ -135,13 +135,13 @@ int main(int argc, char *argv[]) {
 		// Generate g_tbls
 		ec_init_tables(RS_K, RS_P, &encode_matrix[RS_K * RS_K], g_tbls);
 		// Generate EC parity blocks from sources
-		ec_encode_data(cell_length, RS_K, RS_P, g_tbls, frag_ptrs, &(frag_ptrs[RS_K]));
+		ec_encode_data(cell_length, RS_K, RS_P, g_tbls, cell_ptrs, &(cell_ptrs[RS_K]));
 	}
 	else { // Encode with rs_erasure component
 		// Rearrange input in contiguous memory
 		for ( unsigned int i = 0; i < RS_K; i++ ) {
 			for ( int l = 0; l < cell_length; l++ ) {
-				((uint8_t(*)[cell_length])rs_erasure_input)[i][l] = frag_ptrs[i][l];
+				((uint8_t(*)[cell_length])rs_erasure_input)[i][l] = cell_ptrs[i][l];
 			}
 		}
 
@@ -172,7 +172,7 @@ int main(int argc, char *argv[]) {
 			// Pack results in fragments buffer
 			for ( unsigned int e = 0; e < NUM_ERRORS; e++ ) {
 				for ( int l = 0; l < cell_length; l++ ) {
-					frag_ptrs[i + RS_K][l] = ((uint8_t(*)[cell_length])reconstructed_blocks_out)[e][l];
+					cell_ptrs[i + RS_K][l] = ((uint8_t(*)[cell_length])reconstructed_blocks_out)[e][l];
 				}
 			}
 		}
@@ -182,7 +182,7 @@ int main(int argc, char *argv[]) {
 	printf("%s:%d: Complete cell array:\n", __FILE__, __LINE__);
 	for ( unsigned int i = 0; i < RS_K + RS_P; i++ ) {
 		for ( unsigned int l = 0; l < cell_length; l++ ) {
-			printf("%02x ", frag_ptrs[i][l]);
+			printf("%02x ", cell_ptrs[i][l]);
 			if ( ((l+1) % BYTE_WIDTH) == 0 ) {
 				printf("\n");
 			}
@@ -226,7 +226,7 @@ int main(int argc, char *argv[]) {
 
 				// Pack recovery array pointers as list of valid fragments
 				for ( unsigned int i = 0; i < RS_K; i++ ){
-					recover_srcs[i] = frag_ptrs[decode_index_hls[permutation_index][survival_index][i]];
+					recover_srcs[i] = cell_ptrs[decode_index_hls[permutation_index][survival_index][i]];
 				}
 				// Recover data
 				uint8_t* decode_matrix = (uint8_t*)decode_matrix_hls[permutation_index*num_vectors_per_erasure_pattern + survival_index];
@@ -251,7 +251,7 @@ int main(int argc, char *argv[]) {
 				// Rearrange input in contiguous memory
 				for ( unsigned int i = 0; i < RS_K; i++ ) {
 					for ( int l = 0; l < cell_length; l++ ) {
-						((uint8_t(*)[cell_length])rs_erasure_input)[i][l] = frag_ptrs[decode_index_hls[permutation_index][survival_index][i]][l];
+						((uint8_t(*)[cell_length])rs_erasure_input)[i][l] = cell_ptrs[decode_index_hls[permutation_index][survival_index][i]][l];
 					}
 				}
 
@@ -300,7 +300,7 @@ int main(int argc, char *argv[]) {
 
 			// Check that recovered buffers are the same as original
 			for ( unsigned int i = 0; i < NUM_ERRORS; i++ ) {
-				ret_val = memcmp(recover_outp[i], frag_ptrs[erasure_list[i]], cell_length);
+				ret_val = memcmp(recover_outp[i], cell_ptrs[erasure_list[i]], cell_length);
 				if ( ret_val ) {
 					printf("%s:%d: Fail erasure recovery %d, frag %d\n", __FILE__, __LINE__, i, erasure_list[i]);
 					
@@ -308,7 +308,7 @@ int main(int argc, char *argv[]) {
 					printf("%s:%d: expected:\n", __FILE__, __LINE__);
 					for ( unsigned int i = 0; i < NUM_ERRORS; i++ ) {
 						for ( int l = 0; l < cell_length; l++ ) {
-							printf("%02x ", frag_ptrs[erasure_list[i]][l]);
+							printf("%02x ", cell_ptrs[erasure_list[i]][l]);
 							if ( ((l+1) % BYTE_WIDTH) == 0 ) {
 								printf("\n");
 							}

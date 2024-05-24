@@ -26,6 +26,8 @@
 
 #define NUM_ERASURES RS_P
 
+void print_contiguous_cell ( FILE* fd, uint8_t* array, unsigned int num_cells, unsigned int cell_length, unsigned int line_byte_width );
+
 int main(int argc, char *argv[]) {
     static const uint32_t max_handles = 32;
     fpga_handle accel_handles[max_handles];
@@ -37,7 +39,7 @@ int main(int argc, char *argv[]) {
 	volatile uint8_t * reconstructed_blocks_out;
     uint64_t wsid_in, wsid_out;
     uint64_t buf_pa_in, buf_pa_out;
-    uint64_t cell_length_byte = 64;
+    uint64_t cell_length_byte = 2048;
 
     // FPGA error code
     volatile fpga_result res = FPGA_OK;
@@ -104,13 +106,10 @@ int main(int argc, char *argv[]) {
         printf("%s:%d: rs_erasure_input\n", __FILE__, __LINE__);
         for ( unsigned int j = 0; j < (cell_length_byte * RS_K); j++ ){
             rs_erasure_input[j] = rand();
-            printf("%02x ", rs_erasure_input[j]);
-			if ( ((j+1) % LINE_BYTE_WIDTH) == 0 ) {
-				printf("\n");
-			}
         }
-        printf("\n");
-
+        for ( unsigned int j = 0; j < RS_K; j++ ) {
+            print_contiguous_cell(stdout, ((uint8_t(*)[cell_length_byte])rs_erasure_input)[j], 1, cell_length_byte, LINE_BYTE_WIDTH );
+        }
         ////////////////////////////////
         // Create event for interrupt //
         ////////////////////////////////
@@ -157,6 +156,11 @@ int main(int argc, char *argv[]) {
         printf("%s:%d write @%x, value = %x\n", __FILE__, __LINE__, KERNEL_START, KERNEL_START_VALUE);
 
     #ifndef INTERRUPT_EVENTS
+        // Disable interrupts
+        printf("%s:%d Disable AFU interrupts via CSR write...\n", __FILE__, __LINE__);
+        MAPPED_MMIO(mmio_ptr[i], AFU_IRQ_EN) = ~AFU_IRQ_EN_VALUE;
+        printf("%s:%d write @%08x, value = %016lx\n", __FILE__, __LINE__, AFU_IRQ_EN, ~AFU_IRQ_EN_VALUE);
+
         // Active polling on AFU
         do {
             usleep( SLEEP_TIME_US );
@@ -195,13 +199,9 @@ int main(int argc, char *argv[]) {
 
         // Check output buffer
 		printf("%s:%d: reconstructed_blocks_out\n", __FILE__, __LINE__);
-        for ( unsigned int j = 0; j < RS_OUTPUT_SIZE(cell_length_byte, NUM_ERASURES); j++ ){
-            printf("%02x ", reconstructed_blocks_out[j]);
-			if ( ((j+1) % LINE_BYTE_WIDTH) == 0 ) {
-				printf("\n");
-			}
+        for ( unsigned int j = 0; j < NUM_ERASURES; j++ ) {
+            print_contiguous_cell(stdout, ((uint8_t(*)[cell_length_byte])reconstructed_blocks_out)[j], 1, cell_length_byte, LINE_BYTE_WIDTH );
         }
-        printf("\n");
 
         //////////////
         // Clean up //

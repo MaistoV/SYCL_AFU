@@ -71,7 +71,7 @@ int main(int argc, char *argv[]) {
 
 	// Fragment buffer pointers
 	uint8_t* bitstring;
-	uint8_t *frag_ptrs[MMAX];
+	uint8_t *cell_ptrs[MMAX];
 	uint8_t *src_in_err;
 	// Reconstructed cells
 	uint8_t *recover_outp[KMAX];	
@@ -144,7 +144,7 @@ int main(int argc, char *argv[]) {
 	}
 	// Allocate the src & parity buffers
 	for ( unsigned int i = 0; i < rs_m; i++ ) {
-		if (NULL == (frag_ptrs[i] = (uint8_t*)malloc(len))) {
+		if (NULL == (cell_ptrs[i] = (uint8_t*)malloc(len))) {
 			printf("%s:%d (uint8_t*)malloc error: Fail\n", __FILE__, __LINE__);
 			goto clean_up;;
 		}
@@ -161,7 +161,7 @@ int main(int argc, char *argv[]) {
 	// Fill sources with random data
 	for ( int i = 0; i < rs_k; i++ )
 		for ( int j = 0; j < len; j++)
-			frag_ptrs[i][j] = rand();
+			cell_ptrs[i][j] = rand();
 
 	printf(" encode (rs_m,rs_k,rs_p)=(%d,%d,%d) erasures=%d len=%d\n", rs_m, rs_k, rs_p, num_erasures, len);
 
@@ -178,7 +178,7 @@ int main(int argc, char *argv[]) {
 	// Generate g_tbls
 	ec_init_tables(rs_k, rs_p, &encode_matrix[rs_k * rs_k], g_tbls);
 	// Generate EC parity blocks from sources
-	ec_encode_data(len, rs_k, rs_p, g_tbls, frag_ptrs, &frag_ptrs[rs_k]);
+	ec_encode_data(len, rs_k, rs_p, g_tbls, cell_ptrs, &cell_ptrs[rs_k]);
 	
 	// Total number of target erasure_patterns
 	unsigned long max_erasure_patterns = compute_1_erasure_patterns( rs_k, rs_p );
@@ -373,7 +373,7 @@ int main(int argc, char *argv[]) {
 
 			// Pack recovery array pointers as list of valid fragments
 			for ( int i = 0; i < rs_k; i++ )
-				recover_srcs[i] = frag_ptrs[decode_index[i]];
+				recover_srcs[i] = cell_ptrs[decode_index[i]];
 
 			// Recover data
 			ec_init_tables(rs_k, num_erasures, decode_matrix, g_tbls);
@@ -381,7 +381,7 @@ int main(int argc, char *argv[]) {
 
 			// Check that recovered buffers are the same as original
 			for ( unsigned int i = 0; i < num_erasures; i++ ) {
-				ret_val = memcmp(recover_outp[i], frag_ptrs[erasure_list[i]], len);
+				ret_val = memcmp(recover_outp[i], cell_ptrs[erasure_list[i]], len);
 				if ( ret_val ) {
 					printf(" Fail erasure recovery %d, frag %d\n", i, erasure_list[i]);
 					goto close_files;
@@ -504,7 +504,7 @@ clean_up:
 	free ( g_tbls		 );
 	free ( bitstring	 );
 	for ( unsigned int i = 0; i < rs_m; i++ ) {
-		free ( frag_ptrs[i] );
+		free ( cell_ptrs[i] );
 	}
 	for ( unsigned int i = 0; i < rs_p; i++ ) {
 		free (recover_outp[i] );

@@ -106,7 +106,6 @@ int main(int argc, char *argv[]) {
 	volatile uint8_t * reconstructed_blocks_out;
     uint64_t wsid_in, wsid_out;
     uint64_t buf_pa_in, buf_pa_out;
-    uint64_t cell_length_byte = 128;
     // FPGA error code
     volatile fpga_result res = FPGA_OK;
 	// FPGA interrupts
@@ -116,7 +115,7 @@ int main(int argc, char *argv[]) {
 	// CSR word for AFU
 	rs_erasure_csr_t rs_erasure_csr;
 	// Cell length is constant across AFU calls in this test
-	rs_erasure_csr.cell_length_byte_width	= cell_length_byte / LINE_BYTE_WIDTH;
+	rs_erasure_csr.cell_length_byte_width	= cell_length / LINE_BYTE_WIDTH;
 
 	// Discover/Grab FPGA Resources
 	uint32_t num_handles;
@@ -137,18 +136,18 @@ int main(int argc, char *argv[]) {
 	///////////////////////////
 	// Allocate MMIO buffers //
 	///////////////////////////
-	res = OPAE_SIMPLE_WRAPPER_allocate_io_buffers ( 
-										accel_handle,
-										mmio_ptr,
-										RS_INPUT_SIZE(cell_length), 
-										(void **)&rs_erasure_input, 
-										&wsid_in,
-										RS_OUTPUT_SIZE(cell_length, NUM_ERASURES), 
-										(void **)&reconstructed_blocks_out, 
-										&wsid_out
-									);	
-	// rs_erasure_input         = (volatile uint8_t*)alloc_buffer(accel_handle, RS_INPUT_SIZE (cell_length_byte), &wsid_in , &buf_pa_in );
-	// reconstructed_blocks_out = (volatile uint8_t*)alloc_buffer(accel_handle, RS_OUTPUT_SIZE(cell_length_byte, NUM_ERASURES), &wsid_out, &buf_pa_out);
+	rs_erasure_input         = (volatile uint8_t*) OPAE_SIMPLE_WRAPPER_allocate_io_buffer (
+																				accel_handle,
+																				RS_INPUT_SIZE (cell_length),
+																				&wsid_in,
+																				&buf_pa_in
+																			);
+	reconstructed_blocks_out = (volatile uint8_t*) OPAE_SIMPLE_WRAPPER_allocate_io_buffer (
+																				accel_handle,
+																				RS_OUTPUT_SIZE(cell_length, NUM_ERASURES),
+																				&wsid_out,
+																				&buf_pa_out
+																			);
 
 	// Check pointers
 	assert(NULL != rs_erasure_input);
@@ -183,13 +182,13 @@ int main(int argc, char *argv[]) {
 	// Allocate coding matrices
 	uint8_t encode_matrix 	[RS_M * RS_K];		// Coefficient matrices
 	uint8_t g_tbls			[RS_K * RS_P * 32];	// Intermediate table for ISA-L
-	uint8_t *frag_ptrs	 	[RS_M];				// Fragment buffer pointers
+	uint8_t *cell_ptrs	 	[RS_M];				// Cells buffer pointers
 	uint8_t *recover_outp	[RS_P];				// Reconstructed cells
 	uint8_t *recover_srcs	[RS_K];
 
 	// Allocate the src & parity buffers
 	for ( unsigned int i = 0; i < RS_M; i++ ) {
-		if (NULL == (frag_ptrs[i] = (uint8_t*)malloc(cell_length))) {
+		if (NULL == (cell_ptrs[i] = (uint8_t*)malloc(cell_length))) {
 			printf("%s:%d Test failure! Error with malloc\n", __FILE__, __LINE__);
 			return -1;
 		}
@@ -206,16 +205,16 @@ int main(int argc, char *argv[]) {
 	// Fill sources with random data
 	for ( unsigned int i = 0; i < RS_K; i++ ) {
 		for ( unsigned int l = 0; l < cell_length; l++ ) {
-			frag_ptrs[i][l] = rand();
+			cell_ptrs[i][l] = rand();
 		}
 	}
 
-	// Debug frag_ptrs
+	// Debug cell_ptrs
 #ifdef DEBUG
-	printf("%s:%d: frag_ptrs\n", __FILE__, __LINE__);
+	printf("%s:%d: cell_ptrs\n", __FILE__, __LINE__);
 	for ( unsigned int i = 0; i < RS_K; i++ ) {
 		for ( unsigned int l = 0; l < cell_length; l++ ) {
-			printf("%02x ", frag_ptrs[i][l]);
+			printf("%02x ", cell_ptrs[i][l]);
 			if ( ((l+1) % LINE_BYTE_WIDTH) == 0 ) {
 				printf("\n");
 			}
@@ -243,13 +242,13 @@ int main(int argc, char *argv[]) {
 		// Generate g_tbls
 		ec_init_tables(RS_K, RS_P, &encode_matrix[RS_K * RS_K], g_tbls);
 		// Generate EC parity blocks from sources
-		ec_encode_data(cell_length, RS_K, RS_P, g_tbls, frag_ptrs, &(frag_ptrs[RS_K]));
+		ec_encode_data(cell_length, RS_K, RS_P, g_tbls, cell_ptrs, &(cell_ptrs[RS_K]));
 	} // encode_isal
 	// Encode with rs_erasure kernel
 	else { // !encode_isal
 		// Rearrange input in contiguous memory
 		for ( unsigned int i = 0; i < RS_K; i++ ) {
-			memcpy(((uint8_t(*)[cell_length])rs_erasure_input)[i], frag_ptrs[i], sizeof(uint8_t) * cell_length );
+			memcpy(((uint8_t(*)[cell_length])rs_erasure_input)[i], cell_ptrs[i], sizeof(uint8_t) * cell_length );
 		}
 
 	// Debug rs_erasure_input
@@ -258,7 +257,7 @@ int main(int argc, char *argv[]) {
 		print_contiguous_cell(stdout, (uint8_t*)rs_erasure_input, RS_K, cell_length, LINE_BYTE_WIDTH );
 	#endif
 
-		// Encode fragments RS_K+1, RS_K+2, ..., RS_K+RS_P
+		// Encode cells RS_K+1, RS_K+2, ..., RS_K+RS_P
 		printf("%s:%d: Encoding parity cells with SYCL_AFU kernel\n", __FILE__, __LINE__);
 
 		// Write input
@@ -279,9 +278,9 @@ int main(int argc, char *argv[]) {
 									);
 		fpga_assert(res);
 
-		// Pack results in fragments buffer
+		// Pack results in cells buffer
 		for ( unsigned int e = 0; e < NUM_ERASURES; e++ ) {
-			memcpy(frag_ptrs[e + RS_K], ((uint8_t(*)[cell_length])reconstructed_blocks_out)[e], sizeof(uint8_t) * cell_length );
+			memcpy(cell_ptrs[e + RS_K], ((uint8_t(*)[cell_length])reconstructed_blocks_out)[e], sizeof(uint8_t) * cell_length );
 		}
 
 	} // !encode_isal
@@ -290,7 +289,7 @@ int main(int argc, char *argv[]) {
 #ifdef DEBUG
 	printf("%s:%d: Complete cell array:\n", __FILE__, __LINE__);
 	for ( unsigned int i = 0; i < RS_K + RS_P; i++ ) {
-		print_contiguous_cell(stdout, (uint8_t*)frag_ptrs[i], 1, cell_length, LINE_BYTE_WIDTH );
+		print_contiguous_cell(stdout, (uint8_t*)cell_ptrs[i], 1, cell_length, LINE_BYTE_WIDTH );
 	}
 #endif
 
@@ -344,7 +343,7 @@ int main(int argc, char *argv[]) {
 		printf("%s:%d: erasure_pattern 0x%04x\n", __FILE__, __LINE__, erasure_pattern);
 	#endif
 
-		// Pack recovery array pointers as list of valid fragments
+		// Pack recovery array pointers as list of valid cells
 		uint8_t survival_pattern_index [RS_M] = {0};
 		uint16_t survival_pattern_copy = survival_pattern;
 		for ( unsigned int i = 0; i < RS_M; i++ ) {
@@ -408,7 +407,7 @@ int main(int argc, char *argv[]) {
 			for ( unsigned int i = 0; i < RS_K; i++ ){			// For each survived cell
 				for ( j = j_init; j < RS_M; j++ ){				// Scan the survival pattern
 					if ( survival_pattern_index[j] ) { 			// if high
-						recover_srcs[i] = frag_ptrs[j]; 		// copy pointer
+						recover_srcs[i] = cell_ptrs[j]; 		// copy pointer
 						break;									// Break out of this loop
 					}
 				}
@@ -470,7 +469,7 @@ int main(int argc, char *argv[]) {
 			for ( unsigned int i = 0; i < RS_K; i++ ){			// For each survived cell
 				for ( j = j_init; j < RS_M; j++ ){				// Scan the survival pattern
 					if ( survival_pattern_index[j] ) { 			// if high
-						memcpy(((uint8_t(*)[cell_length])rs_erasure_input)[i], frag_ptrs[j], cell_length); // copy buffer
+						memcpy(((uint8_t(*)[cell_length])rs_erasure_input)[i], cell_ptrs[j], cell_length); // copy buffer
 						break;									// Break out of this loop
 					}
 				}
@@ -521,17 +520,17 @@ int main(int argc, char *argv[]) {
 		for ( unsigned int i = 0; i < NUM_ERASURES; i++ ) {
 			for ( j = j_init; j < RS_M; j++ ){	  // Scan the erasure pattern
 				if ( erasure_pattern_index[j] ) { // if high
-					printf("%s:%d: Checking reconstruction %u, fragment %u\n", __FILE__, __LINE__, i, j);
+					printf("%s:%d: Checking reconstruction %u, cell %u\n", __FILE__, __LINE__, i, j);
 					// Check buffers
-					ret_val = memcmp(recover_outp[i], frag_ptrs[j], cell_length);
+					ret_val = memcmp(recover_outp[i], cell_ptrs[j], cell_length);
 
 					if ( ret_val ) {
-						printf("%s:%d: Fail reconstruction %d, frag %d\n", __FILE__, __LINE__, i, j);
+						printf("%s:%d: Fail reconstruction %d, cell %d\n", __FILE__, __LINE__, i, j);
 
-					// Debug frag_ptrs
+					// Debug cell_ptrs
 					#ifdef DEBUG
 						printf("%s:%d: Expected:\n", __FILE__, __LINE__);
-						print_contiguous_cell(stdout, (uint8_t*)frag_ptrs[i], 1, cell_length, LINE_BYTE_WIDTH );
+						print_contiguous_cell(stdout, (uint8_t*)cell_ptrs[i], 1, cell_length, LINE_BYTE_WIDTH );
 						printf("%s:%d: Given:\n", __FILE__, __LINE__);
 						print_contiguous_cell(stdout, (uint8_t*)recover_outp[i], 1, cell_length, LINE_BYTE_WIDTH );
 					#endif
