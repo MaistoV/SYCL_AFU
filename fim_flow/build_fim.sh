@@ -7,8 +7,6 @@
 # 2. Never PCIE_SMALL
 # 3. Extend for custom OFSS flow
 # 4. Extend for null HEMs instantiation
-# 5. Import custom AFUs in flat FIM
-# 6. Import custom or default pr_assignment.tcl script
 #######################################
 
 # Parse ARGS and variables
@@ -70,24 +68,12 @@ ARGS=$ARGS"no_hssi" # Always assume no_hssi
 
 # Parse NULL_HEMS
 if [ "$NULL_HEMS" == "1" ]; then
-    echo "[INFO] Removing all HEMs, the PFs would still be instantiatied"
-    ARGS=$ARGS",null_he_lb,null_he_mem,null_he_mem_tg"
+  echo "[INFO] Removing all HEMs, the PFs would still be instantiatied"
   # - null_he_lb - Replaces the Host Exerciser Loopback (HE_LBK) with he_null .
   # - null_he_mem - Replaces the Host Exerciser Memory (HE_MEM) with he_null.
-  # - null_he_mem_tg - Replaces the Host Exerciser Memory Traffic Generator with he_null.    
+  # - null_he_mem_tg - Replaces the Host Exerciser Memory Traffic Generator with he_null.
+  ARGS=$ARGS",null_he_lb,null_he_mem,null_he_mem_tg"
 fi
-
-# Parse RESIZE_PR
-TARGET_PR_ASSIGNMENTS_TCL=${OFS_ROOTDIR}/syn/board/${BOARD}/setup/pr_assignments.tcl
-if [ $RESIZE_PR == 1 ]; then
-  # Select script
-  SOURCE_PR_ASSIGNMENTS_TCL=${ROOT_DIR}/fim_flow/resize_pr/resize_pr_assignments.tcl
-else
-  # Select default script
-  SOURCE_PR_ASSIGNMENTS_TCL=${ROOT_DIR}/fim_flow/resize_pr/default_pr_assignments.tcl
-fi
-# Override script
-cp -v ${SOURCE_PR_ASSIGNMENTS_TCL} ${TARGET_PR_ASSIGNMENTS_TCL}
 
 # Launch build
 cd $HTS_RELEASE

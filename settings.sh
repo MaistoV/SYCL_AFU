@@ -48,7 +48,7 @@ export OFSS_CONFIG=pf0_${FIM_NUM_PF0_VFS}vf_no_hems
 # First VF number exposing AFU logic
 export FIRST_AFU_VF=5
 # If HEMs are removed
-if [ ${OFSS_CONFIG} == *"no_hems"* ]; then
+if [[ "${OFSS_CONFIG}" == *"no_hems"* ]]; then
     export FIRST_AFU_VF=1
 fi
 

@@ -21,31 +21,54 @@ help:
 # FIM #
 #######
 
-SEED_DEFAULT = 3
-restore_fitter_seed:
-	sed -E -i "s/SEED .+/SEED ${SEED_DEFAULT}/g" \
-		${OFS_BUILD_ROOT}/syn/board/htk-nc220-agf014/syn_top/ofs_top.qsf
-
-# Reseed fitter
-reseed_fitter:
-	if [ ${RESEED_FITTER} -eq 1 ]; then \
-		sed -E -i "s/SEED .+/SEED $(shell bash -c 'echo $$RANDOM')/g" \
-			${OFS_BUILD_ROOT}/syn/board/htk-nc220-agf014/syn_top/ofs_top.qsf; \
-	fi
+# FIM config file
+BASE_OFS_TOP_QSF = ${OFS_BUILD_ROOT}/syn/board/htk-nc220-agf014/syn_top/ofs_top.qsf
+PR_BUILD_OFS_TOP_QSF = ${OPAE_PLATFORM_ROOT}/hw/lib/build/syn/board/htk-nc220-agf014/syn_top/ofs_top.qsf
 
 # Copy OFSS configuration files
 # NOTE: this requires th OFSS configuration to be exposed in ${OFSS_CONFIG_DIR} 
-ofss_config: ${OFSS_CONFIG_DIR}
+fim_ofss_config: ${OFSS_CONFIG_DIR}
 	cp -vr ${OFSS_CONFIG_DIR}/* ${OFS_BUILD_ROOT}/tools/ofss_config/
 
-fim_build_pr:
-fim_build_flat:
-fim_build_%: ofss_config reseed_fitter
+# Reseed fitter
+fim_reseed_fitter:
+	if [ ${RESEED_FITTER} -eq 1 ]; then \
+		sed -E -i "s/SEED .+/SEED $(shell bash -c 'echo $$RANDOM')/g" ${BASE_OFS_TOP_QSF}; \
+		sed -E -i "s/SEED .+/SEED $(shell bash -c 'echo $$RANDOM')/g" ${PR_BUILD_OFS_TOP_QSF}; \
+	fi
+
+SEED_DEFAULT = 3
+fim_restore_fitter_seed:
+	sed -E -i "s/SEED .+/SEED ${SEED_DEFAULT}/g" ${BASE_OFS_TOP_QSF}
+	sed -E -i "s/SEED .+/SEED ${SEED_DEFAULT}/g" ${PR_BUILD_OFS_TOP_QSF}
+
+INCLUDE_PR_STRING =set_global_assignment -name VERILOG_MACRO \"INCLUDE_PR\"
+fim_remove_pr:
+	sed -i "s/${INCLUDE_PR_STRING}/#${INCLUDE_PR_STRING}/g" ${BASE_OFS_TOP_QSF}
+
+fim_include_pr:
+	sed -i "s/#${INCLUDE_PR_STRING}/${INCLUDE_PR_STRING}/g" ${BASE_OFS_TOP_QSF}
+
+# Restore FIM default configuration
+fim_restore_defaults: fim_restore_fitter_seed fim_include_pr fim_restore_pr
+
+# Override script
+TARGET_PR_ASSIGNMENTS_TCL=${OFS_ROOTDIR}/syn/board/${BOARD}/setup/pr_assignments.tcl
+fim_resize_pr: 
+	if [ ${RESIZE_PR} -eq 1 ]; then \
+		cp -v ${ROOT_DIR}/fim_flow/resize_pr/resize_pr_assignments.tcl ${TARGET_PR_ASSIGNMENTS_TCL}; \
+	fi
+fim_restore_pr: 
+		cp -v ${ROOT_DIR}/fim_flow/resize_pr/default_pr_assignments.tcl ${TARGET_PR_ASSIGNMENTS_TCL}
+
+fim_build_pr: fim_resize_pr # Only for PR builds
+fim_build_flat: fim_remove_pr # Only for flat builds
+fim_build_%: fim_ofss_config fim_reseed_fitter
 #	TODO: remove the need to source this script from HTS
 	cd ${HTS_RELEASE}; ./setup_env.sh; \
 		${ROOT_DIR}/fim_flow/build_fim.sh --$* ${OFSS_CONFIG}
-# 	Restore fitter seed
-	${MAKE} restore_fitter_seed
+# 	Restore FIM defaults
+	${MAKE} fim_restore_defaults
 
 ifeq (${FIM_UPDATE_DEBUG}, 1)
 	FPGASUPDATE_FLAGS += --log-level debug 
@@ -116,9 +139,11 @@ endif
 ifeq (${SYCL_DEBUG}, 1)
 	SYCL_CXX_DEFINES += -DDEBUG
 endif
-ifeq (${ASP_ZERO_COPY}, 1)
-	SYCL_CXX_DEFINES += -DASP_ZERO_COPY
-endif
+# DEBUG: make this cmake-time constant
+# ASP_ZERO_COPY ?= 1 
+# ifeq (${ASP_ZERO_COPY}, 1)
+# 	SYCL_CXX_DEFINES += -DASP_ZERO_COPY
+# endif
 SYCL_MAKE_ENV = "CXX_DEFINES=${SYCL_CXX_DEFINES}"
 
 ####################
@@ -139,7 +164,7 @@ aocl_bsp_install:
 aocl_bsp_uninstall:
 	${ONEAPI_DEBUG_ENV} aocl uninstall ${OFS_ASP_ROOT}
 
-aocl_aocx_initalize: opae.io_bind_one 
+aocl_aocx_initalize: #opae.io_bind_one 
 	${ONEAPI_DEBUG_ENV} aocl initialize ${ACL_DEVICE} ${OFS_ASP_BOARD_VARIANT} 
 
 CMAKE_ASP_FLAGS = -DFPGA_DEVICE=${OFS_ASP_FPGA_DEVICE} \
@@ -161,10 +186,15 @@ oneapi_asp_%: oneapi_cmake_asp
 	cd ${SYCL_ASP_BUILD_DIR}; \
 	${MAKE} $* ${SYCL_MAKE_ENV}
 
+# requires CL_CONTEXT_MPSIM_DEVICE_INTELFPGA=1
+test_asp_fpga_sim: 
+	cd ${SYCL_ASP_BUILD_DIR}; \
+	CL_CONTEXT_MPSIM_DEVICE_INTELFPGA=1 \
+	./${SYCL_IP_NAME}.$* ${TEST_ARGS}
+
 test_asp_plain_c:
 test_asp_fpga: # Make sure to make aocl_aocx_initalize first
 test_asp_fpga_emu:
-test_asp_fpga_sim: # TODO: CL_CONTEXT_MPSIM_DEVICE_INTELFPGA=1
 test_asp_%:
 	cd ${SYCL_ASP_BUILD_DIR}; \
 	./${SYCL_IP_NAME}.$* ${TEST_ARGS}
@@ -209,8 +239,12 @@ test_ip_%:
 #######
 
 # Build host application
+AFU_HOST_DEFINES ?=
 ifeq (${DEBUG}, 1)
 	AFU_HOST_DEFINES += -DDEBUG
+endif
+ifeq (${DEBUG_OSW}, 1)
+	AFU_HOST_DEFINES += -DDEBUG_OSW
 endif
 ifeq (${INTERRUPT_EVENTS}, 1)
 	AFU_HOST_DEFINES += -DINTERRUPT_EVENTS
@@ -239,7 +273,6 @@ ase_launch: ${AFU_ASE_DIR}
 
 # Open Wafeform Log File
 ase_waves: ${AFU_ASE_DIR}/work/vsim.wlf
-# ${MAKE} -C ${AFU_ASE_DIR} wave
 	vsim $<										\
 		-do ${ROOT_DIR}/scripts/add_waves.do 	\
 		-debugdb # ${AFU_ASE_DIR}/work/vsim.dbg
@@ -250,7 +283,7 @@ ${AFU_SYNTH_DIR}: ${OPAE_PLATFORM_ROOT}
 
 # Build Green Bitstream
 # This takes at least 40 minutes...
-gbs: ${AFU_SYNTH_DIR} #oneapi_ip
+gbs: ${AFU_SYNTH_DIR}
 	${SYCL_IP_ENV} ${AFU_FLOW_DIR}/afu_synth_build.sh
 
 gbs_configure:
@@ -266,7 +299,7 @@ test_gbs:
 #	Run host application
 	cd ${AFU_SW_DIR}; ./${AFU_ELF_NAME} ${TEST_ARGS}
 
-test_ase: afu_host
+test_ase:
 	cd ${AFU_SW_DIR}; with_ase ./${AFU_ELF_NAME} ${TEST_ARGS}
 
 #########
@@ -282,11 +315,12 @@ oneapi_isal: oneapi_ip_plain_c
 # Measures #
 ############
 
-measure_all: measure_isal measure_asp_fpga measure_asp_plain_c # measure_sycl_afu
+measure_all: measure_isal measure_asp_fpga measure_asp_plain_c measure_sycl_afu
 
 measure_plots:
 	cd ${MEASURE_LATENCY_DIR}/plots; \
-	python plot_latency.py ${MEASURE_LATENCY_DATA_DIR} ${PLOT_OUT_DIR}
+	python plot_latency.py ${MEASURE_LATENCY_DATA_DIR} ${PLOT_OUT_DIR};
+	python plot_power.py ${MEASURE_LATENCY_DATA_DIR} ${PLOT_OUT_DIR}
 
 measure_isal:
 measure_asp_fpga:
@@ -298,12 +332,16 @@ measure_%:
 		${MEASURE_NUM_REPS} 	\
 		${MEASURE_MAX_DECODE}
 
-clean_measure:
-	rm -rf ${ROOT_DIR}/measures/latency/data/*
+# TBD
+measure_power:
+	${ROOT_DIR}/measures/power/measure_power.sh ${MEASURE_POWER_DATA_DIR}
 
 ############
 # Clean up #
 ############
+clean_measure:
+	rm -rf ${ROOT_DIR}/measures/latency/data/*
+
 clean_fim_pr:
 	rm -rf ${FIM_PR_BUILD_DIR}
 
