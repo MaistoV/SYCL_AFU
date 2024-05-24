@@ -145,6 +145,7 @@ int main(int argc, char *argv[]) {
 	}
 
 	// Interface arguments for IP
+	// Use regular malloc in host code
 	line_t* rs_erasure_input		 = (line_t*)malloc( RS_INPUT_SIZE(cell_length)					);
 	line_t* reconstructed_blocks_out = (line_t*)malloc( RS_OUTPUT_SIZE(cell_length, NUM_ERASURES)	);
 

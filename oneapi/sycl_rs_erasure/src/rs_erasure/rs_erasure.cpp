@@ -49,7 +49,16 @@ void RunKernelLambda( sycl::queue& q,
 	for ( unsigned int i = 0; i < RS_INPUT_SIZE(cell_length); i++ ) {
 		((uint8_t*)in_zero_copy)[i] = ((uint8_t*)device_read)[i];
 	}
-#endif // ASP_ZERO_COPY
+#else // ! ASP_ZERO_COPY
+	// malloc in USM
+	line_t* device_read_usm  = sycl::malloc_shared<line_t>( RS_INPUT_SIZE(cell_length) , q);
+	line_t* device_write_usm = sycl::malloc_shared<line_t>( RS_OUTPUT_SIZE(cell_length, num_erasures), q);
+	
+	// Manually copy data from argument buffers to local ones
+	for ( unsigned int i = 0; i < RS_INPUT_SIZE(cell_length); i++ ) {
+		((uint8_t*)device_read_usm)[i] = ((uint8_t*)device_read)[i];
+	}
+#endif // ! ASP_ZERO_COPY
 
 #endif // IS_BSP
 
@@ -80,8 +89,8 @@ void RunKernelLambda( sycl::queue& q,
 #else // ! ASP_ZERO_COPY
 			// Launch with USM pointers
 			rs_erasure(
-					device_read,
-					device_write,
+					device_read_usm,
+					device_write_usm,
 					rs_erasure_csr
 				);
 #endif // ! ASP_ZERO_COPY
@@ -101,7 +110,9 @@ void RunKernelLambda( sycl::queue& q,
 		MEASURE_LATENCY_END_AND_PRINT(start, time_sec, fd_latency);
 	}
 
-#if defined(IS_BSP) && defined(ASP_ZERO_COPY)
+#if defined(IS_BSP)
+	// Copy back data from local buffer to caller's
+#if defined(ASP_ZERO_COPY)
 	// Copy back data from local buffer to caller's
 	for ( unsigned int i = 0; i < RS_OUTPUT_SIZE(cell_length, num_erasures); i++ ) {
 		((uint8_t*)device_write)[i] = ((uint8_t*)out_zero_copy)[i];
@@ -110,7 +121,17 @@ void RunKernelLambda( sycl::queue& q,
 	// Free allocations
     sycl::free(in_zero_copy, q);
     sycl::free(out_zero_copy, q);
-#endif // defined(IS_BSP) && defined(ASP_ZERO_COPY)
+#else // ! defined(ASP_ZERO_COPY)
+	for ( unsigned int i = 0; i < RS_OUTPUT_SIZE(cell_length, num_erasures); i++ ) {
+		((uint8_t*)device_write)[i] = ((uint8_t*)device_write_usm)[i];
+	}
+	
+	// Free allocations
+    sycl::free(device_read_usm, q);
+    sycl::free(device_write_usm, q);
+#endif // ! defined(ASP_ZERO_COPY)
+
+#endif // defined(IS_BSP)
 
 #endif // ! NO_SYCL
 
@@ -179,7 +200,7 @@ void rs_erasure (
 #ifdef NO_SYCL
 	printf("%s:%d: num_erasures: %u\n", __FILE__, __LINE__, num_erasures);
 	printf("%s:%d: device_read:\n", __FILE__, __LINE__);
-	for ( unsigned int i = 0; i < cell_length*RS_K; i++ ) {
+	for ( unsigned int i = 0; i < (cell_length * RS_K); i++ ) {
 		printf("%02x ", ((uint8_t*)device_read)[i]);
 		if ( ((i+1) % LINE_BYTE_WIDTH) == 0 ) {
 			printf("\n");
@@ -226,7 +247,8 @@ LOOP_LINES:
 		uint8_t recontruction_counter = 0;
 		LOOP_ERASURES:
 			#pragma unroll 1 // Explicit no unroll
-			for ( unsigned int erasure_pattern_bit_index = 0; erasure_pattern_bit_index < RS_M; erasure_pattern_bit_index++ ) {
+			// uint8_t since we are assuming RS_M <= 16
+			for ( uint8_t erasure_pattern_bit_index = 0; erasure_pattern_bit_index < RS_M; erasure_pattern_bit_index++ ) {
 				
 				// If we get a high bit
 				uint16 erasure_pattern_uint16 = erasure_pattern;

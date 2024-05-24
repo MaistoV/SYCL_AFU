@@ -256,6 +256,10 @@ export AOCX_FIM_IMAGE_INFO=$(cat ${OFS_ASP_ROOT}/pr_build_template/hw/lib/build/
 export OFS_ASP_FPGA_DEVICE=$OFS_ASP_ROOT:$OFS_ASP_BOARD_VARIANT
 # Append board variant
 export SYCL_ASP_BUILD_DIR=${SYCL_ASP_BUILD_DIR}_${OFS_ASP_BOARD_VARIANT}
+# Append ASP_ZERO_COPY
+if [[ $ASP_ZERO_COPY == 1 ]]; then
+    export SYCL_ASP_BUILD_DIR=${SYCL_ASP_BUILD_DIR}_ASP_ZERO_COPY
+fi 
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$OFS_ASP_ROOT/linux64/lib
 
 ############
