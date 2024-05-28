@@ -40,23 +40,26 @@ module kernel_dfl_wrapper #(
 
     // AVMM splitter
     // TODO: import these from flow defines
-    localparam AVMM_SPLITTER_MASTER_ADDR_WIDTH   = 17;
-    localparam AVMM_SPLITTER_SLAVE_0_ADDR_WIDTH  = 3;
-    localparam AVMM_SPLITTER_SLAVE_1_ADDR_WIDTH  = 5;
-    localparam AVMM_SPLITTER_DATA_WIDTH          = 64;
-    localparam AVMM_SPLITTER_RESPONSE_WIDTH      = 2;
+    localparam AVMM_SPLITTER_MASTER_ADDR_WIDTH       = 17;
+    localparam AVMM_SPLITTER_SLAVE_0_ADDR_WIDTH      = 3;
+    localparam AVMM_SPLITTER_SLAVE_1_ADDR_WIDTH      = 5;
+    localparam AVMM_SPLITTER_SLAVE_0_BURST_CNT_WIDTH = $bits(csr_mmio64_to_afu.burstcount);
+    localparam AVMM_SPLITTER_SLAVE_1_BURST_CNT_WIDTH = 8;
+    localparam AVMM_SPLITTER_DATA_WIDTH              = 64;
+    localparam AVMM_SPLITTER_RESPONSE_WIDTH          = 2;
 
     // kernel_system
-    localparam KERNEL_SYSTEM_CRA_ADDR_WIDTH = 30;
-    localparam KERNEL_SYSTEM_BURST_CNT_WIDTH = 8;
+    // These depend on SYCL/OneAPI IP authoring flow
+    localparam KERNEL_SYSTEM_CRA_ADDR_WIDTH  = 30;
+    localparam KERNEL_SYSTEM_BURST_CNT_WIDTH = 8; // AVMM_SPLITTER_SLAVE_1_BURST_CNT_WIDTH
     // How many bits to discard? It depends on the line width
-    localparam KERNEL_DISCARD_ADDR_BITS    = $clog2(`OFS_PLAT_PARAM_HOST_CHAN_DATA_WIDTH / 8);
+    localparam KERNEL_DISCARD_ADDR_BITS      = $clog2(`OFS_PLAT_PARAM_HOST_CHAN_DATA_WIDTH / 8);
     // How many address bits the kernel expects?
-    localparam KERNEL_SYSTEM_ADDR_WIDTH    = 41;
+    localparam KERNEL_SYSTEM_ADDR_WIDTH      = 41;
     // Length of the useful address
     localparam KERNEL_SYSTEM_ADDR_HIGH_WIDTH = KERNEL_SYSTEM_ADDR_WIDTH - KERNEL_DISCARD_ADDR_BITS;
     // How many bits to extend
-    localparam KERNEL_CRA_ADDR_EXTEND_BITS = KERNEL_SYSTEM_CRA_ADDR_WIDTH - AVMM_SPLITTER_SLAVE_1_ADDR_WIDTH - 3;
+    localparam KERNEL_CRA_ADDR_EXTEND_BITS   = KERNEL_SYSTEM_CRA_ADDR_WIDTH - AVMM_SPLITTER_SLAVE_1_ADDR_WIDTH - 3;
 
     // // Host_chan bridges
     // localparam KERNEL_WRAPPER_HOST_CHAN_DATA_WIDTH = ofs_plat_host_chan_pkg::DATA_WIDTH;
@@ -107,21 +110,21 @@ module kernel_dfl_wrapper #(
     // )
     // csr_mmio64_to_afu_bridge();
 
-    // avmm_splitter <--> dfl_csr_proxy
+    // avmm_splitter <--> dfl_csr_avalon
     ofs_plat_avalon_mem_if # (
-        .ADDR_WIDTH      ( AVMM_SPLITTER_SLAVE_0_ADDR_WIDTH ),
-        .DATA_WIDTH      ( AVMM_SPLITTER_DATA_WIDTH         ),
-        .BURST_CNT_WIDTH ( CRA_BRIDGE_BURST_CNT_WIDTH       ),
-        .LOG_CLASS       ( ofs_plat_log_pkg::HOST_CHAN      )
+        .ADDR_WIDTH      ( AVMM_SPLITTER_SLAVE_0_ADDR_WIDTH      ),
+        .DATA_WIDTH      ( AVMM_SPLITTER_DATA_WIDTH              ),
+        .BURST_CNT_WIDTH ( AVMM_SPLITTER_SLAVE_0_BURST_CNT_WIDTH ),
+        .LOG_CLASS       ( ofs_plat_log_pkg::HOST_CHAN           )
     )
     csr_mmio64_to_csr();
 
     // avmm_splitter <--> kernel_system
     ofs_plat_avalon_mem_if # (
-        .ADDR_WIDTH      ( AVMM_SPLITTER_SLAVE_1_ADDR_WIDTH ),
-        .DATA_WIDTH      ( AVMM_SPLITTER_DATA_WIDTH         ),
-        .BURST_CNT_WIDTH ( KERNEL_SYSTEM_BURST_CNT_WIDTH    ),
-        .LOG_CLASS       ( ofs_plat_log_pkg::HOST_CHAN      )
+        .ADDR_WIDTH      ( AVMM_SPLITTER_SLAVE_1_ADDR_WIDTH      ),
+        .DATA_WIDTH      ( AVMM_SPLITTER_DATA_WIDTH              ),
+        .BURST_CNT_WIDTH ( AVMM_SPLITTER_SLAVE_1_BURST_CNT_WIDTH ),
+        .LOG_CLASS       ( ofs_plat_log_pkg::HOST_CHAN           )
     )
     csr_mmio64_to_kernel();
     
@@ -319,10 +322,10 @@ module kernel_dfl_wrapper #(
     ///////////////////////
 
     dfl_csr_avalon # (
-        .ADDR_WIDTH         ( AVMM_SPLITTER_SLAVE_0_ADDR_WIDTH ),
-        .DATA_WIDTH         ( AVMM_SPLITTER_DATA_WIDTH         ),
-        .BURST_CNT_WIDTH    ( CRA_BRIDGE_BURST_CNT_WIDTH       ),
-        .RESPONSE_WIDTH     ( AVMM_SPLITTER_RESPONSE_WIDTH     )
+        .ADDR_WIDTH         ( AVMM_SPLITTER_SLAVE_0_ADDR_WIDTH      ),
+        .DATA_WIDTH         ( AVMM_SPLITTER_DATA_WIDTH              ),
+        .BURST_CNT_WIDTH    ( AVMM_SPLITTER_SLAVE_0_BURST_CNT_WIDTH ),
+        .RESPONSE_WIDTH     ( AVMM_SPLITTER_RESPONSE_WIDTH          )
     ) dfl_csr_avalon_inst (
         .clock_i                                ( clock_i                              ),
         .reset_i                                ( ~reset_ni                            ),
@@ -446,7 +449,7 @@ module kernel_dfl_wrapper #(
         .kernel_cra_readdatavalid  ( csr_mmio64_to_kernel.readdatavalid       ),  // output logic
         // IRQ and exceptions
         .kernel_irq_irq            ( kernel_irq                               ),  // output logic
-        .device_exception_bus      ( /* TBD: keep open? */                    )   // output logic [63:0]
+        .device_exception_bus      ( /* keep open */                          )   // output logic [63:0]
     );
 
     // Assertions
