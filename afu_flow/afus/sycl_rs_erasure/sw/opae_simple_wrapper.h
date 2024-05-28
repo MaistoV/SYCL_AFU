@@ -5,22 +5,39 @@
 // Microseconds wait for AFU CSR polling
 #define SLEEP_TIME_US 1
 
-// Helping function for MMIO writes, assuming ASE not supporting mapped MMIO access
-void mmio64_write (
+/// @brief Helping function for MMIO writes, assuming ASE not supporting mapped MMIO access
+/// @param accel_handle Handle to the AFU accelerator
+/// @param mmio_ptr Pointer to mapped MMIO space
+/// @param offset Offset in MMIO space
+/// @param value 64-bit value to write
+/// @return N/A
+void OPAE_SIMPLE_WRAPPER_mmio64_write (
 					fpga_handle 		accel_handle,
 					volatile uint64_t * mmio_ptr,
 					uint64_t			offset,
 					uint64_t 			value
 				);
-// Helping function for MMIO writes, assuming ASE not supporting mapped MMIO access
-void mmio32_write (
+
+/// @brief Helping function for MMIO writes, assuming ASE not supporting mapped MMIO access
+/// @param accel_handle Handle to the AFU accelerator
+/// @param mmio_ptr Pointer to mapped MMIO space
+/// @param offset Offset in MMIO space
+/// @param value 32-bit value to write
+/// @return N/A
+void OPAE_SIMPLE_WRAPPER_mmio32_write (
 					fpga_handle 		accel_handle,
 					volatile uint64_t * mmio_ptr,
 					uint64_t			offset,
 					uint32_t 			value
 				);
-// Helping function for MMIO reads, assuming ASE not supporting mapped MMIO access
-void mmio64_read (
+
+/// @brief Helping function for MMIO reads, assuming ASE not supporting mapped MMIO access
+/// @param accel_handle Handle to the AFU accelerator
+/// @param mmio_ptr Pointer to mapped MMIO space
+/// @param offset Offset in MMIO space
+/// @param dest Reference to destination variable
+/// @return N/A
+void OPAE_SIMPLE_WRAPPER_mmio64_read (
 					fpga_handle 		accel_handle,
 					volatile uint64_t * mmio_ptr,
 					uint64_t			offset,

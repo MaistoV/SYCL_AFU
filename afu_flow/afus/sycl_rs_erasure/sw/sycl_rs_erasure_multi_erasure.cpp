@@ -152,11 +152,11 @@ int main(int argc, char *argv[]) {
 	// Load AFU parameters //
 	/////////////////////////
 	// Write physical address to AFU CSR
-	mmio64_write ( accel_handle, mmio_ptr, KERNEL_ARG_DEVICE_READ_REG, buf_pa_in );
+	OPAE_SIMPLE_WRAPPER_mmio64_write ( accel_handle, mmio_ptr, KERNEL_ARG_DEVICE_READ_REG, buf_pa_in );
 	printf("%s:%d write @%x, value = %lx\n", __FILE__, __LINE__, KERNEL_ARG_DEVICE_READ_REG, buf_pa_in);
 
 	// Write physical address to AFU CSR
-	mmio64_write ( accel_handle, mmio_ptr, KERNEL_ARG_DEVICE_WRITE_REG, buf_pa_out );
+	OPAE_SIMPLE_WRAPPER_mmio64_write ( accel_handle, mmio_ptr, KERNEL_ARG_DEVICE_WRITE_REG, buf_pa_out );
 	printf("%s:%d write @%x, value = %lx\n", __FILE__, __LINE__, KERNEL_ARG_DEVICE_WRITE_REG, buf_pa_out);
 	
 	// Seed the PRNG

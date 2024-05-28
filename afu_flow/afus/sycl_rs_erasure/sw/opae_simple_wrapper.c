@@ -24,7 +24,7 @@
 
 #include "opae_simple_wrapper.h"
 
-void mmio64_write (
+void OPAE_SIMPLE_WRAPPER_mmio64_write (
 					fpga_handle 		accel_handle,
 					volatile uint64_t * mmio_ptr,
 					uint64_t			offset,
@@ -40,7 +40,7 @@ void mmio64_write (
 		MAPPED_MMIO(mmio_ptr, offset) = value;
 }
 
-void mmio32_write (
+void OPAE_SIMPLE_WRAPPER_mmio32_write (
 					fpga_handle 		accel_handle,
 					volatile uint64_t * mmio_ptr,
 					uint64_t			offset,
@@ -57,7 +57,7 @@ void mmio32_write (
 }
 
 
-void mmio64_read (
+void OPAE_SIMPLE_WRAPPER_mmio64_read (
 					fpga_handle 		accel_handle,
 					volatile uint64_t * mmio_ptr,
 					uint64_t			offset,
@@ -79,33 +79,18 @@ fpga_result OPAE_SIMPLE_WRAPPER_debug_read (
 							) {
 	fpga_result res = FPGA_OK;
 
-    // Mapped MMIO access
-	if ( getenv("WITH_ASE") != NULL ) {
-        printf("Mapper MMIO read: AFU_DFH_REG     %016lx\n", MAPPED_MMIO(mmio_ptr, AFU_DFH_REG  ) );
-        printf("Mapper MMIO read: AFU_ID_LO       %016lx\n", MAPPED_MMIO(mmio_ptr, AFU_ID_LO    ) );
-        printf("Mapper MMIO read: AFU_ID_HI       %016lx\n", MAPPED_MMIO(mmio_ptr, AFU_ID_HI    ) );
-        printf("Mapper MMIO read: AFU_NEXT        %016lx\n", MAPPED_MMIO(mmio_ptr, AFU_NEXT     ) );
-        printf("Mapper MMIO read: AFU_RESERVED    %016lx\n", MAPPED_MMIO(mmio_ptr, AFU_RESERVED ) );
-    }
-	else {
-		uint64_t data = 0;
-		// DFL
-		res = fpgaReadMMIO64(accel_handle, 0, AFU_DFH_REG, &data);
-		fpga_assert(res);
-		printf("AFU_DFH_REG = %016lx\n", data);
-		res = fpgaReadMMIO64(accel_handle, 0, AFU_ID_LO, &data);
-		fpga_assert(res);
-		printf("AFU ID LO = %016lx\n", data);
-		res = fpgaReadMMIO64(accel_handle, 0, AFU_ID_HI, &data);
-		fpga_assert(res);
-		printf("AFU ID HI = %016lx\n", data);
-		res = fpgaReadMMIO64(accel_handle, 0, AFU_NEXT, &data);
-		fpga_assert(res);
-		printf("AFU NEXT = %016lx\n", data);
-		res = fpgaReadMMIO64(accel_handle, 0, AFU_RESERVED, &data);
-		fpga_assert(res);
-		printf("AFU RESERVED = %016lx\n", data);
-	}
+	// MMIO DFL CSRs access
+	uint64_t data = 0;
+	OPAE_SIMPLE_WRAPPER_mmio64_read ( accel_handle, mmio_ptr, AFU_DFH_REG, &data );
+	printf("AFU_DFH_REG = %016lx\n", data);
+	OPAE_SIMPLE_WRAPPER_mmio64_read ( accel_handle, mmio_ptr, AFU_ID_LO, &data );
+	printf("AFU ID LO = %016lx\n", data);
+	OPAE_SIMPLE_WRAPPER_mmio64_read ( accel_handle, mmio_ptr, AFU_ID_HI, &data );
+	printf("AFU ID HI = %016lx\n", data);
+	OPAE_SIMPLE_WRAPPER_mmio64_read ( accel_handle, mmio_ptr, AFU_NEXT, &data );
+	printf("AFU NEXT = %016lx\n", data);
+	OPAE_SIMPLE_WRAPPER_mmio64_read ( accel_handle, mmio_ptr, AFU_RESERVED, &data );
+	printf("AFU RESERVED = %016lx\n", data);
 
 	return res;
 }
@@ -152,17 +137,19 @@ fpga_result OPAE_SIMPLE_WRAPPER_init (
 	res = fpgaOpen(accel_token, accel_handle, 0);
 	fpga_assert(res);
 
-
 	// Map MMIO address space
-	volatile uint64_t * tmp_ptr;
-	res = fpgaMapMMIO(*accel_handle, 0, ((uint64_t **)&tmp_ptr));
-	fpga_assert(res);
-	assert(tmp_ptr != NULL);
-	*mmio_ptr = tmp_ptr;
+	// Not supported by ASE
+	if ( getenv("WITH_ASE") == NULL ) {
+		volatile uint64_t * tmp_ptr;
+		res = fpgaMapMMIO(*accel_handle, 0, ((uint64_t **)&tmp_ptr));
+		fpga_assert(res);
+		assert(tmp_ptr != NULL);
+		*mmio_ptr = tmp_ptr;
+	}
 
 	// AFU reset via CSR
-	mmio64_write ( accel_handle, *mmio_ptr, AFU_RESET, AFU_RESET_VALUE );
-	mmio64_write ( accel_handle, *mmio_ptr, AFU_IRQ_EN, AFU_IRQ_EN_VALUE );
+	OPAE_SIMPLE_WRAPPER_mmio64_write ( *accel_handle, *mmio_ptr, AFU_RESET, AFU_RESET_VALUE );
+	OPAE_SIMPLE_WRAPPER_mmio64_write ( *accel_handle, *mmio_ptr, AFU_IRQ_EN, AFU_IRQ_EN_VALUE );
 
 #ifdef DEBUG_OSW
 	res = OPAE_SIMPLE_WRAPPER_debug_read( *accel_handle, *mmio_ptr );
@@ -245,7 +232,7 @@ fpga_result OPAE_SIMPLE_WRAPPER_call_afu (
 	rs_erasure_csrs |= survived_cells_64 	<< 16u;
 	rs_erasure_csrs |= cell_length_64		<< 32u;
 
-	mmio64_write ( accel_handle, mmio_ptr, KERNEL_ARG_RS_ERASURE_CSR_REG, rs_erasure_csrs );
+	OPAE_SIMPLE_WRAPPER_mmio64_write ( accel_handle, mmio_ptr, KERNEL_ARG_RS_ERASURE_CSR_REG, rs_erasure_csrs );
 #ifdef DEBUG_OSW
 	printf("%s:%d erasure_pattern_64  0x%016lx\n", __FILE__, __LINE__, erasure_pattern_64);
 	printf("%s:%d survived_cells_64   0x%016lx\n", __FILE__, __LINE__, survived_cells_64);
@@ -273,7 +260,7 @@ fpga_result OPAE_SIMPLE_WRAPPER_call_afu (
 	uint64_t status_val;
 	do {
 		sleep( SLEEP_TIME_US );
-		mmio64_read ( accel_handle, mmio_ptr, KERNEL_STATUS, &status_val );
+		OPAE_SIMPLE_WRAPPER_mmio64_read ( accel_handle, mmio_ptr, KERNEL_STATUS, &status_val );
 	#ifdef DEBUG_OSW
 		print_kernel_status(status_val);
 	#endif // DEBUG_OSW
@@ -295,7 +282,7 @@ fpga_result OPAE_SIMPLE_WRAPPER_call_afu (
 	}
 
 	// Start the AFU by writing a '1' into the start register
-	mmio32_write(accel_handle, mmio_ptr, KERNEL_START, KERNEL_START_VALUE);
+	OPAE_SIMPLE_WRAPPER_mmio32_write(accel_handle, mmio_ptr, KERNEL_START, KERNEL_START_VALUE);
 #ifdef DEBUG_OSW
 	printf("%s:%d write @%x, value = %x\n", __FILE__, __LINE__, KERNEL_START, KERNEL_START_VALUE);
 #endif // DEBUG_OSW
@@ -324,7 +311,7 @@ fpga_result OPAE_SIMPLE_WRAPPER_call_afu (
 	// Active polling on AFU
 	do {
 		usleep( SLEEP_TIME_US );
-		mmio64_read ( accel_handle, mmio_ptr, KERNEL_STATUS, &status_val );
+		OPAE_SIMPLE_WRAPPER_mmio64_read ( accel_handle, mmio_ptr, KERNEL_STATUS, &status_val );
 	#ifdef DEBUG_OSW
 		print_kernel_status(status_val);
 	#endif // DEBUG_OSW
@@ -338,7 +325,7 @@ fpga_result OPAE_SIMPLE_WRAPPER_call_afu (
 
 	// Clear interrupt
 	// NOTE: this is necessary across calls regardless of INTERRUPT_EVENTS
-	mmio64_read ( accel_handle, mmio_ptr, KERNEL_CLEAR_INTERRUPT, &status_val );
+	OPAE_SIMPLE_WRAPPER_mmio64_read ( accel_handle, mmio_ptr, KERNEL_CLEAR_INTERRUPT, &status_val );
 #ifdef DEBUG_OSW
 	printf("%s:%d Read from KERNEL_CLEAR_INTERRUPT...\n", __FILE__, __LINE__);
 	print_kernel_status(status_val);
