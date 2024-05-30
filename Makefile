@@ -71,6 +71,7 @@ fim_build_%: fim_ofss_config fim_reseed_fitter
 # 	Restore FIM defaults
 	${MAKE} fim_restore_defaults
 
+FPGASUPDATE_FLAGS ?=
 ifeq (${FIM_UPDATE_DEBUG}, 1)
 	FPGASUPDATE_FLAGS += --log-level debug 
 endif
@@ -120,14 +121,12 @@ SYCL_IP_ENV += RS_SCHEMA=${RS_SCHEMA} \
 				SYCL_IP_BUILD_DIR=${SYCL_IP_BUILD_DIR} \
 				SYCL_IP_PRJ=${SYCL_IP_PRJ}
 
-ifeq (${SYCL_FAST_COMPILE}, 1)
-	SYCL_CMAKE_FLAGS += -DUSER_HARDWARE_FLAGS=-Xsfast-compile
-endif
 ifeq (${SYCL_DEBUG}, 1)
 	SYCL_CMAKE_FLAGS += --trace-expand
 endif
 
 # Environment setup for cmake
+USER_HARDWARE_FLAGS ?=
 CMAKE_ENV = USER_HARDWARE_FLAGS=${USER_HARDWARE_FLAGS} \
 			SYCL_IP_NAME=${SYCL_IP_NAME} \
 			${SYCL_IP_ENV}
@@ -295,17 +294,17 @@ gbs: ${AFU_SYNTH_DIR}
 gbs_configure:
 #	Configure PR slot with GBS
 # sudo fpgaconf ${AFU_GBS_FILE}
-	sudo fpgasupdate  ${FPGASUPDATE_FLAGS} ${AFU_GBS_FILE} ${PAC_PCIE_SBD}.0
+	sudo fpgasupdate ${FPGASUPDATE_FLAGS} ${AFU_GBS_FILE} ${PAC_PCIE_SBD}.0
 
 # System Tests
 AFU_ELF_NAME ?= bin/${AFU_NAME}
 
 test_sycl_afu: test_gbs
-test_gbs:
+test_gbs: afu_host
 #	Run host application
 	cd ${AFU_SW_DIR}; ./${AFU_ELF_NAME} ${TEST_ARGS}
 
-test_ase:
+test_ase: afu_host
 	cd ${AFU_SW_DIR}; with_ase ./${AFU_ELF_NAME} ${TEST_ARGS}
 
 #########
@@ -317,19 +316,12 @@ test_ase:
 test_isal: test_ip_plain_c
 oneapi_isal: oneapi_ip_plain_c
 
-############
-# Measures #
-############
+############################
+# Measures (single-thread) #
+############################
+MULTI_THREAD ?= 0
 
 measure_all: measure_isal measure_asp_fpga measure_asp_plain_c measure_sycl_afu
-
-measure_plots_latency:
-	cd ${MEASURE_LATENCY_DIR}/plots; \
-	python plot_latency.py ${MEASURE_LATENCY_DATA_DIR} ${PLOT_OUT_DIR};
-
-measure_plots_power:
-	cd ${MEASURE_LATENCY_DIR}/plots; \
-	python plot_power.py ${MEASURE_LATENCY_DATA_DIR} ${PLOT_OUT_DIR}
 
 measure_isal:
 measure_asp_fpga:
@@ -340,17 +332,59 @@ measure_%:
 	${MEASURE_LATENCY_DIR}/scripts/measure_latency_top.sh \
 		$* 						\
 		${MEASURE_NUM_REPS} 	\
-		${MEASURE_MAX_DECODE}
+		${MEASURE_MAX_DECODE} 	\
+		${MULTI_THREAD}
 
-# TBD
+# TODO: test, evaluate and refine
 measure_power:
-	${ROOT_DIR}/measures/power/measure_power.sh ${MEASURE_POWER_DATA_DIR}
+	${ROOT_DIR}/measures/power/measure_power_top.sh ${MEASURE_POWER_DATA_DIR}
+
+#########################
+# Plots (single-thread) #
+#########################
+
+plot_latency:
+	cd ${MEASURE_LATENCY_DIR}/plots; \
+	python plot_latency.py ${MEASURE_LATENCY_DATA_DIR} ${MEASURE_LATENCY_PLOT_OUT_DIR}
+
+plot_cycles:
+	cd ${MEASURE_LATENCY_DIR}/plots; \
+	python plot_cycles.py ${MEASURE_CYCLES_DATA_DIR} ${MEASURE_CYCLES_PLOT_OUT_DIR}
+
+plot_power:
+	cd ${MEASURE_LATENCY_DIR}/plots; \
+	python plot_power.py ${MEASURE_POWER_DATA_DIR} ${MEASURE_POWER_PLOT_OUT_DIR}
+
+###########################
+# Measures (multi-thread) #
+###########################
+measure_all: measure_isal measure_asp_fpga measure_asp_plain_c measure_sycl_afu
+
+measure_multithread_isal:
+measure_multithread_asp_fpga:
+measure_multithread_asp_plain_c: # For debug
+measure_multithread_sycl_afu:
+measure_multithread_%:
+	${ROOT_DIR}/measures/latency/scripts/measure_latency_multithread.sh \
+		measure_$*
+
+########################
+# Plots (multi-thread) #
+########################
+plot_multithread_latency:
+	cd ${MEASURE_LATENCY_DIR}/plots; \
+	python plot_multithread_latency.py
+
+# plot_multithread_power:
+# 	cd ${MEASURE_LATENCY_DIR}/plots; \
+# 	python plot_power.py ${MEASURE_LATENCY_DATA_DIR} ${MEASURE_LATENCY_PLOT_OUT_DIR}
+
 
 ############
 # Clean up #
 ############
-clean_measure:
-	rm -rf ${ROOT_DIR}/measures/latency/data/*
+clean_measure_latency:
+	rm -rf ${MEASURE_LATENCY_DATA_DIR}
 
 clean_fim_pr:
 	rm -rf ${FIM_PR_BUILD_DIR}

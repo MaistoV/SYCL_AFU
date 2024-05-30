@@ -13,6 +13,8 @@ export HTS_RELEASE=${HTS_RELEASE=${ROOT_DIR}/hitek_release/AG_C220_NC220_OFS_Rel
 export PAC_PCIE_SBD=${PAC_PCIE_SBD:="0000:8a:00"}
 # PCIe bus:device address, remove segment value
 export PAC_PCIE_BD=$(echo $PAC_PCIE_SBD | awk -F ':' '{print $2 ":" $3}')
+# Hitek Board
+export BOARD=htk-nc220-agf014
 
 # For HEM tests 
 export HEM_OUT_DIR=$(pwd)/HEM/results 
@@ -60,7 +62,7 @@ export AFU_MAX_NUM=${AFU_MAX_NUM=$FIM_NUM_PF0_VFS}
 #####################
 # FIM/AFU synthesis #
 #####################
-# import script fim/resize_pr/resize_pr_assignments.tcl
+# import script fim_flow/resize_pr/resize_pr_assignments.tcl
 export RESIZE_PR=${RESIZE_PR=1}
 
 # Import custom AFU as default
@@ -136,8 +138,10 @@ cd $ROOT_DIR
 export LIBRARY_PATH=/usr/lib
 export LD_LIBRARY_PATH=/usr/lib64
 
-# For QuestaSIM, set the following:
-export MTI_HOME=/home/mentor/questa_core_2020/questasim/
+# For Mentor QuestaSim, set the following:
+# export MTI_HOME=/home/mentor/questa_core_2020/questasim/
+# For Intel Questa, set the following:
+export MTI_HOME=/home/vincenzo/intelFPGA_pro/23.2/questa_fe
 export PATH=$MTI_HOME/linux_x86_64/:$MTI_HOME/bin/:$PATH
 
 ############
@@ -148,12 +152,22 @@ export PATH=$MTI_HOME/linux_x86_64/:$MTI_HOME/bin/:$PATH
 # export AFU_NAME=${AFU_NAME="mixed_intf_afu_array"}
 
 # Target AFU
-# export AFU_NAME=${AFU_NAME="sycl_rs_erasure"}
-export AFU_NAME=${AFU_NAME="sycl_rs_erasure_array"}
+export AFU_NAME=${AFU_NAME="sycl_rs_erasure"}
+# export AFU_NAME=${AFU_NAME="sycl_rs_erasure_array"}
 # Don't export RS_SCHEMA for AFUs other than sycl_rs_erasure
 if [ "${AFU_NAME}" == "sycl_rs_erasure" ] ||
     [ "${AFU_NAME}" == "sycl_rs_erasure_array" ]; then
     export RS_SCHEMA=${RS_SCHEMA=RS_3_2}
+
+    # Override AFU_MAX_NUM
+    case ${RS_SCHEMA} in
+        "RS_3_2")
+            export AFU_MAX_NUM=13
+            ;;
+        "RS_6_3")
+            export AFU_MAX_NUM=5
+            ;;
+    esac
 else 
     unset RS_SCHEMA
 fi
@@ -257,18 +271,33 @@ export OFS_ASP_FPGA_DEVICE=$OFS_ASP_ROOT:$OFS_ASP_BOARD_VARIANT
 # Append board variant
 export SYCL_ASP_BUILD_DIR=${SYCL_ASP_BUILD_DIR}_${OFS_ASP_BOARD_VARIANT}
 # Append ASP_ZERO_COPY
+export ASP_ZERO_COPY=${ASP_ZERO_COPY=1}
 if [[ $ASP_ZERO_COPY == 1 ]]; then
     export SYCL_ASP_BUILD_DIR=${SYCL_ASP_BUILD_DIR}_ASP_ZERO_COPY
 fi 
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$OFS_ASP_ROOT/linux64/lib
 
-############
-# Measures #
-############
+####################
+# Measures Latency #
+####################
 export MEASURE_LATENCY_DIR=${ROOT_DIR}/measures/latency
-export MEASURE_NUM_REPS=${MEASURE_NUM_REPS=1} 
-export MEASURE_MAX_DECODE=${MEASURE_MAX_DECODE=20} 
-# export MEASURE_LATENC_OUTPUT_DIR=${MEASURE_LATENC_OUTPUT_DIR=${MEASURE_LATENCY_DIR}/data/}
+export MEASURE_NUM_REPS=${MEASURE_NUM_REPS=5} 
+export MEASURE_MAX_DECODE=${MEASURE_MAX_DECODE=10} 
+
+export MEASURE_LATENCY_DATA_DIR=${MEASURE_LATENCY_DIR}/data
+export MEASURE_LATENCY_PLOT_OUT_DIR=${MEASURE_LATENCY_DIR}/plots/output_plots
+
+###################
+# Measures Cycles #
+###################
+export MEASURE_CYCLES_DATA_DIR=${MEASURE_LATENCY_DIR}/data/data_SYCL_ASP_SIM_ASP_ZERO_COPY
+export MEASURE_CYCLES_PLOT_OUT_DIR=${MEASURE_LATENCY_DIR}/plots/output_plots
+
+##################
+# Measures Power #
+##################
+export MEASURE_POWER_DATA_DIR=${ROOT_DIR}/measures/power
+export MEASURE_POWER_PLOT_OUT_DIR=${MEASURE_POWER_DATA_DIR}/plots/output_plots
 
 #################
 # Multi-erasure #
@@ -279,11 +308,9 @@ export MULTI_ERASURE_SIMPLE=${MULTI_ERASURE_SIMPLE=0}
 # Append MULTI_ERASURE_SIMPLE_SUFFIX (if MULTI_ERASURE_SIMPLE is set)
 if [[ ${MULTI_ERASURE_SIMPLE} == 1 ]]; then
     export MULTI_ERASURE_SIMPLE_SUFFIX="_multi_erasure"
-    export MEASURE_LATENCY_DATA_DIR=${MEASURE_LATENCY_DIR}/data${MULTI_ERASURE_SIMPLE_SUFFIX}
-    export PLOT_OUT_DIR=${MEASURE_LATENCY_DIR}/plots/output_plots${MULTI_ERASURE_SIMPLE_SUFFIX}
-#     export SYCL_IP_NAME=${SYCL_IP_NAME}${MULTI_ERASURE_SIMPLE_SUFFIX}
-#     export SYCL_IP_BUILD_DIR=${SYCL_IP_BUILD_DIR}${MULTI_ERASURE_SIMPLE_SUFFIX}
-#     export SYCL_ASP_BUILD_DIR=${SYCL_ASP_BUILD_DIR}${MULTI_ERASURE_SIMPLE_SUFFIX}
+    export MEASURE_LATENCY_DATA_DIR=${MEASURE_LATENCY_DATA_DIR}${MULTI_ERASURE_SIMPLE_SUFFIX}
+    export MEASURE_LATENCY_PLOT_OUT_DIR=${MEASURE_LATENCY_PLOT_OUT_DIR}${MULTI_ERASURE_SIMPLE_SUFFIX}
+    export MEASURE_POWER_PLOT_OUT_DIR=${MEASURE_POWER_PLOT_OUT_DIR}${MULTI_ERASURE_SIMPLE_SUFFIX}
 fi
 
 ########################
@@ -306,4 +333,5 @@ echo "OFS_ASP_BOARD_VARIANT : $OFS_ASP_BOARD_VARIANT"
 echo "AOCX_PR_INTERFACE_ID  : $AOCX_PR_INTERFACE_ID"
 echo "AOCX_FIM_IMAGE_INFO   : $AOCX_FIM_IMAGE_INFO"
 echo "RS_SCHEMA             : $RS_SCHEMA"
+echo "MUTLI_ERASURE_SIMPLE  : $MULTI_ERASURE_SIMPLE"
 echo "AFU_ENV                 $AFU_ENV"

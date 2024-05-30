@@ -6,6 +6,7 @@ MAKE_TEST_TARGET=test_$1
 DECODE_ISAL=0
 NUM_RUNS=$2
 MAX_DECODE=$3
+MULTI_THREAD=$4
 
 case $1 in
 
@@ -50,6 +51,11 @@ case $1 in
     exit -1
     ;;
 esac
+
+# Append pid for MULTI_THREADing
+if [ ${MULTI_THREAD} -eq 1 ]; then
+  MEASURE_LATENCY_OUTPUT_DIR=${MEASURE_LATENCY_OUTPUT_DIR}_$$
+fi
 
 # Lauch subscript
 source ${MEASURE_LATENCY_DIR}/scripts/measure_latency.sh 	\
