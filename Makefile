@@ -190,9 +190,10 @@ oneapi_asp_%: oneapi_cmake_asp
 
 # requires CL_CONTEXT_MPSIM_DEVICE_INTELFPGA=1
 test_asp_fpga_sim: 
+#	Run simulation
 	cd ${SYCL_ASP_BUILD_DIR}; \
 	CL_CONTEXT_MPSIM_DEVICE_INTELFPGA=1 \
-	./${SYCL_IP_NAME}.$* ${TEST_ARGS}
+	./${SYCL_IP_NAME}.fpga_sim ${TEST_ARGS}
 
 test_asp_plain_c:
 test_asp_fpga: # Make sure to make aocl_aocx_initalize first
@@ -332,8 +333,9 @@ measure_plots_power:
 
 measure_isal:
 measure_asp_fpga:
+measure_asp_fpga_sim:
 measure_asp_plain_c: # For debug
-measure_sycl_afu: # not yet available
+measure_sycl_afu:
 measure_%:
 	${MEASURE_LATENCY_DIR}/scripts/measure_latency_top.sh \
 		$* 						\

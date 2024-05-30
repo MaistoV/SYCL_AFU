@@ -1,9 +1,6 @@
 #!/bin/bash
 ###############################################
-# Experiment subjects:
-#   * Hardware config
 # Experiment factors
-#   * RS_SCHEMA
 #   * cell_length
 ###############################################
 
@@ -50,40 +47,47 @@ if [[ "$4" != "" ]]; then
     MAX_DECODE=$4
 fi
 
-# Clear old data
+# Make targets
+MAKE_TEST_TARGET=test_sycl_afu
+if [[ "$5" != "" ]]; then
+    MAKE_TEST_TARGET=$5
+fi
+MAKE_BUILD_TARGET=afu_host
+if [[ "$6" != "" ]]; then
+    MAKE_BUILD_TARGET=$6
+fi
+
+# Create output directory
 mkdir -p $out_dir
 
 # Regenerate random experimental points
-bash ${ROOT_DIR}/measures/latency/gen_experiments.sh $num_runs tmp.cell_length_experiments.txt 
+bash ${ROOT_DIR}/measures/latency/scripts/gen_experiments.sh $num_runs tmp.cell_length_experiments.txt 
 # Read experimental point
-readarray -t experiment_list < tmp.cell_length_experiments.txt 
+readarray -t experiment_list < tmp.cell_length_experiments.txt
+if [ ${#experiment_list[@]} -eq 0 ]; then
+    echo "Experiment list is empty, aborting..."
+    exit -1
+fi
 
-# List of RS schemas
-declare -a RS_SCHEMA_list=("RS_3_2" "RS_6_3")
-
-# Run experiments
-for RS_SCHEMA in "${RS_SCHEMA_list[@]}"
+# Loop over experimental points
+exp=0
+for length in "${experiment_list[@]}"
 do
-    export RS_SCHEMA=${RS_SCHEMA}
-    source settings.sh
-    echo "Build host application..."
-    CMD="make ${MAKE_BUILD_TARGET} SYCL_IP_DEBUG=0 DEBUG=0"
-    echo $CMD
-    ${CMD}
-    EXIT_CODE=$?; check_exit_code "$EXIT_CODE" "$CMD" && return $EXIT_CODE
-
-    # Loop over experimental points
-    exp=0
-    for length in "${experiment_list[@]}"
-    do
-        exp=$(($exp + 1))
-        # Launch the experiment
-        # NOTE: Also re-seed PRNG with the -r flag
-        export TEST_ARGS="-e 1 -d $decode_ISAL -m 1 -o $out_dir -r $(($len + $exp)) -l $length -c $MAX_DECODE"
-        CMD="make ${MAKE_TEST_TARGET}"
-        echo "$RS_SCHEMA: Running experiment $exp/${#experiment_list[@]} length = $length"
-        # echo ${CMD} TEST_ARGS=\"${TEST_ARGS}\"
-        ${CMD} > /dev/null
-        # EXIT_CODE=$?; check_exit_code "$EXIT_CODE" "$CMD" && return $EXIT_CODE
-    done
+    exp=$(($exp + 1))
+    # Launch the experiment
+    # NOTE: Also re-seed PRNG with the -r flag
+    export TEST_ARGS="-e 1 -d $decode_ISAL -m 1 -o $out_dir -r $(($len + $exp)) -l $length -c $MAX_DECODE"
+    CMD="make ${MAKE_TEST_TARGET}"
+    echo "$RS_SCHEMA: Running experiment $exp/${#experiment_list[@]} length = $length"
+    echo ${CMD} TEST_ARGS=\"${TEST_ARGS}\"
+    ${CMD} ###> /dev/null
+    # EXIT_CODE=$?; check_exit_code "$EXIT_CODE" "$CMD" && return $EXIT_CODE
+            
+    # Parse simulation data
+    if [[ "${MAKE_TEST_TARGET}" == "test_asp_fpga_sim" ]]; then
+        ${ROOT_DIR}/scripts/parse_simulation_data_json.sh       \
+            ${SYCL_ASP_BUILD_DIR}/${SYCL_IP_NAME}.fpga_sim.prj  \
+            ${out_dir}/cycles_${RS_SCHEMA}.csv                  \
+            ${length}
+    fi
 done
