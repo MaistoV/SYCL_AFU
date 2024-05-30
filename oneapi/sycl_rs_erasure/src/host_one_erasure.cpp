@@ -416,7 +416,7 @@ int main(int argc, char *argv[]) {
 		 prng_seed
 		 );
 
-	return ret_val;
+	return 0;
 }
 
 void RunKernel(

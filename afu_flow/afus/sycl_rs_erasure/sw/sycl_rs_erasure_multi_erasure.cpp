@@ -145,7 +145,7 @@ int main(int argc, char *argv[]) {
 																			);
 
 	// Check pointers
-	assert(NULL != rs_erasure_input);
+	assert(NULL != rs_erasure_input		   );
 	assert(NULL != reconstructed_blocks_out);
 
 	/////////////////////////
@@ -153,11 +153,11 @@ int main(int argc, char *argv[]) {
 	/////////////////////////
 	// Write physical address to AFU CSR
 	OPAE_SIMPLE_WRAPPER_mmio64_write ( accel_handle, mmio_ptr, KERNEL_ARG_DEVICE_READ_REG, buf_pa_in );
-	printf("%s:%d write @%x, value = %lx\n", __FILE__, __LINE__, KERNEL_ARG_DEVICE_READ_REG, buf_pa_in);
+	printf("%s:%d write @%x, value = 0x%lx\n", __FILE__, __LINE__, KERNEL_ARG_DEVICE_READ_REG, buf_pa_in);
 
 	// Write physical address to AFU CSR
 	OPAE_SIMPLE_WRAPPER_mmio64_write ( accel_handle, mmio_ptr, KERNEL_ARG_DEVICE_WRITE_REG, buf_pa_out );
-	printf("%s:%d write @%x, value = %lx\n", __FILE__, __LINE__, KERNEL_ARG_DEVICE_WRITE_REG, buf_pa_out);
+	printf("%s:%d write @%x, value = 0x%lx\n", __FILE__, __LINE__, KERNEL_ARG_DEVICE_WRITE_REG, buf_pa_out);
 	
 	// Seed the PRNG
 	srand(prng_seed);
@@ -196,12 +196,7 @@ int main(int argc, char *argv[]) {
 #ifdef DEBUG
 	printf("%s:%d: cell_ptrs\n", __FILE__, __LINE__);
 	for ( unsigned int i = 0; i < RS_K; i++ ) {
-		for ( unsigned int l = 0; l < cell_length; l++ ) {
-			printf("%02x ", cell_ptrs[i][l]);
-			if ( ((l+1) % LINE_BYTE_WIDTH) == 0 ) {
-				printf("\n");
-			}
-		}
+		print_contiguous_cell(stdout, cell_ptrs[i], ONE_ERASURE, cell_length, LINE_BYTE_WIDTH );
 	}
 	printf("\n");
 #endif
@@ -317,9 +312,10 @@ int main(int argc, char *argv[]) {
 		// Increment counter
 		reconstruction_count++;
 
-		// Survival pattern bitstring
-		uint16_t survival_pattern = (~erasure_patterns[permutation_index]) & RS_PATTERN_MASK;
+		// Erasure pattern bitstring
 		uint16_t erasure_pattern  = erasure_patterns[permutation_index] & RS_PATTERN_MASK;
+		// Just flip erasure_pattern
+		uint16_t survival_pattern = (~erasure_patterns[permutation_index]) & RS_PATTERN_MASK;
 
 	#ifdef DEBUG
 		printf("%s:%d: survival_pattern 0x%04x\n", __FILE__, __LINE__, survival_pattern);
@@ -467,7 +463,6 @@ int main(int argc, char *argv[]) {
 
 			// Write input
 			rs_erasure_csr.erasure_pattern	= erasure_pattern;
-			// Just flip erasure_pattern
 			rs_erasure_csr.survived_cells	= survival_pattern;
 
 			
@@ -484,6 +479,7 @@ int main(int argc, char *argv[]) {
 												fd_latency
 										);
 			fpga_assert(res);
+			
 		#ifdef DEBUG			
 			printf("%s:%d: reconstructed_blocks_out:\n", __FILE__, __LINE__);
 			print_contiguous_cell(stdout, (uint8_t*)reconstructed_blocks_out, NUM_ERASURES, cell_length, LINE_BYTE_WIDTH );

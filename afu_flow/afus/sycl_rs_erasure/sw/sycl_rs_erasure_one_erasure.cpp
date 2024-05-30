@@ -133,6 +133,7 @@ int main(int argc, char *argv[]) {
 																				&wsid_out,
 																				&buf_pa_out
 																			);
+																			
 	// Check pointers
 	assert(NULL != rs_erasure_input		   );
 	assert(NULL != reconstructed_blocks_out);
@@ -147,8 +148,6 @@ int main(int argc, char *argv[]) {
 	// Write physical address to AFU CSR
 	OPAE_SIMPLE_WRAPPER_mmio64_write ( accel_handle, mmio_ptr, KERNEL_ARG_DEVICE_WRITE_REG, buf_pa_out );
 	printf("%s:%d write @%x, value = 0x%lx\n", __FILE__, __LINE__, KERNEL_ARG_DEVICE_WRITE_REG, buf_pa_out);
-
-	max_permutations = compute_max_erasure_patterns( RS_K, RS_P, ONE_ERASURE );
 
 	// Seed the PRNG
 	srand(prng_seed);
@@ -183,6 +182,7 @@ int main(int argc, char *argv[]) {
 		}
 	}
 
+	// Debug cell_ptrs
 #ifdef DEBUG
 	printf("%s:%d: cell_ptrs\n", __FILE__, __LINE__);
 	for ( unsigned int i = 0; i < RS_K; i++ ) {
@@ -191,17 +191,22 @@ int main(int argc, char *argv[]) {
 	printf("\n");
 #endif
 
-	printf("%s:%d: Encoding parity cells for RS[%d:%d] cell_length=%d, using %s\n",
-		 __FILE__, __LINE__, RS_K, RS_P, cell_length, (encode_isal) ? "ISA-L" : "SYCL_AFU kernel");
-	
-	// Encode with ISA-L
-	if ( encode_isal ) {
+
+	// Generate encode matrix for any ISA-L utilization
+	if ( encode_isal || decode_isal ) {
 		// Pick an encode matrix. A Cauchy matrix is a good choice as even
 		// large RS_K are always invertable keeping the recovery rule simple.
 		gf_gen_cauchy1_matrix(encode_matrix, RS_M, RS_K);
 	#ifdef DEBUG	
 		print_matrix_2d(stdout, RS_M, RS_K, encode_matrix, "encode_matrix ");
 	#endif
+	}
+
+	printf("%s:%d: Encoding parity cells for RS[%d:%d] cell_length=%d, using %s\n",
+		 __FILE__, __LINE__, RS_K, RS_P, cell_length, (encode_isal) ? "ISA-L" : "SYCL_AFU kernel");
+		
+	// Encode with ISA-L
+	if ( encode_isal ) {
 		// Generate g_tbls
 		ec_init_tables(RS_K, RS_P, &encode_matrix[RS_K * RS_K], g_tbls);
 		// Generate EC parity blocks from sources
@@ -256,6 +261,7 @@ int main(int argc, char *argv[]) {
 			// Always read from first reconstructed block at index 0
 			memcpy(cell_ptrs[e + RS_K], ((uint8_t(*)[cell_length])reconstructed_blocks_out)[0], sizeof(uint8_t) * cell_length );
 		}	
+
 	} // !encode_isal
 	
 // Debug Complete cell array
