@@ -71,8 +71,16 @@ void RunKernelLambda( sycl::queue& q,
 
     // submit the kernel
     q.submit([&](sycl::handler &h) {
-		// Use kernel_args_restrict to specify that pointers do not alias.
-		h.single_task<RSErasureID>([=]() [[intel::kernel_args_restrict]] {
+		// Kernel tags:
+		// * kernel_args_restrict to specify that pointers do not alias.
+		// * scheduler_target_fmax_mhz to increas fMax
+		// * max_global_work_dim(0) to simplify scheduling logic
+		h.single_task<RSErasureID>([=]() 
+										[[intel::kernel_args_restrict]] 
+										[[intel::max_global_work_dim(0)]]
+										[[intel::scheduler_target_fmax_mhz(SCYL_FREQ_MHZ)]]
+									 {
+
 #ifdef IS_BSP
 #ifdef ASP_ZERO_COPY
 			// using a host_ptr tells the compiler that this pointer lives in the

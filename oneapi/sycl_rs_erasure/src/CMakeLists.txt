@@ -22,6 +22,11 @@ if(IS_BSP MATCHES "1")
     endif()
 endif()
 
+# Append kernel target frequency
+if( DEFINED SCYL_FREQ_MHZ )
+    set(USER_FLAGS "${USER_FLAGS} -DSCYL_FREQ_MHZ=${SCYL_FREQ_MHZ}")
+endif()
+
 # Append Zero-copy flag
 if( $ENV{ASP_ZERO_COPY} MATCHES "1")
     set(USER_FLAGS "${USER_FLAGS} -DASP_ZERO_COPY")

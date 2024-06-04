@@ -115,20 +115,24 @@ ifeq (${MMD_DEBUG}, 1)
 endif
 SYCL_IP_CMAKE_SOURCES := ${SYCL_SRC_DIR}/CMakeLists.txt ${SYCL_SRC_DIR}/src/CMakeLists.txt
 
-# Wrap these variables in a single list
+# SYCL CMake flags
+USER_HARDWARE_FLAGS += "-Xsno-hardware-kernel-invocation-queue"
+SCYL_FREQ_MHZ ?= 500
+ifeq (${SYCL_DEBUG}, 1)
+	SYCL_CMAKE_FLAGS += --trace-expand
+endif
+
+SYCL_CMAKE_FLAGS += -DSCYL_FREQ_MHZ=${SCYL_FREQ_MHZ}
+SYCL_CMAKE_FLAGS += -DUSER_HARDWARE_FLAGS=${USER_HARDWARE_FLAGS}
+
+# SYCL CMake environment
 SYCL_IP_ENV += RS_SCHEMA=${RS_SCHEMA} \
 				SYCL_IP_NAME=${SYCL_IP_NAME} \
 				SYCL_IP_BUILD_DIR=${SYCL_IP_BUILD_DIR} \
 				SYCL_IP_PRJ=${SYCL_IP_PRJ}
 
-ifeq (${SYCL_DEBUG}, 1)
-	SYCL_CMAKE_FLAGS += --trace-expand
-endif
-
 # Environment setup for cmake
-USER_HARDWARE_FLAGS ?=
-CMAKE_ENV = USER_HARDWARE_FLAGS=${USER_HARDWARE_FLAGS} \
-			SYCL_IP_NAME=${SYCL_IP_NAME} \
+CMAKE_ENV = SYCL_IP_NAME=${SYCL_IP_NAME} \
 			${SYCL_IP_ENV}
 CMAKE = ${CMAKE_ENV} cmake .. ${SYCL_CMAKE_FLAGS}
 
@@ -139,11 +143,6 @@ endif
 ifeq (${SYCL_DEBUG}, 1)
 	SYCL_CXX_DEFINES += -DDEBUG
 endif
-# DEBUG: make this cmake-time constant
-# ASP_ZERO_COPY ?= 1 
-# ifeq (${ASP_ZERO_COPY}, 1)
-# 	SYCL_CXX_DEFINES += -DASP_ZERO_COPY
-# endif
 SYCL_MAKE_ENV = "CXX_DEFINES=${SYCL_CXX_DEFINES}"
 
 ####################
