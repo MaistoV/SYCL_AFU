@@ -22,6 +22,11 @@ if(IS_BSP MATCHES "1")
     endif()
 endif()
 
+# Append Zero-copy flag
+if( $ENV{ASP_ZERO_COPY} MATCHES "1")
+    set(USER_FLAGS "${USER_FLAGS} -DASP_ZERO_COPY")
+endif()
+
 # FPGA board selection
 if(NOT DEFINED FPGA_DEVICE)
     set(FPGA_DEVICE "Agilex7")
