@@ -69,7 +69,7 @@ void RunKernelLambda( sycl::queue& q,
 		MEASURE_LATENCY_START(start);
 	}
 
-    // submit the kernel
+    // Submit the kernel
     q.submit([&](sycl::handler &h) {
 		// Kernel tags:
 		// * kernel_args_restrict to specify that pointers do not alias.
@@ -181,6 +181,21 @@ int is_n_hot ( int n, uint16_t pattern ) {
 	return ( popcount( pattern ) == n );
 }
 
+// Return first high bit
+uintlog2_RS_M get_first_high_bit ( uint16_t pattern ) {
+	uint8_t i;
+	for ( i = 0; i < RS_M; i++ ) {
+		if ( pattern & ((uint16_t)(0x1u << i)) ) {
+			break;
+		}
+	}
+	return (uintlog2_RS_M)i;
+}
+
+// Utility macros
+// Extract the one-hot erasure patterns for the next erasure
+#define ERASURE_ONEHOT_MASK(index) ((uint16_t)(0x1u << (index)))
+
 // Function implementing the Reed-Solomon logic
 void rs_erasure (
                 device_read_t  device_read,
@@ -199,10 +214,20 @@ void rs_erasure (
 	// Unpack rs_erasure_csr metadata
     uint16_t    erasure_pattern	= rs_erasure_csr.erasure_pattern;
     uint16_t    survived_cells	= rs_erasure_csr.survived_cells ;
-	uint32_t    cell_length		= rs_erasure_csr.cell_length_byte_width << LOG2_LINE_BYTE_WIDTH ;
+    uint32_t    cell_length		= rs_erasure_csr.cell_length_byte_width << LOG2_LINE_BYTE_WIDTH ;
 
-	// Number of erasures (<= P)
-	uint8_t		num_erasures	= popcount(erasure_pattern);
+	// Number of erasures (<= P = {2,3})
+	uintlog2_RS_P num_erasures	= popcount(erasure_pattern);
+	
+	// // Get lower RS_M bits
+	// uint16_t erasure_pattern_tmp = erasure_pattern;
+	// // Scan erasure pattern for next erasure
+	// uintlog2_RS_M erasure_pattern_bit_index [MAX_ERASURES];
+	// for ( unsigned int i = 0; i < num_erasures; i++ ) {
+	// 	erasure_pattern_bit_index[i] = get_first_high_bit ( erasure_pattern_tmp );
+	// 	// Zero-out this bit in running pattern
+	// 	erasure_pattern_tmp &= ~(ERASURE_ONEHOT_MASK(erasure_pattern_bit_index[i]));
+	// }
 
 // Debug device_read
 #ifdef NO_SYCL
@@ -237,60 +262,63 @@ LOOP_LINES:
 		// Read RS_K lines for each input cell
 		// Strided memory read
 		#pragma unroll LOOP_READ_CELLS_UNROLL
-		for ( unsigned int cell_index = 0; cell_index < RS_K; cell_index++ ){
+		for ( unsigned int cell_index = 0; cell_index < RS_K; cell_index++ ) {
 			survived_cell_lines[cell_index] = device_read[ (cell_index * NUM_LINES) + line_index ];
 		}
-		// Debug survived_cell_lines
-		#ifdef NO_SYCL
-			for ( unsigned int cell_index = 0; cell_index < RS_K; cell_index++ ){
-				printf("%s:%d: survived_cell_lines[%d] for line_index=%d:\n", __FILE__, __LINE__, cell_index, line_index);
-				for ( int byte_index = 0; byte_index < LINE_BYTE_WIDTH; byte_index++ ) {
-					printf("%02x ", ((uint8_t (*)[LINE_BYTE_WIDTH])survived_cell_lines)[cell_index][byte_index] );
-				}
-				printf("\n");
+	// Debug survived_cell_lines
+	#ifdef NO_SYCL
+		for ( unsigned int cell_index = 0; cell_index < RS_K; cell_index++ ){
+			printf("%s:%d: survived_cell_lines[%d] for line_index=%d:\n", __FILE__, __LINE__, cell_index, line_index);
+			for ( int byte_index = 0; byte_index < LINE_BYTE_WIDTH; byte_index++ ) {
+				printf("%02x ", ((uint8_t (*)[LINE_BYTE_WIDTH])survived_cell_lines)[cell_index][byte_index] );
 			}
 			printf("\n");
-		#endif // NO_SYCL
+		}
+		printf("\n");
+	#endif // NO_SYCL
 
-		uint8_t recontruction_counter = 0;
-		LOOP_ERASURES:
-			#pragma unroll 1 // Explicit no unroll
-			// uint8_t since we are assuming RS_M <= 16
-			for ( uint8_t erasure_pattern_bit_index = 0; erasure_pattern_bit_index < RS_M; erasure_pattern_bit_index++ ) {
-				
-				// If we get a high bit
-				uint16 erasure_pattern_uint16 = erasure_pattern;
-				if ( erasure_pattern_uint16[erasure_pattern_bit_index] ) {
+		// Create a working copy of erasure_pattern
+		uint16_t erasure_pattern_tmp = erasure_pattern;
+	LOOP_ERASURES:
+		#pragma unroll 1 // Explicit no unroll		
+		for ( uintlog2_RS_P reconstruction_index = 0; reconstruction_index < num_erasures; reconstruction_index++ ) {
+			// Scan erasure pattern for next erasure
+			uintlog2_RS_M erasure_pattern_bit_index = get_first_high_bit ( erasure_pattern_tmp );
+			// Zero-out this bit in running pattern
+			erasure_pattern_tmp &= ~(ERASURE_ONEHOT_MASK(erasure_pattern_bit_index));
 
-					////////////////
-					// ROM lookup //
-					////////////////
+			// If we get a high bit
+			// if ( erasure_pattern_uintRS_M[0] ) {
+				////////////////
+				// ROM lookup //
+				////////////////
+				// ROM index of reconstruction vector
+				uint16_t vector_index = rs_rom_lookup (
+										ERASURE_ONEHOT_MASK(erasure_pattern_bit_index),
+										// ERASURE_ONEHOT_MASK(erasure_pattern_bit_index[reconstruction_index]),
+										survived_cells
+									);
 
-					// Extract the one-hot erasure patterns for the next erasure
-					#define ERASURE_ONEHOT_MASK (erasure_pattern & (0x1u << erasure_pattern_bit_index))
-					// ROM index of reconstruction vector
-					uint16_t vector_index = rs_rom_lookup( ERASURE_ONEHOT_MASK, survived_cells );
+				// Schratchpad memory buffering ROM data
+				// If necessary, force it as register [[intel::fpga_register]]
+				uint8_t reconstruction_vector [SCRATCHPAD_DEPTH];
 
-					// Schratchpad memory buffering ROM data
-					// If necessary, force it as register [[intel::fpga_register]]
-					uint8_t reconstruction_vector	[SCRATCHPAD_DEPTH];
+			LOOP_ROM_LOOKUP:
+				// Read decoding matrix from the right ROM address
+				#pragma unroll // Full unroll
+				for ( unsigned int j = 0; j < RS_K; j++ ) {
+					reconstruction_vector[j] = decode_matrix_rom[vector_index][j];
+				}
 
-				LOOP_ROM_LOOKUP:
-					// Read decoding matrix from the right ROM address
-					#pragma unroll
-					for ( unsigned int j = 0; j < RS_K; j++ ) {
-						reconstruction_vector[j] = decode_matrix_rom[vector_index][j];
-					}
-
-				// Debug reconstruction_vector
-				#ifdef NO_SYCL
-					printf("%s:%d: vector_index=%hu\n", __FILE__, __LINE__, vector_index);
-					printf("%s:%d: reconstruction_vector: ", __FILE__, __LINE__ );
-					for ( unsigned int j = 0; j < RS_K; j++ ) {
-						printf("%hhu ", reconstruction_vector[j]);
-					}
-					printf("\n");
-				#endif // NO_SYCL
+			// Debug reconstruction_vector
+			#ifdef NO_SYCL
+				printf("%s:%d: vector_index=%hu\n", __FILE__, __LINE__, vector_index);
+				printf("%s:%d: reconstruction_vector: ", __FILE__, __LINE__ );
+				for ( unsigned int j = 0; j < RS_K; j++ ) {
+					printf("%hhu ", reconstruction_vector[j]);
+				}
+				printf("\n");
+			#endif // NO_SYCL
 
 				/////////////////
 				// GF multiply //
@@ -299,65 +327,61 @@ LOOP_LINES:
 				line_t reconstructed_cell_line;
 				reconstructed_cell_line = (line_t)0u;
 
-				// Loop over bytes in a cell
+			// Loop over bytes in a cell
 			LOOP_BYTES:
-				#pragma unroll // full unroll
+				#pragma unroll // Full unroll
 				for ( unsigned int cell_byte_index = 0; cell_byte_index < LINE_BYTE_WIDTH; cell_byte_index++ ) {
-		LOOP_READ_SCHRATCHPAD:
+				LOOP_READ_SCHRATCHPAD:
 					// Loop over bytes in scratchpad
-					#pragma unroll // full unroll
+					#pragma unroll // Full unroll
 					for ( uint8_t reconstruction_vector_byte_index = 0; reconstruction_vector_byte_index < RS_K; reconstruction_vector_byte_index++ ) {
 						// Read from Scratchpad Memory
 						// NOTE: this is a contiguous access pattern, let the compiler coalesce it
 						uint8 tmp_byte = reconstruction_vector[reconstruction_vector_byte_index];
 
 						uint8_t reconstructed_byte = (uint8_t)0u;
-		LOOP_BITS:
+					LOOP_BITS:
 						// Loop over bits in each byte
-						#pragma unroll // full unroll
+						#pragma unroll // Full unroll
 						for ( uint8_t bit_index = 0; bit_index < GF_ORDER; bit_index++ ) {
-								// Perform (AND or mux) multiplication and (XOR) accumulation (addition in GF(2^8))
-								uint8 survived_byte = ((uint8 (*)[LINE_BYTE_WIDTH])survived_cell_lines)[reconstruction_vector_byte_index][cell_byte_index];
-								reconstructed_byte ^= ( survived_byte[bit_index] ) // Multiplication
-																				? tmp_byte 		// +1
-																				: (uint8)0u;	// +0
+							// Perform (AND or mux) multiplication and (XOR) accumulation (addition in GF(2^8))
+							uint8 survived_byte = ((uint8 (*)[LINE_BYTE_WIDTH])survived_cell_lines)[reconstruction_vector_byte_index][cell_byte_index];
+							reconstructed_byte ^= ( survived_byte[bit_index] ) // Multiplication
+																			? tmp_byte 		// +1
+																			: (uint8)0u;	// +0
 
-								// Save MSB before shifting it out
-								uint1 msb_tmp_byte = tmp_byte[7];
-								// Multiply in GF(2^8) (shift and reduce)
-								tmp_byte <<= 1u;
-								if ( msb_tmp_byte ){
-									tmp_byte = tmp_byte ^ GF_POLY;
-								}
+							// Save MSB before shifting it out
+							uint1 msb_tmp_byte = tmp_byte[7];
+							// Multiply in GF(2^8) (shift and reduce)
+							tmp_byte <<= 1u;
+							if ( msb_tmp_byte ){
+								tmp_byte = tmp_byte ^ GF_POLY;
+							}
 						}
 
 						// Accumulate new value
 						((uint8*)&reconstructed_cell_line)[cell_byte_index] ^= reconstructed_byte;
-					}
+					} // reconstruction_vector_byte_index
 
 				} // cell_byte_index
 
 				////////////////////////////
 				// Write out to interface //
 				////////////////////////////
-				unsigned int write_line = line_index + (recontruction_counter * NUM_LINES);
+				unsigned int write_line = line_index + (reconstruction_index * NUM_LINES);
 				device_write[ write_line ] = reconstructed_cell_line;
-			
-			// Debug reconstructed_cell_line
+				
+				// Debug reconstructed_cell_line
 			#ifdef NO_SYCL
-				printf("%s:%d: recontruction_counter %d: \n", __FILE__, __LINE__, recontruction_counter );
+				printf("%s:%d: reconstruction_index %d: \n", __FILE__, __LINE__, reconstruction_index );
 				printf("%s:%d: Output data on line_index %d @%016x: \n", __FILE__, __LINE__, line_index, write_line );
 				for ( unsigned int byte_index = 0; byte_index < sizeof(reconstructed_cell_line); byte_index++ ) {
 					printf("%02x ", ((uint8_t*)&reconstructed_cell_line)[byte_index]);
 				}
 				printf("\n\n");
 			#endif // NO_SYCL
+		} // reconstruction_index
 
-				// Increment counter
-				recontruction_counter++;
-
-			} // erasure_pattern_uint16[erasure_pattern_bit_index]
-		} // erasure_pattern_bit_index
 	} // line_index
 
 } // rs_erasure
