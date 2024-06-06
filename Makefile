@@ -78,8 +78,8 @@ endif
 fim_update: 
 #	Update flash images 
 	sudo fpgasupdate ${FPGASUPDATE_FLAGS} ${FIM_IMAGE} ${PAC_PCIE_SBD}.0
-	@echo "To configure the new FIM, powercycle the PAC with:"
-	@echo "    ${MAKE} pac_powercycle_<bootpage>"
+	@echo "[INFO] To configure the new FIM, powercycle the PAC with:"
+	@echo "[INFO]     ${MAKE} pac_powercycle_<bootpage>"
 
 ifeq (${RSU_DEBUG}, 1)
 	RSU_FLAGS += --debug fpga
@@ -109,6 +109,7 @@ pac_hot_plug:
 #############################
 # ONE API CMake Environment #
 #############################
+MMD_DEBUG ?=
 ifeq (${MMD_DEBUG}, 1)
 	ONEAPI_DEBUG_ENV := MMD_ENABLE_DEBUG=1  \
 						MMD_PROGRAM_DEBUG=1
@@ -152,7 +153,7 @@ SYCL_MAKE_ENV = "CXX_DEFINES=${SYCL_CXX_DEFINES}"
 oneapi_asp_build_aocx:
 	cd ${OFS_ASP_ROOT}; \
 	./scripts/build-default-aocx.sh -b ${OFS_ASP_BOARD_VARIANT}
-	@echo Built AOCX for PR tree ${OPAE_PLATFORM_ROOT}
+	@echo "[INFO] Built AOCX for PR tree ${OPAE_PLATFORM_ROOT}"
 
 aocl_bsp_build:
 	cd ${OFS_ASP_ROOT}; ./scripts/build-bsp.sh
@@ -414,6 +415,9 @@ clean_oneapi_ip: clean_oneapi_ip_report
 clean_oneapi_asp:
 #	Build directory
 	rm -rf ${SYCL_ASP_BUILD_DIR}
+
+clean_aocx:
+	rm -rf ${AOCX_ROOT}
 
 clean_all: # clean_ase clean_sw clean_gbs clean_ase clean_oneapi_ip clean_oneapi_asp 
 	# TBD: clean for all flows?

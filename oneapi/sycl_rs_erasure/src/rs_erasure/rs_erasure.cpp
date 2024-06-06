@@ -240,57 +240,57 @@ LOOP_LINES:
 		for ( unsigned int cell_index = 0; cell_index < RS_K; cell_index++ ){
 			survived_cell_lines[cell_index] = device_read[ (cell_index * NUM_LINES) + line_index ];
 		}
-		// Debug survived_cell_lines
-		#ifdef NO_SYCL
-			for ( unsigned int cell_index = 0; cell_index < RS_K; cell_index++ ){
-				printf("%s:%d: survived_cell_lines[%d] for line_index=%d:\n", __FILE__, __LINE__, cell_index, line_index);
-				for ( int byte_index = 0; byte_index < LINE_BYTE_WIDTH; byte_index++ ) {
-					printf("%02x ", ((uint8_t (*)[LINE_BYTE_WIDTH])survived_cell_lines)[cell_index][byte_index] );
-				}
-				printf("\n");
+	// Debug survived_cell_lines
+	#ifdef NO_SYCL
+		for ( unsigned int cell_index = 0; cell_index < RS_K; cell_index++ ){
+			printf("%s:%d: survived_cell_lines[%d] for line_index=%d:\n", __FILE__, __LINE__, cell_index, line_index);
+			for ( int byte_index = 0; byte_index < LINE_BYTE_WIDTH; byte_index++ ) {
+				printf("%02x ", ((uint8_t (*)[LINE_BYTE_WIDTH])survived_cell_lines)[cell_index][byte_index] );
 			}
 			printf("\n");
-		#endif // NO_SYCL
+		}
+		printf("\n");
+	#endif // NO_SYCL
 
 		uint8_t recontruction_counter = 0;
 		LOOP_ERASURES:
-			#pragma unroll 1 // Explicit no unroll
-			// uint8_t since we are assuming RS_M <= 16
-			for ( uint8_t erasure_pattern_bit_index = 0; erasure_pattern_bit_index < RS_M; erasure_pattern_bit_index++ ) {
-				
-				// If we get a high bit
-				uint16 erasure_pattern_uint16 = erasure_pattern;
-				if ( erasure_pattern_uint16[erasure_pattern_bit_index] ) {
+		#pragma unroll 1 // Explicit no unroll
+		// uint8_t since we are assuming RS_M <= 16
+		for ( uint8_t erasure_pattern_bit_index = 0; erasure_pattern_bit_index < RS_M; erasure_pattern_bit_index++ ) {
+			
+			// If we get a high bit
+			uint16 erasure_pattern_uint16 = erasure_pattern;
+			if ( erasure_pattern_uint16[erasure_pattern_bit_index] ) {
 
-					////////////////
-					// ROM lookup //
-					////////////////
+				////////////////
+				// ROM lookup //
+				////////////////
 
-					// Extract the one-hot erasure patterns for the next erasure
-					#define ERASURE_ONEHOT_MASK (erasure_pattern & (0x1u << erasure_pattern_bit_index))
-					// ROM index of reconstruction vector
-					uint16_t vector_index = rs_rom_lookup( ERASURE_ONEHOT_MASK, survived_cells );
+				// Extract the one-hot erasure patterns for the next erasure
+				#define ERASURE_ONEHOT_MASK (erasure_pattern & (0x1u << erasure_pattern_bit_index))
+				// ROM index of reconstruction vector
+				uint16_t vector_index = rs_rom_lookup( ERASURE_ONEHOT_MASK, survived_cells );
 
-					// Schratchpad memory buffering ROM data
-					// If necessary, force it as register [[intel::fpga_register]]
-					uint8_t reconstruction_vector	[SCRATCHPAD_DEPTH];
+				// Schratchpad memory buffering ROM data
+				// If necessary, force it as register [[intel::fpga_register]]
+				uint8_t reconstruction_vector	[SCRATCHPAD_DEPTH];
 
-				LOOP_ROM_LOOKUP:
-					// Read decoding matrix from the right ROM address
-					#pragma unroll
-					for ( unsigned int j = 0; j < RS_K; j++ ) {
-						reconstruction_vector[j] = decode_matrix_rom[vector_index][j];
-					}
+			LOOP_ROM_LOOKUP:
+				// Read decoding matrix from the right ROM address
+				#pragma unroll
+				for ( unsigned int j = 0; j < RS_K; j++ ) {
+					reconstruction_vector[j] = decode_matrix_rom[vector_index][j];
+				}
 
-				// Debug reconstruction_vector
-				#ifdef NO_SYCL
-					printf("%s:%d: vector_index=%hu\n", __FILE__, __LINE__, vector_index);
-					printf("%s:%d: reconstruction_vector: ", __FILE__, __LINE__ );
-					for ( unsigned int j = 0; j < RS_K; j++ ) {
-						printf("%hhu ", reconstruction_vector[j]);
-					}
-					printf("\n");
-				#endif // NO_SYCL
+			// Debug reconstruction_vector
+			#ifdef NO_SYCL
+				printf("%s:%d: vector_index=%hu\n", __FILE__, __LINE__, vector_index);
+				printf("%s:%d: reconstruction_vector: ", __FILE__, __LINE__ );
+				for ( unsigned int j = 0; j < RS_K; j++ ) {
+					printf("%hhu ", reconstruction_vector[j]);
+				}
+				printf("\n");
+			#endif // NO_SYCL
 
 				/////////////////
 				// GF multiply //

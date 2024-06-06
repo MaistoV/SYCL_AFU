@@ -183,7 +183,7 @@ if [[ $UPDATE_DEFAULT_AFU == 1 ]]; then
     export AFU_WITH_PIM=${AFU_SOURCE_LIST}
     # Append AFU_PARAMS
     export FIM_FLAT_BUILD_DIR=${FIM_FLAT_BUILD_DIR}_${AFU_PARAMS}
-    export FIM_PR_BUILD_DIR=${FIM_FLAT_BUILD_DIR}_${AFU_PARAMS}
+    export FIM_PR_BUILD_DIR=${FIM_PR_BUILD_DIR}_${AFU_PARAMS}
 fi
 
 # Utility IDs and paths
@@ -248,19 +248,22 @@ export DISABLE_AVMM_INTERRUPT=0
 ##############
 # OneAPI ASP #
 ##############
+export OFS_ASP_ROOT=${HTS_RELEASE}/oneapi/oneapi-asp_agf014/nc220
+
 # ASP variant, from tree $OFS_ASP_ROOT/hardware/
 # export OFS_ASP_BOARD_VARIANT=${OFS_ASP_BOARD_VARIANT=ofs_nc220}
 # export OFS_ASP_BOARD_VARIANT=${OFS_ASP_BOARD_VARIANT=ofs_nc220_iopipes}
 export OFS_ASP_BOARD_VARIANT=${OFS_ASP_BOARD_VARIANT=ofs_nc220_usm}
 # export OFS_ASP_BOARD_VARIANT=${OFS_ASP_BOARD_VARIANT=ofs_nc220_usm_iopipes}
 
+# Root of built aocx
+export AOCX_ROOT=${OFS_ASP_ROOT}/build/bringup/${OFS_ASP_BOARD_VARIANT}
+
 # Set USM flag
 unset OFS_ASP_USM_FLAG
 if [[ "${OFS_ASP_BOARD_VARIANT}" == *"usm"* ]]; then
     export OFS_ASP_USM_FLAG="-DIS_USM=1"
 fi
-
-export OFS_ASP_ROOT="${HTS_RELEASE}/oneapi/oneapi-asp_agf014/nc220"
 
 # Utility IDs
 export AOCX_PR_INTERFACE_ID=$(cat ${OFS_ASP_ROOT}/pr_build_template/hw/lib/fme-ifc-id.txt)
