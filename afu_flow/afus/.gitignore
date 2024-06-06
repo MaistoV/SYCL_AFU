@@ -1,3 +1,4 @@
+# Ignore these by default
 register_map_offsets.hpp
 kernel_headers/
 *.o
