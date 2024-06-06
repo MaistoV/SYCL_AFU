@@ -80,7 +80,7 @@ do
     CMD="make ${MAKE_TEST_TARGET}"
     echo "$RS_SCHEMA: Running experiment $exp/${#experiment_list[@]} length = $length"
     echo ${CMD} TEST_ARGS=\"${TEST_ARGS}\"
-    ${CMD} ###> /dev/null
+    ${CMD} > /dev/null
     # EXIT_CODE=$?; check_exit_code "$EXIT_CODE" "$CMD" && return $EXIT_CODE
             
     # Parse simulation data
