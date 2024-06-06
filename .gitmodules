@@ -1,3 +1,6 @@
 [submodule "oneapi/oneAPI-samples"]
 	path = oneapi/oneAPI-samples
 	url = https://github.com/oneapi-src/oneAPI-samples.git
+[submodule "afu_flow/afus/examples-afu"]
+	path = afu_flow/afus/examples-afu
+	url = https://github.com/OFS/examples-afu.git

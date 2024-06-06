@@ -112,7 +112,7 @@ export OPAE_SDK_REPO_BRANCH=release/$OPAE_SDK_VERSION
 export OFS_PLATFORM_AFU_BBB=$OFS_BUILD_ROOT/external/ofs-platform-afu-bbb 
 
 # Location to the example-afu clone
-export EXAMPLES_AFU=$OFS_BUILD_ROOT/external/examples-afu
+export EXAMPLES_AFU=${ROOT_DIR}/afu_flow/afus/examples-afu
 
 # OPAE and MPF libraries must either be on the default linker search paths or on both LIBRARY_PATH and LD_LIBRARY_PATH.  
 export OPAE_LOC=/usr
