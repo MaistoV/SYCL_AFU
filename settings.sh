@@ -280,6 +280,13 @@ if [[ $ASP_ZERO_COPY == 1 ]]; then
 fi 
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$OFS_ASP_ROOT/linux64/lib
 
+############
+# Measures #
+############
+# Select the exeriments profile
+export EXPERIMENT_PROFILE=${EXPERIMENT_PROFILE="QUICK"} # Reduced number of samples
+# export EXPERIMENT_PROFILE=${EXPERIMENT_PROFILE="COMPLETE"}  # Full set of samples
+
 ####################
 # Measures Latency #
 ####################
@@ -337,4 +344,5 @@ echo "AOCX_PR_INTERFACE_ID  : $AOCX_PR_INTERFACE_ID"
 echo "AOCX_FIM_IMAGE_INFO   : $AOCX_FIM_IMAGE_INFO"
 echo "RS_SCHEMA             : $RS_SCHEMA"
 echo "MUTLI_ERASURE_SIMPLE  : $MULTI_ERASURE_SIMPLE"
+echo "EXPERIMENT_PROFILE    : $EXPERIMENT_PROFILE"
 echo "AFU_ENV                 $AFU_ENV"

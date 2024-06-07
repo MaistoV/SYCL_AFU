@@ -56,18 +56,37 @@ MAKE_BUILD_TARGET=afu_host
 if [[ "$6" != "" ]]; then
     MAKE_BUILD_TARGET=$6
 fi
+MAKE_SETUP_TARGET=gbs_configure
+if [[ "$7" != "" ]]; then
+    MAKE_SETUP_TARGET=$7
+fi
+EXPERIMENT_PROFILE=QUICK
+if [[ "$7" != "" ]]; then
+    EXPERIMENT_PROFILE=$8
+fi
 
 # Create output directory
 mkdir -p $out_dir
 
 # Regenerate random experimental points
-bash ${ROOT_DIR}/measures/latency/scripts/gen_experiments.sh $num_runs tmp.cell_length_experiments.txt 
+bash ${ROOT_DIR}/measures/latency/scripts/gen_experiments.sh \
+    $num_runs                       \
+    tmp.cell_length_experiments.txt \
+    ${EXPERIMENT_PROFILE}
+
 # Read experimental point
 readarray -t experiment_list < tmp.cell_length_experiments.txt
 if [ ${#experiment_list[@]} -eq 0 ]; then
-    echo "Experiment list is empty, aborting..."
+    echo "[ERROR] Experiment list is empty, aborting..." >&2
     exit -1
 fi
+
+# Setup GBS/AOCX
+make ${MAKE_SETUP_TARGET} > /dev/null
+
+# Build host code
+# NOTE: in case of asp_fpga_sim, this will always be a full re-build
+make ${MAKE_BUILD_TARGET}
 
 # Loop over experimental points
 exp=0
