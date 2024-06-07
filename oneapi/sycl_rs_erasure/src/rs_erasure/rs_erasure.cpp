@@ -193,11 +193,11 @@ void rs_erasure (
                 device_write_t device_write,
                 rs_erasure_csr_t rs_erasure_csr
                 ){
-#ifdef NO_SYCL
+#if (defined(NO_SYCL) && defined(DEBUG))
 	// printf("%s:%d: cell_length_byte_width	: 0x%02x\n"	, __FILE__, __LINE__, rs_erasure_csr.cell_length_byte_width	);
     printf("%s:%d: erasure_pattern			: 0x%04x\n"	, __FILE__, __LINE__, rs_erasure_csr.erasure_pattern		);
     printf("%s:%d: survived_cells			: 0x%04x\n"	, __FILE__, __LINE__, rs_erasure_csr.survived_cells			);
-#endif // NO_SYCL
+#endif // (defined(NO_SYCL) && defined(DEBUG))
 
 	/////////////////////////////////////////
 	// Input read
@@ -211,7 +211,7 @@ void rs_erasure (
 	uint8_t		num_erasures	= popcount(erasure_pattern);
 
 // Debug device_read
-#ifdef NO_SYCL
+#if (defined(NO_SYCL) && defined(DEBUG))
 	printf("%s:%d: num_erasures: %u\n", __FILE__, __LINE__, num_erasures);
 	printf("%s:%d: device_read:\n", __FILE__, __LINE__);
 	for ( unsigned int i = 0; i < (cell_length * RS_K); i++ ) {
@@ -221,7 +221,7 @@ void rs_erasure (
 		}
 	}
 	printf("\n");
-#endif // NO_SYCL
+#endif // (defined(NO_SYCL) && defined(DEBUG))
 
 	// Check input values
 #if defined(FPGA_EMULATOR) || defined(NO_SYCL)
@@ -231,15 +231,20 @@ void rs_erasure (
 	assert( (cell_length % LINE_BYTE_WIDTH) == 0 ); // Must be an integer multiple
 #endif
 
-LOOP_LINES:
-	// Loop over interface lines in a cell
-	#define NUM_LINES (cell_length / LINE_BYTE_WIDTH)
-	#pragma unroll 1 // Explicit no unroll
+
+	LOOP_LINES:
+	// Loop over lines in a cell
+	#define NUM_LINES (cell_length / LINE_BYTE_WIDTH)	
+	// Coalesce with LOOP_ERASURES
+	// NOTE: this is uneffective for ASP, since LOOP_READ_LINES loads (device_read) 
+	//		conflict with LOOP_ERASURES stores (device_write) on the same buffer location
+	// NOTE: In IP generation flow, load and store interfaces are separate and parallel
+	[[intel::loop_coalesce(2)]] 
 	for ( unsigned int line_index = 0; line_index < NUM_LINES; line_index++ ) {
 		// Array of k survived cell lines, force it as registers
 		[[intel::fpga_register]] line_t survived_cell_lines [RS_K];
 
-	LOOP_READ_LINES:
+		LOOP_READ_LINES:
 		// Read RS_K lines for each input cell
 		// Strided memory read
 		#pragma unroll LOOP_READ_CELLS_UNROLL
@@ -247,7 +252,7 @@ LOOP_LINES:
 			survived_cell_lines[cell_index] = device_read[ (cell_index * NUM_LINES) + line_index ];
 		}
 	// Debug survived_cell_lines
-	#ifdef NO_SYCL
+	#if (defined(NO_SYCL) && defined(DEBUG))
 		for ( unsigned int cell_index = 0; cell_index < RS_K; cell_index++ ){
 			printf("%s:%d: survived_cell_lines[%d] for line_index=%d:\n", __FILE__, __LINE__, cell_index, line_index);
 			for ( int byte_index = 0; byte_index < LINE_BYTE_WIDTH; byte_index++ ) {
@@ -256,7 +261,7 @@ LOOP_LINES:
 			printf("\n");
 		}
 		printf("\n");
-	#endif // NO_SYCL
+	#endif // (defined(NO_SYCL) && defined(DEBUG))
 
 		uint8_t recontruction_counter = 0;
 		LOOP_ERASURES:
@@ -281,7 +286,11 @@ LOOP_LINES:
 				// If necessary, force it as register [[intel::fpga_register]]
 				uint8_t reconstruction_vector	[SCRATCHPAD_DEPTH];
 
-			LOOP_ROM_LOOKUP:
+				// Reset all the recontructing bits
+				line_t reconstructed_cell_line;
+				reconstructed_cell_line = (line_t)0u;
+
+				LOOP_ROM_LOOKUP:
 				// Read decoding matrix from the right ROM address
 				#pragma unroll
 				for ( unsigned int j = 0; j < RS_K; j++ ) {
@@ -289,24 +298,21 @@ LOOP_LINES:
 				}
 
 			// Debug reconstruction_vector
-			#ifdef NO_SYCL
+			#if (defined(NO_SYCL) && defined(DEBUG))
 				printf("%s:%d: vector_index=%hu\n", __FILE__, __LINE__, vector_index);
 				printf("%s:%d: reconstruction_vector: ", __FILE__, __LINE__ );
 				for ( unsigned int j = 0; j < RS_K; j++ ) {
 					printf("%hhu ", reconstruction_vector[j]);
 				}
 				printf("\n");
-			#endif // NO_SYCL
+			#endif // (defined(NO_SYCL) && defined(DEBUG))
 
 				/////////////////
 				// GF multiply //
 				/////////////////
-				// Reset all the recontructing bits
-				line_t reconstructed_cell_line;
-				reconstructed_cell_line = (line_t)0u;
 
 				// Loop over bytes in a cell
-			LOOP_BYTES:
+				LOOP_BYTES:
 				#pragma unroll // full unroll
 				for ( unsigned int cell_byte_index = 0; cell_byte_index < LINE_BYTE_WIDTH; cell_byte_index++ ) {
 		LOOP_READ_SCHRATCHPAD:
@@ -350,14 +356,14 @@ LOOP_LINES:
 				device_write[ write_line ] = reconstructed_cell_line;
 			
 			// Debug reconstructed_cell_line
-			#ifdef NO_SYCL
+			#if (defined(NO_SYCL) && defined(DEBUG))
 				printf("%s:%d: recontruction_counter %d: \n", __FILE__, __LINE__, recontruction_counter );
 				printf("%s:%d: Output data on line_index %d @%016x: \n", __FILE__, __LINE__, line_index, write_line );
 				for ( unsigned int byte_index = 0; byte_index < sizeof(reconstructed_cell_line); byte_index++ ) {
 					printf("%02x ", ((uint8_t*)&reconstructed_cell_line)[byte_index]);
 				}
 				printf("\n\n");
-			#endif // NO_SYCL
+			#endif // (defined(NO_SYCL) && defined(DEBUG))
 
 				// Increment counter
 				recontruction_counter++;

@@ -109,35 +109,42 @@ pac_hot_plug:
 #############################
 # ONE API CMake Environment #
 #############################
-MMD_DEBUG ?=
-ifeq (${MMD_DEBUG}, 1)
-	ONEAPI_DEBUG_ENV := MMD_ENABLE_DEBUG=1  \
-						MMD_PROGRAM_DEBUG=1
-endif
+# SYCL CMake sources
 SYCL_IP_CMAKE_SOURCES := ${SYCL_SRC_DIR}/CMakeLists.txt ${SYCL_SRC_DIR}/src/CMakeLists.txt
 
-# SYCL CMake flags
-USER_HARDWARE_FLAGS += "-Xsno-hardware-kernel-invocation-queue"
-SCYL_FREQ_MHZ ?= 500
+MMD_DEBUG ?=
+ifeq (${MMD_DEBUG}, 1)
+	ONEAPI_DEBUG_ENV := MMD_ENABLE_DEBUG=1 MMD_PROGRAM_DEBUG=1
+endif
+
+MMD_DEBUG ?=
 ifeq (${SYCL_DEBUG}, 1)
 	SYCL_CMAKE_FLAGS += --trace-expand
 endif
 
-SYCL_CMAKE_FLAGS += -DSCYL_FREQ_MHZ=${SCYL_FREQ_MHZ}
+# SYCL CMake flags
+# TODO: test
+#	-⁠Xsoptimize=throughput-area-balanced, reduced throughput
+#	-Xsoptimize=area, decreases fMax
+USER_HARDWARE_FLAGS += "-Xsoptimize=latency -Xsno-hardware-kernel-invocation-queue"
 SYCL_CMAKE_FLAGS += -DUSER_HARDWARE_FLAGS=${USER_HARDWARE_FLAGS}
 
-# SYCL CMake environment
+# SYCL IP-related environment
 SYCL_IP_ENV += RS_SCHEMA=${RS_SCHEMA} \
 				SYCL_IP_NAME=${SYCL_IP_NAME} \
 				SYCL_IP_BUILD_DIR=${SYCL_IP_BUILD_DIR} \
 				SYCL_IP_PRJ=${SYCL_IP_PRJ}
 
-# Environment setup for cmake
+# CMake environment
 CMAKE_ENV = SYCL_IP_NAME=${SYCL_IP_NAME} \
 			${SYCL_IP_ENV}
 CMAKE = ${CMAKE_ENV} cmake .. ${SYCL_CMAKE_FLAGS}
 
 # Build-time variables
+SCYL_FREQ_MHZ ?= 350
+ifdef ${SCYL_FREQ_MHZ}
+	SYCL_CXX_DEFINES += -DSCYL_FREQ_MHZ=${SCYL_FREQ_MHZ}
+endif
 ifeq (${MULTI_ERASURE_SIMPLE}, 1)
 	SYCL_CXX_DEFINES += -DMULTI_ERASURE_SIMPLE
 endif
@@ -300,7 +307,7 @@ gbs_configure:
 AFU_ELF_NAME ?= bin/${AFU_NAME}
 
 test_sycl_afu: test_gbs
-test_gbs: afu_host
+test_gbs: #afu_host
 #	Run host application
 	cd ${AFU_SW_DIR}; ./${AFU_ELF_NAME} ${TEST_ARGS}
 
