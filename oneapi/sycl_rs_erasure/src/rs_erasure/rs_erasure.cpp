@@ -38,8 +38,8 @@ void RunKernelLambda( sycl::queue& q,
 #ifdef ASP_ZERO_COPY
     // Input and output data for the zero-copy version
     // malloc_host allocates memory specifically in the host's address space
-    line_t* in_zero_copy  = sycl::malloc_host<line_t>(RS_INPUT_SIZE(cell_length), q.get_context());
-    line_t* out_zero_copy = sycl::malloc_host<line_t>(RS_OUTPUT_SIZE(cell_length, num_erasures), q.get_context());
+    line_t* in_zero_copy  = (line_t*)sycl::malloc_host(RS_INPUT_SIZE(cell_length), q);
+    line_t* out_zero_copy = (line_t*)sycl::malloc_host(RS_OUTPUT_SIZE(cell_length, num_erasures), q);
 
 	// Check pointers are valid
 	assert ( in_zero_copy  );
@@ -51,8 +51,8 @@ void RunKernelLambda( sycl::queue& q,
 	}
 #else // ! ASP_ZERO_COPY
 	// malloc in USM
-	line_t* device_read_usm  = sycl::malloc_shared<line_t>( RS_INPUT_SIZE(cell_length) , q);
-	line_t* device_write_usm = sycl::malloc_shared<line_t>( RS_OUTPUT_SIZE(cell_length, num_erasures), q);
+	line_t* device_read_usm  = (line_t*)sycl::malloc_shared( RS_INPUT_SIZE(cell_length), q);
+	line_t* device_write_usm = (line_t*)sycl::malloc_shared( RS_OUTPUT_SIZE(cell_length, num_erasures), q);
 	
 	// Manually copy data from argument buffers to local ones
 	for ( unsigned int i = 0; i < RS_INPUT_SIZE(cell_length); i++ ) {
@@ -69,11 +69,17 @@ void RunKernelLambda( sycl::queue& q,
 		MEASURE_LATENCY_START(start);
 	}
 
+	// Define null value, if not defined
+	#ifndef SCYL_FREQ_MHZ
+		#warning "SCYL_FREQ_MHZ undefined, using 350MHz"
+		#define SCYL_FREQ_MHZ 350
+	#endif // SCYL_FREQ_MHZ
+
     // submit the kernel
     q.submit([&](sycl::handler &h) {
 		// Kernel tags:
 		// * kernel_args_restrict to specify that pointers do not alias.
-		// * scheduler_target_fmax_mhz to increas fMax
+		// * scheduler_target_fmax_mhz to increase/decrease fMax
 		// * max_global_work_dim(0) to simplify scheduling logic
 		h.single_task<RSErasureID>([=]() 
 										[[intel::kernel_args_restrict]] 
