@@ -235,11 +235,13 @@ void rs_erasure (
 	LOOP_LINES:
 	// Loop over lines in a cell
 	#define NUM_LINES (cell_length / LINE_BYTE_WIDTH)	
+#ifdef LOOP_COALESCE
 	// Coalesce with LOOP_ERASURES
 	// NOTE: this is uneffective for ASP, since LOOP_READ_LINES loads (device_read) 
 	//		conflict with LOOP_ERASURES stores (device_write) on the same buffer location
 	// NOTE: In IP generation flow, load and store interfaces are separate and parallel
 	[[intel::loop_coalesce(2)]] 
+#endif // LOOP_COALESCE
 	for ( unsigned int line_index = 0; line_index < NUM_LINES; line_index++ ) {
 		// Array of k survived cell lines, force it as registers
 		[[intel::fpga_register]] line_t survived_cell_lines [RS_K];

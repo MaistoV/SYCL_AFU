@@ -126,7 +126,8 @@ endif
 # TODO: test
 #	-⁠Xsoptimize=throughput-area-balanced, reduced throughput
 #	-Xsoptimize=area, decreases fMax
-USER_HARDWARE_FLAGS += "-Xsoptimize=latency -Xsno-hardware-kernel-invocation-queue"
+USER_HARDWARE_FLAGS ?=
+# USER_HARDWARE_FLAGS += "-Xsoptimize=latency -Xsno-hardware-kernel-invocation-queue"
 SYCL_CMAKE_FLAGS += -DUSER_HARDWARE_FLAGS=${USER_HARDWARE_FLAGS}
 
 # SYCL IP-related environment
@@ -141,8 +142,8 @@ CMAKE_ENV = SYCL_IP_NAME=${SYCL_IP_NAME} \
 CMAKE = ${CMAKE_ENV} cmake .. ${SYCL_CMAKE_FLAGS}
 
 # Build-time variables
-SCYL_FREQ_MHZ ?= 350
-ifdef ${SCYL_FREQ_MHZ}
+SCYL_FREQ_MHZ ?= 600
+ifdef SCYL_FREQ_MHZ
 	SYCL_CXX_DEFINES += -DSCYL_FREQ_MHZ=${SCYL_FREQ_MHZ}
 endif
 ifeq (${MULTI_ERASURE_SIMPLE}, 1)
@@ -150,6 +151,10 @@ ifeq (${MULTI_ERASURE_SIMPLE}, 1)
 endif
 ifeq (${SYCL_DEBUG}, 1)
 	SYCL_CXX_DEFINES += -DDEBUG
+endif
+LOOP_COALESCE ?= 0
+ifeq (${LOOP_COALESCE}, 1)
+	SYCL_CXX_DEFINES += -DLOOP_COALESCE
 endif
 SYCL_MAKE_ENV = "CXX_DEFINES=${SYCL_CXX_DEFINES}"
 
