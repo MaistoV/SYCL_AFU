@@ -8,7 +8,9 @@
 # Configuration lists
 declare -a MULTI_ERASURE_SIMPLE_list=(0 1)
 declare -a RS_SCHEMA_list=(RS_3_2 RS_6_3)
-declare -a HW_list=(asp_fpga_sim)
+
+# Override
+export MEASURE_NUM_REPS=3
 
 cnt=0
 # Loop single-/multi-erasure
@@ -20,9 +22,8 @@ for erasure in "${MULTI_ERASURE_SIMPLE_list[@]}"; do
         source settings.sh
         cnt=$((cnt+1))
         echo "$cnt: MULTI_ERASURE_SIMPLE=$erasure, RS_SCHEMA=$rs"
-        # Re-build for different MULTI_ERASURE_SIMPLE
+        # Need to re-build for different MULTI_ERASURE_SIMPLE
         rm -rf ${SYCL_ASP_BUILD_DIR}/*fpga_sim*
-        make oneapi_asp_fpga_sim
         # Run
         make measure_asp_fpga_sim
     done

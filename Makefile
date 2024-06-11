@@ -13,15 +13,20 @@ FIM_IMAGE ?= ${FIM_IMAGE_USER1}
 FIM_UPDATE_DEBUG ?= 0
 RSU_DEBUG ?= 0
 
+# Environment check
+ifndef ROOT_DIR
+$(error Setup script settings.sh has not been sourced, aborting)
+endif
+
 all: help
 
 help:
-	@cat "scripts/make_help.txt"
+	@cat "${ROOT_DIR}/scripts/make_help.txt"
 	
 #######
 # FIM #
 #######
-	@cat "${ROOT_DIR}/scripts/make_help.txt"
+
 # FIM config file
 BASE_OFS_TOP_QSF = ${OFS_BUILD_ROOT}/syn/board/htk-nc220-agf014/syn_top/ofs_top.qsf
 PR_BUILD_OFS_TOP_QSF = ${OPAE_PLATFORM_ROOT}/hw/lib/build/syn/board/htk-nc220-agf014/syn_top/ofs_top.qsf
@@ -338,6 +343,14 @@ measure_power:
 ############################
 # Measures (single-thread) #
 ############################
+# Aliases to setup test preconditions
+# NOTE: explicitly separate stup from test simplifies single/multi-threaded tests handling
+setup_isal: afu_host
+setup_asp_fpga: aocl_aocx_initialize oneapi_asp_fpga
+setup_asp_fpga_sim: oneapi_asp_fpga_sim
+setup_asp_plain_c: oneapi_asp_plain_c
+setup_sycl_afu: afu_host gbs_configure
+
 MULTI_THREAD ?= 0
 
 measure_all: measure_isal measure_asp_fpga measure_asp_plain_c measure_sycl_afu
@@ -373,24 +386,31 @@ plot_power:
 ###########################
 # Measures (multi-thread) #
 ###########################
-measure_all: measure_isal measure_asp_fpga measure_asp_plain_c measure_sycl_afu
+NUM_THREADS ?= 2
+SBDF ?= ${PAC_PCIE_SBD}.${FIRST_AFU_VF}
 
-measure_multithread_isal:
-measure_multithread_asp_fpga:
-measure_multithread_asp_plain_c: # For debug
-measure_multithread_sycl_afu:
-measure_multithread_%:
-	${ROOT_DIR}/measures/latency/scripts/measure_latency_multithread.sh \
-		measure_$*
+# measure_all: measure_isal measure_asp_fpga measure_asp_plain_c measure_sycl_afu
+
+measure_multi_thread_isal:
+# measure_multi_thread_asp_fpga: # Not supported
+measure_multi_thread_asp_plain_c: # For debug
+measure_multi_thread_sycl_afu:
+measure_multi_thread_%:
+	${MEASURE_LATENCY_DIR}/scripts/measure_latency_multi_thread.sh \
+		measure_$* 		\
+		${NUM_THREADS} 	\
+		${SBDF}
 
 ########################
 # Plots (multi-thread) #
 ########################
-plot_multithread_latency:
+plot_multi_thread_latency:
 	cd ${MEASURE_LATENCY_DIR}/plots; \
-	python plot_multithread_latency.py
+	python plot_multi_thread_latency.py 	\
+		${MEASURE_LATENCY_DATA_DIR}		\
+		${MEASURE_LATENCY_PLOT_OUT_DIR}
 
-# plot_multithread_power:
+# plot_multi_thread_power:
 # 	cd ${MEASURE_LATENCY_DIR}/plots; \
 # 	python plot_power.py ${MEASURE_LATENCY_DATA_DIR} ${MEASURE_LATENCY_PLOT_OUT_DIR}
 

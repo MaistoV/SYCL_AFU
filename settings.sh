@@ -160,14 +160,17 @@ if [ "${AFU_NAME}" == "sycl_rs_erasure" ] ||
     export RS_SCHEMA=${RS_SCHEMA=RS_3_2}
 
     # Override AFU_MAX_NUM
-    case ${RS_SCHEMA} in
-        "RS_3_2")
-            export AFU_MAX_NUM=13
-            ;;
-        "RS_6_3")
-            export AFU_MAX_NUM=5
-            ;;
-    esac
+    # case ${RS_SCHEMA} in
+    #     "RS_3_2")
+    #         export AFU_MAX_NUM=13
+    #         ;;
+    #     "RS_6_3")
+    #         export AFU_MAX_NUM=5
+    #         ;;
+    #     "RS_10_4")
+    #         export AFU_MAX_NUM=1?
+    #         ;;
+    # esac
 else 
     unset RS_SCHEMA
 fi
@@ -285,6 +288,7 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$OFS_ASP_ROOT/linux64/lib
 # Measures #
 ############
 # Select the exeriments profile
+export EXPERIMENT_PROFILE=${EXPERIMENT_PROFILE="1MB"} # Only one cell length
 export EXPERIMENT_PROFILE=${EXPERIMENT_PROFILE="QUICK"} # Reduced number of samples
 # export EXPERIMENT_PROFILE=${EXPERIMENT_PROFILE="COMPLETE"}  # Full set of samples
 
