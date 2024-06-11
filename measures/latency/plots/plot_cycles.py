@@ -37,7 +37,8 @@ if len(sys.argv) >= 2:
 plt.figure("Clock cyles latency vs Cell length", figsize=[15,10])
 plt.title("Clock cyles latency vs Cell length")
 # ax = plt.subplot(1,2,1)
-model = [0. for _ in range(0, len(RS_SCHEMA_list)) ]
+model = [0. for _ in range(0, len(RS_SCHEMA_list)) ] 
+label_linregr = ["" for _ in range(0, len(RS_SCHEMA_list)) ] 
 throughput_B_s_peak = [0 for _ in range(0, len(RS_SCHEMA_list))]
 throughput_B_cycle = [[0 for _ in range(len(cell_length)) ] for _ in range(len(RS_SCHEMA_list))]
 throughput_B_s = [[0 for _ in range(len(cell_length)) ] for _ in range(len(RS_SCHEMA_list))]
@@ -59,6 +60,9 @@ for rs in range(0, len(RS_SCHEMA_list)):
     cycles_avg = data["avg"].values.reshape(-1, 1)
     model[rs] = LinearRegression().fit(x, cycles_avg)
     cycles_pred = model[rs].predict(np.array(cell_length_int).reshape(-1, 1))
+    print("cycles_pred: ")
+    print(cycles_pred)
+    label_linregr[rs] = f'{model[rs].intercept_[0]:.2f} + {model[rs].coef_[0][0]:.2f} * cell_length'
 
     # Theoretical peak throughput at FMAX_MHz
 	#   Throughput = cell_length / latency
@@ -77,11 +81,12 @@ for rs in range(0, len(RS_SCHEMA_list)):
 
     # plt.subplot(1,3,rs+1, sharey=ax, sharex=ax)
     # plt.title( "RS[" + RS_SCHEMA_txt[rs] + "]" )
-    plt.scatter(x, cycles_min)#, label="Min")
-    plt.scatter(x, cycles_max)#, label="Max")
-    plt.scatter(x, cycles_avg)#, label="Avg")
+    # plt.scatter(x, cycles_min)#, label="Min")
+    # plt.scatter(x, cycles_max)#, label="Max")
+    # plt.scatter(x, cycles_avg)#, label="Avg")
     # plt.plot(x, cycles_avg, "-o", label="Avg " + RS_SCHEMA_list[rs])
-    plt.plot(cell_length_int, cycles_pred, label="Linear regression " + "RS[" + RS_SCHEMA_txt[rs] + "]", color=RS_SCHEMA_color[rs])
+    
+    plt.plot(cell_length_int, cycles_pred, label="RS[" + RS_SCHEMA_txt[rs] + "] " + label_linregr[rs], color=RS_SCHEMA_color[rs])
     # Set log-scales
     # plt.xscale("log", base=2)
     # plt.yscale("log", base=10)
@@ -96,11 +101,11 @@ print(figname)
 plt.savefig(figname, dpi=400, bbox_inches="tight")
 
 print("Cycles_model:")
-for rs in range(0, len(RS_SCHEMA_txt)):
-    print("    " + RS_SCHEMA_txt[rs], ": Cycles = " + str(model[rs].intercept_[0]) + " + " + str(model[rs].coef_[0][0]) + " * cell_length")
+for rs in range(0, len(RS_SCHEMA_list)):
+    print("    " + RS_SCHEMA_txt[rs], ": Cycles = " + label_linregr[rs])
 print("Throughput_model:")
 for rs in range(0, len(throughput_B_s_peak)):
-    print("    " + RS_SCHEMA_txt[rs], ": at " + str(FMAX_MHz) + "MHz = ",throughput_B_s_peak[rs]/KB/KB/KB, " GB/s")
+    print("    " + RS_SCHEMA_txt[rs], ": at " + str(FMAX_MHz) + "MHz = ", throughput_B_s_peak[rs]/KB/KB/KB, " GB/s")
     print("    Peak: " + str(throughput_B_s_peak[rs]/GB) + " GB/s")
 
 B_s		= [ "1", "2", "4", "6", "8", "10", "12"]

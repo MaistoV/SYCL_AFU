@@ -19,6 +19,7 @@ int usage( char** argv ) {
 		"  -o <dir>		Output directory for latency measures (ignored for -m=0)\n"
 		"  -x <0|1>		Decode once each cell and exit\n"
 		"  -c <value>	Decode at most <value> cells and exit\n"
+		"  -f <value>	PCIe address in SSSS:BB:DD.F format\n"
 		"  -l <value>	Cell length in bytes (positive multiple of 64B)\n"
 		, argv[0]
 	);
@@ -40,10 +41,19 @@ int main(int argc, char *argv[]) {
 	unsigned int cell_length = CELL_LENGTH_DEFAULT;
 	unsigned long max_permutations = 0;
 
+	// Default 0000:01:00.1
+	OPAE_SIMPLE_WRAPPER_pcie_sbdf_t	pcie_sbdf = {
+								.segment 	= 0,
+								.bus 		= 1,
+								.device 	= 0,
+								.function 	= 1
+							};
+
+	// Utility string
+	char tmp_string[256];
 	// For latency measurement
 	char filename[256];
 	char filedir[256] = "./";
-	char tmp_string[256];
 	double time_sec = 0.;
 	FILE* fd_latency;
     std::chrono::time_point<
@@ -52,7 +62,7 @@ int main(int argc, char *argv[]) {
 		> start, end;
 
 	int c;
-	while ( ( c = getopt(argc, argv, "r:e:d:l:m:o:x:c:h") ) != -1 ) {
+	while ( ( c = getopt(argc, argv, "r:e:d:l:m:o:x:c:f:h") ) != -1 ) {
 		switch (c) {
 		case 'r':
 			prng_seed = atoi(optarg);
@@ -66,6 +76,7 @@ int main(int argc, char *argv[]) {
 		case 'l':
 			cell_length = atoi(optarg);
 			if ( (cell_length <= 0) || ((cell_length % LINE_BYTE_WIDTH) != 0) ) {
+				fprintf(stderr, "[ERROR] Invalid cell_length\n");
 				usage( argv );
 			}
 			break;
@@ -80,6 +91,17 @@ int main(int argc, char *argv[]) {
 			break;
 		case 'c':
 			max_reconstruction = atoi(optarg);
+			break;
+		case 'f':
+			int ret_val_local;
+			ret_val_local = OPAE_SIMPLE_WRAPPER_parse_pcie_sbdf ( 
+												optarg,
+												&pcie_sbdf
+											);
+			if ( ret_val_local != 0 ) {
+				fprintf(stderr, "[ERROR] Invalid PCIe SBDF format\n");
+				usage( argv );
+			}
 			break;
 		case 'h':
 		default:
@@ -110,7 +132,8 @@ int main(int argc, char *argv[]) {
 	res = OPAE_SIMPLE_WRAPPER_init ( 
 								&accel_handle, 
 								AFU_ACCEL_UUID,
-								(volatile uint64_t**)&mmio_ptr
+								(volatile uint64_t**)&mmio_ptr,
+								pcie_sbdf
 							);
 	fpga_assert(res);
 
@@ -259,7 +282,7 @@ int main(int argc, char *argv[]) {
 
 			// Pack results in cells buffer
 			// Always read from first reconstructed block at index 0
-			memcpy(cell_ptrs[e + RS_K], ((uint8_t(*)[cell_length])reconstructed_blocks_out)[0], sizeof(uint8_t) * cell_length );
+			memcpy(cell_ptrs[e + RS_K], (const void*)reconstructed_blocks_out, sizeof(uint8_t) * cell_length );
 		}	
 
 	} // !encode_isal
@@ -382,12 +405,9 @@ int main(int argc, char *argv[]) {
 				print_contiguous_cell(stdout, (uint8_t*)reconstructed_blocks_out, ONE_ERASURE, cell_length, LINE_BYTE_WIDTH );
 			#endif
 
-				// Read data
-				for ( unsigned int i = 0; i < RS_P; i++ ) {
-					for ( int l = 0; l < cell_length; l++ ) {
-						recover_outp[i][l] = ((uint8_t(*)[cell_length])reconstructed_blocks_out)[i][l];
-					}
-				}
+				// Read data, always from first output cell
+				memcpy(recover_outp[0], (const void*)reconstructed_blocks_out, cell_length); // copy buffer
+				
 			} // !decode_isal
 
 			// Check that recovered buffers are the same as original

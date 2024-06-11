@@ -95,10 +95,65 @@ fpga_result OPAE_SIMPLE_WRAPPER_debug_read (
 	return res;
 }
 
+// Parse string in format "SSSS:BB:DD.F"
+int OPAE_SIMPLE_WRAPPER_parse_pcie_sbdf ( 
+												const char* input_string,
+												OPAE_SIMPLE_WRAPPER_pcie_sbdf_t* pcie_sbdf
+											) {
+	// Return value
+	(*pcie_sbdf) = {
+								.segment 	= 0,
+								.bus 		= 1,
+								.device 	= 0,
+								.function 	= 1
+							};
+
+	// Utility string
+	char tmp_string[5];
+	// Assume 12 chars
+	char sbdf_string[] = "SSSS:BB:DD.F";;
+	const size_t len_sbdf = strlen(sbdf_string);
+
+	// Copy input to local string
+	strncpy(sbdf_string, input_string, len_sbdf);
+	sbdf_string[len_sbdf] = '\0';
+
+	// Check valid PCIe format, expected SSSS:BB:DD.F"
+	// TODO: check values are numeric, otherwise 0 is returned from atoi()
+	if (
+		(sbdf_string[ 4] != ':') ||
+		(sbdf_string[ 7] != ':') ||
+		(sbdf_string[10] != '.') 
+	) {
+			return -1;
+	}
+
+	// Parse SSSS
+	strncpy(tmp_string, sbdf_string, 4);
+	tmp_string[4] = '\0';
+	(*pcie_sbdf).segment	= atoi(tmp_string);
+	// Parse BB
+	strncpy(tmp_string, &(sbdf_string[5]), 2);
+	tmp_string[2] = '\0';
+	(*pcie_sbdf).bus 		= atoi(tmp_string);
+	// Parse DD
+	strncpy(tmp_string, &(sbdf_string[8]), 2);
+	tmp_string[2] = '\0';
+	(*pcie_sbdf).device	= atoi(tmp_string);
+	// Parse F
+	strncpy(tmp_string,  &(sbdf_string[11]), 1);
+	tmp_string[1] = '\0';
+	(*pcie_sbdf).function	= atoi(tmp_string);
+
+	// Ok
+	return 0;
+}
+
 fpga_result OPAE_SIMPLE_WRAPPER_init ( 
 							fpga_handle* accel_handle,
 							const char *accel_uuid,
-                           	volatile uint64_t** mmio_ptr
+                           	volatile uint64_t** mmio_ptr,
+							OPAE_SIMPLE_WRAPPER_pcie_sbdf_t	pcie_sbdf
 						) {
     fpga_result res = FPGA_OK;
 	
@@ -122,6 +177,26 @@ fpga_result OPAE_SIMPLE_WRAPPER_init (
 	res = fpgaPropertiesSetGUID(filter, guid);
 	fpga_assert(res);
 
+#ifdef DEBUG_OSW
+	printf("%s:%d: PCIe address %04hu:%02hhu:%02hhu:%hhu\n",
+			__FILE__, __LINE__,
+			pcie_sbdf.segment,
+			pcie_sbdf.bus,
+			pcie_sbdf.device,
+			pcie_sbdf.function
+		);
+#endif // DEBUG_OSW
+
+	// Add PCIe S:B:D:F to filter
+	res = fpgaPropertiesSetSegment	(filter, pcie_sbdf.segment	);
+	fpga_assert(res);
+	res = fpgaPropertiesSetBus		(filter, pcie_sbdf.bus		);
+	fpga_assert(res);
+	res = fpgaPropertiesSetDevice	(filter, pcie_sbdf.device	);
+	fpga_assert(res);
+	res = fpgaPropertiesSetFunction	(filter, pcie_sbdf.function	);
+	fpga_assert(res);
+
     // Enumerate and get the tokens
     uint32_t num_matches;
 	const uint32_t max_tokens = 1; // We need just one
@@ -129,7 +204,14 @@ fpga_result OPAE_SIMPLE_WRAPPER_init (
     res = fpgaEnumerate(&filter, 1, &accel_token, max_tokens, &num_matches);
 	fpga_assert(res);
     if ( num_matches < 1 ) {
-        fprintf(stderr, "Accelerator %s not found!\n", accel_uuid);
+        fprintf(stderr, "%s:%d: PCIe address %04hu:%02hhu:%02hhu:%hhu, AFU %s not found!\n",
+			__FILE__, __LINE__, 
+			pcie_sbdf.segment,
+			pcie_sbdf.bus,
+			pcie_sbdf.device,
+			pcie_sbdf.function,
+			accel_uuid
+			);
 		return FPGA_INVALID_PARAM;
 	}
 

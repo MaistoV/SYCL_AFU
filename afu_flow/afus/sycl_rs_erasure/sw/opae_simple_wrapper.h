@@ -5,6 +5,24 @@
 // Microseconds wait for AFU CSR polling
 #define SLEEP_TIME_US 1
 
+typedef struct OPAE_SIMPLE_WRAPPER_pcie_sbdf {
+	uint16_t segment;
+	uint8_t bus;
+	uint8_t device;
+	uint8_t function;
+} OPAE_SIMPLE_WRAPPER_pcie_sbdf_t;
+
+
+/// @brief Parse string in format "SSSS:BB:DD.F"
+/// @param input_string Input string in expected format
+/// @param pcie_sbdf Pointer to desination struct
+/// @return 0 if ok, -1 if wrong format
+/// @note This function uses atoi(), if chars in @input_string are not decimal digits, 0 will be returned
+int OPAE_SIMPLE_WRAPPER_parse_pcie_sbdf ( 
+									const char* input_string,
+									OPAE_SIMPLE_WRAPPER_pcie_sbdf_t* pcie_sbdf
+								);
+
 /// @brief Helping function for MMIO writes, assuming ASE not supporting mapped MMIO access
 /// @param accel_handle Handle to the AFU accelerator
 /// @param mmio_ptr Pointer to mapped MMIO space
@@ -48,11 +66,13 @@ void OPAE_SIMPLE_WRAPPER_mmio64_read (
 /// @param accel_handle Handle to the AFU accelerator
 /// @param accel_uuid UUID of the target AFU
 /// @param mmio_ptr Pointer to mapped MMIO space
+/// @param pcie_sbdf Struct for PCIe S:B:D:F function ID
 /// @return fpga_result-encoded exit code
 fpga_result OPAE_SIMPLE_WRAPPER_init ( 
 							fpga_handle* accel_handle,
 							const char *accel_uuid,
-                           	volatile uint64_t** mmio_ptr
+                           	volatile uint64_t** mmio_ptr,
+							OPAE_SIMPLE_WRAPPER_pcie_sbdf_t	pcie_sbdf
 						);
 
 /// @brief Allocate the input and output buffers for AFU

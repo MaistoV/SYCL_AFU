@@ -26,6 +26,7 @@ int usage( char** argv ) {
 		"  -m <0|1>		Measure reconstruction latency\n"
 		"  -o <dir>		Output directory for latency measures (ignored for -m=0)\n"
 		"  -x <0|1>		Decode once each cell and exit\n"
+		"  -f <value>	PCIe address in SSSS:BB:DD.F format\n"
 		"  -c <value>	Decode at most <value> cells and exit\n"
 		"  -l <value>	Cell length in bytes (positive multiple of 64B)\n"
 		, argv[0]
@@ -49,10 +50,20 @@ int main(int argc, char *argv[]) {
 	unsigned long max_permutations = 0;
 	unsigned int j, j_init = 0;
 
+	// Default 0000:01:00.1
+	OPAE_SIMPLE_WRAPPER_pcie_sbdf_t	pcie_sbdf = {
+								.segment 	= 0,
+								.bus 		= 1,
+								.device 	= 0,
+								.function 	= 1
+							};
+
+	// Utility string
+	char tmp_string[256];
+
 	// For latency measurement
 	char filename[256];
 	char filedir[256] = "./";
-	char tmp_string[256];
 	double time_sec = 0.;
 	FILE* fd_latency;
     std::chrono::time_point<
@@ -62,7 +73,7 @@ int main(int argc, char *argv[]) {
 
 	// Permutation buffers
 	int c;
-	while ( ( c = getopt(argc, argv, "r:e:d:l:m:o:x:c:h") ) != -1 ) {
+	while ( ( c = getopt(argc, argv, "r:e:d:l:m:o:x:c:f:h") ) != -1 ) {
 		switch (c) {
 		case 'r':
 			prng_seed = atoi(optarg);
@@ -90,6 +101,17 @@ int main(int argc, char *argv[]) {
 			break;
 		case 'c':
 			max_reconstruction = atoi(optarg);
+			break;
+		case 'f':
+			int ret_val_local;
+			ret_val_local = OPAE_SIMPLE_WRAPPER_parse_pcie_sbdf ( 
+												optarg,
+												&pcie_sbdf
+											);
+			if ( ret_val_local != 0 ) {
+				fprintf(stderr, "[ERROR] Invalid PCIe SBDF format\n");
+				usage( argv );
+			}
 			break;
 		case 'h':
 		default:
@@ -120,7 +142,8 @@ int main(int argc, char *argv[]) {
 	res = OPAE_SIMPLE_WRAPPER_init ( 
 								&accel_handle, 
 								AFU_ACCEL_UUID,
-								(volatile uint64_t**)&mmio_ptr
+								(volatile uint64_t**)&mmio_ptr,
+								pcie_sbdf
 							);
 	fpga_assert(res);
 
@@ -434,7 +457,7 @@ int main(int argc, char *argv[]) {
 				MEASURE_LATENCY_END_AND_PRINT(start, time_sec, fd_latency);
 			}
 		#ifdef DEBUG			
-			printf("%s:%d: reconstructed_blocks_out:\n", __FILE__, __LINE__);
+			printf("%s:%d: recover_outp:\n", __FILE__, __LINE__);
 			for ( unsigned int i = 0; i < NUM_ERASURES; i++ ) {
 				print_contiguous_cell(stdout, (uint8_t*)recover_outp[i], 1, cell_length, LINE_BYTE_WIDTH );
 			}
@@ -487,9 +510,7 @@ int main(int argc, char *argv[]) {
 
 			// Read data
 			for ( unsigned int i = 0; i < NUM_ERASURES; i++ ) {
-				for ( int l = 0; l < cell_length; l++ ) {
-					recover_outp[i][l] = ((uint8_t(*)[cell_length])reconstructed_blocks_out)[i][l];
-				}
+				memcpy(recover_outp[i], ((uint8_t(*)[cell_length])reconstructed_blocks_out)[i], cell_length); // copy buffer
 			}
 		} // !decode_isal
 
@@ -499,7 +520,6 @@ int main(int argc, char *argv[]) {
 		for ( unsigned int i = 0; i < NUM_ERASURES; i++ ) {
 			for ( j = j_init; j < RS_M; j++ ){	  // Scan the erasure pattern
 				if ( erasure_pattern_index[j] ) { // if high
-					printf("%s:%d: Checking reconstruction %u, cell %u\n", __FILE__, __LINE__, i, j);
 					// Check buffers
 					ret_val = memcmp(recover_outp[i], cell_ptrs[j], cell_length);
 
