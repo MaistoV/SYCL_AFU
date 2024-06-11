@@ -21,7 +21,7 @@ help:
 #######
 # FIM #
 #######
-
+	@cat "${ROOT_DIR}/scripts/make_help.txt"
 # FIM config file
 BASE_OFS_TOP_QSF = ${OFS_BUILD_ROOT}/syn/board/htk-nc220-agf014/syn_top/ofs_top.qsf
 PR_BUILD_OFS_TOP_QSF = ${OPAE_PLATFORM_ROOT}/hw/lib/build/syn/board/htk-nc220-agf014/syn_top/ofs_top.qsf
@@ -202,7 +202,7 @@ test_asp_fpga_sim:
 	./${SYCL_IP_NAME}.fpga_sim ${TEST_ARGS}
 
 test_asp_plain_c:
-test_asp_fpga: # Make sure to make aocl_aocx_initalize first
+test_asp_fpga: # Make sure to make aocl_aocx_initialize first
 test_asp_fpga_emu:
 test_asp_%:
 	cd ${SYCL_ASP_BUILD_DIR}; \
@@ -318,10 +318,17 @@ test_ase: afu_host
 # ISA-L #
 #########
 # Alias ISA-L on plain_c ASP or IP implementations
-# TODO: switch to test_gbs to minimize coupling with OneAPI
+# NOTE: Not using test_gbs since it would require gbs_configure first
 
 test_isal: test_ip_plain_c
 oneapi_isal: oneapi_ip_plain_c
+
+##################
+# Measures Power #
+##################
+# TODO: test, evaluate and refine
+measure_power:
+	${ROOT_DIR}/measures/power/measure_power_top.sh ${MEASURE_POWER_DATA_DIR}
 
 ############################
 # Measures (single-thread) #
@@ -341,10 +348,6 @@ measure_%:
 		${MEASURE_NUM_REPS} 	\
 		${MEASURE_MAX_DECODE} 	\
 		${MULTI_THREAD}
-
-# TODO: test, evaluate and refine
-measure_power:
-	${ROOT_DIR}/measures/power/measure_power_top.sh ${MEASURE_POWER_DATA_DIR}
 
 #########################
 # Plots (single-thread) #
@@ -412,6 +415,7 @@ clean_afu_host:
 clean_oneapi_ip_report:
 #	SYCL IP
 	rm -rf ${SYCL_IP_PRJ}
+	rm -rf ${SYCL_IP_PRJ_ARCHIVE}
 #	Exported SYCL IP
 	rm -rf ${SYCL_IP_PRJ_AFU_EXPORT}
 

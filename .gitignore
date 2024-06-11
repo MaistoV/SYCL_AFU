@@ -21,6 +21,7 @@ backup*
 data*/
 *.png
 output_plots/
+__pycache__
 
 # Simulation files
 transcript

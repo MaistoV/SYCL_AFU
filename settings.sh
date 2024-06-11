@@ -235,6 +235,7 @@ export ONEAPI_SAMPLES_INCLUDE=${ONEAPI_SAMPLES_DIR}/DirectProgramming/C++SYCL_FP
 
 # Original project path
 export SYCL_IP_PRJ=${SYCL_IP_BUILD_DIR}/${SYCL_IP_NAME}_report.prj
+export SYCL_IP_PRJ_ARCHIVE=${SYCL_IP_BUILD_DIR}/${SYCL_IP_NAME}_report.a
 # Exported project path
 export SYCL_IP_PRJ_AFU_EXPORT=${AFU_HW_DIR}/${SYCL_IP_NAME}_report.prj
 
