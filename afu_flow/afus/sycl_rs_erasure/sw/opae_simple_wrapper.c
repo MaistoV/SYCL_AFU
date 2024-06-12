@@ -119,7 +119,7 @@ int OPAE_SIMPLE_WRAPPER_parse_pcie_sbdf (
 	sbdf_string[len_sbdf] = '\0';
 
 	// Check valid PCIe format, expected SSSS:BB:DD.F"
-	// TODO: check values are numeric, otherwise 0 is returned from atoi()
+	// TODO: check values are valid hex digits, otherwise 0 is returned from strtol()
 	if (
 		(sbdf_string[ 4] != ':') ||
 		(sbdf_string[ 7] != ':') ||
@@ -131,19 +131,19 @@ int OPAE_SIMPLE_WRAPPER_parse_pcie_sbdf (
 	// Parse SSSS
 	strncpy(tmp_string, sbdf_string, 4);
 	tmp_string[4] = '\0';
-	(*pcie_sbdf).segment	= atoi(tmp_string);
+	(*pcie_sbdf).segment	= strtol(tmp_string, NULL, 16);
 	// Parse BB
 	strncpy(tmp_string, &(sbdf_string[5]), 2);
 	tmp_string[2] = '\0';
-	(*pcie_sbdf).bus 		= atoi(tmp_string);
+	(*pcie_sbdf).bus 		= strtol(tmp_string, NULL, 16);
 	// Parse DD
 	strncpy(tmp_string, &(sbdf_string[8]), 2);
 	tmp_string[2] = '\0';
-	(*pcie_sbdf).device	= atoi(tmp_string);
+	(*pcie_sbdf).device	= strtol(tmp_string, NULL, 16);
 	// Parse F
 	strncpy(tmp_string,  &(sbdf_string[11]), 1);
 	tmp_string[1] = '\0';
-	(*pcie_sbdf).function	= atoi(tmp_string);
+	(*pcie_sbdf).function	= strtol(tmp_string, NULL, 16);
 
 	// Ok
 	return 0;
@@ -178,7 +178,7 @@ fpga_result OPAE_SIMPLE_WRAPPER_init (
 	fpga_assert(res);
 
 #ifdef DEBUG_OSW
-	printf("%s:%d: PCIe address %04hu:%02hhu:%02hhu:%hhu\n",
+	printf("%s:%d: PCIe address %04x:%02x:%02x.%01x\n",
 			__FILE__, __LINE__,
 			pcie_sbdf.segment,
 			pcie_sbdf.bus,
@@ -204,7 +204,7 @@ fpga_result OPAE_SIMPLE_WRAPPER_init (
     res = fpgaEnumerate(&filter, 1, &accel_token, max_tokens, &num_matches);
 	fpga_assert(res);
     if ( num_matches < 1 ) {
-        fprintf(stderr, "%s:%d: PCIe address %04hu:%02hhu:%02hhu:%hhu, AFU %s not found!\n",
+        fprintf(stderr, "%s:%d: PCIe address %04x:%02x:%02x.%01x\n AFU %s not found!\n",
 			__FILE__, __LINE__, 
 			pcie_sbdf.segment,
 			pcie_sbdf.bus,

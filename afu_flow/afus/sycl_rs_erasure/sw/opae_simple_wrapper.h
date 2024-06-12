@@ -17,7 +17,7 @@ typedef struct OPAE_SIMPLE_WRAPPER_pcie_sbdf {
 /// @param input_string Input string in expected format
 /// @param pcie_sbdf Pointer to desination struct
 /// @return 0 if ok, -1 if wrong format
-/// @note This function uses atoi(), if chars in @input_string are not decimal digits, 0 will be returned
+/// @note This function uses strtol(), if chars in @input_string are not hex digits, 0 will be used instead
 int OPAE_SIMPLE_WRAPPER_parse_pcie_sbdf ( 
 									const char* input_string,
 									OPAE_SIMPLE_WRAPPER_pcie_sbdf_t* pcie_sbdf
