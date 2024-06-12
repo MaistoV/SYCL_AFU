@@ -206,7 +206,7 @@ export AFU_ENV="
 ###############
 # OneAPI Base #
 ###############
-export ONEAPI_ROOT=/opt/intel/oneapi
+export ONEAPI_ROOT=${ONEAPI_ROOT=/opt/intel/oneapi}
 export QUARTUS_ROOTDIR_OVERRIDE=$QUARTUS_ROOTDIR
 # Other OFS environment variables
 export WORKDIR=$OFS_ROOTDIR
