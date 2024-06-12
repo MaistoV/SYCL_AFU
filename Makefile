@@ -352,6 +352,7 @@ setup_asp_plain_c: oneapi_asp_plain_c
 setup_sycl_afu: afu_host gbs_configure
 
 MULTI_THREAD ?= 0
+SBDF ?= ${PAC_PCIE_SBD}.${FIRST_AFU_VF}
 
 measure_all: measure_isal measure_asp_fpga measure_asp_plain_c measure_sycl_afu
 
@@ -365,7 +366,8 @@ measure_%:
 		$* 						\
 		${MEASURE_NUM_REPS} 	\
 		${MEASURE_MAX_DECODE} 	\
-		${MULTI_THREAD}
+		${MULTI_THREAD}			\
+		${SBDF}
 
 #########################
 # Plots (single-thread) #
@@ -387,7 +389,6 @@ plot_power:
 # Measures (multi-thread) #
 ###########################
 NUM_THREADS ?= 2
-SBDF ?= ${PAC_PCIE_SBD}.${FIRST_AFU_VF}
 
 # measure_all: measure_isal measure_asp_fpga measure_asp_plain_c measure_sycl_afu
 

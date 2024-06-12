@@ -15,9 +15,9 @@
 
 # Configuration lists
 declare -a MULTI_ERASURE_SIMPLE_list=(1)
-# declare -a RS_SCHEMA_list=(RS_3_2 RS_6_3) # Missong 6_3
+# declare -a RS_SCHEMA_list=(RS_3_2 RS_6_3) # Missing 6_3
 declare -a RS_SCHEMA_list=(RS_3_2)
-declare -a HW_list=(sycl_afu asp_fpga)
+declare -a HW_list=(sycl_afu isal)
 
 # Number of threads
 # Start simple

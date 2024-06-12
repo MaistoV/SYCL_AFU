@@ -65,7 +65,7 @@ fi
 
 # AFU PCIe address
 SBDF="0000:01:00.1"
-if [[ "$6" != "" ]]; then
+if [[ "$7" != "" ]]; then
     SBDF=$7
 fi
 
