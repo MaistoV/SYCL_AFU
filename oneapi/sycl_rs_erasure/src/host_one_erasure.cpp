@@ -62,6 +62,7 @@ int usage( char** argv ) {
 		"  -x <0|1>		Decode once each cell and exit\n"
 		"  -c <value>	Decode at most <value> cells and exit\n"
 		"  -l <value>	Cell length in bytes (positive multiple of 64B)\n"
+		"  -f			Ignored\n"
 		, argv[0]
 	);
 	exit(0);
@@ -108,7 +109,7 @@ int main(int argc, char *argv[]) {
 
 	// Permutation buffers
 	int c;
-	while ( ( c = getopt(argc, argv, "r:e:d:l:m:o:x:c:h") ) != -1 ) {
+	while ( ( c = getopt(argc, argv, "r:e:d:l:m:o:x:c:f:h") ) != -1 ) {
 		switch (c) {
 		case 'r':
 			prng_seed = atoi(optarg);
@@ -136,6 +137,9 @@ int main(int argc, char *argv[]) {
 			break;
 		case 'c':
 			max_reconstruction = atoi(optarg);
+			break;
+		case 'f':
+			// Ignore for ASP
 			break;
 		case 'h':
 		default:
