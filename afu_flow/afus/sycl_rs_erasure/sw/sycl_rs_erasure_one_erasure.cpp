@@ -128,50 +128,56 @@ int main(int argc, char *argv[]) {
 	// Cell length is constant across AFU calls in this test
 	rs_erasure_csr.cell_length_byte_width	= cell_length / LINE_BYTE_WIDTH;
 
-	// Discover/Grab FPGA Resources
-	res = OPAE_SIMPLE_WRAPPER_init ( 
-								&accel_handle, 
-								AFU_ACCEL_UUID,
-								(volatile uint64_t**)&mmio_ptr,
-								pcie_sbdf
-							);
-	fpga_assert(res);
+	// Skip FPGA setup if only using ISA-L
+	if ( !(encode_isal && decode_isal) ) {
 
-	if ( getenv("WITH_ASE") != NULL ) {
-        printf("   *** ASE only detects a single AFU (port 0) ***\n");
-    }
+		//////////////////////////////////
+		// Discover/Grab FPGA Resources //
+		//////////////////////////////////
+		res = OPAE_SIMPLE_WRAPPER_init ( 
+									&accel_handle, 
+									AFU_ACCEL_UUID,
+									(volatile uint64_t**)&mmio_ptr,
+									pcie_sbdf
+								);
+		fpga_assert(res);
 
-	///////////////////////////
-	// Allocate MMIO buffers //
-	///////////////////////////
-	rs_erasure_input         = (volatile uint8_t*) OPAE_SIMPLE_WRAPPER_allocate_io_buffer (
-																				accel_handle,
-																				RS_INPUT_SIZE (cell_length),
-																				&wsid_in,
-																				&buf_pa_in
-																			);
-	reconstructed_blocks_out = (volatile uint8_t*) OPAE_SIMPLE_WRAPPER_allocate_io_buffer (
-																				accel_handle,
-																				RS_OUTPUT_SIZE(cell_length, ONE_ERASURE),
-																				&wsid_out,
-																				&buf_pa_out
-																			);
-																			
-	// Check pointers
-	assert(NULL != rs_erasure_input		   );
-	assert(NULL != reconstructed_blocks_out);
+		if ( getenv("WITH_ASE") != NULL ) {
+			printf("   *** ASE only detects a single AFU (port 0) ***\n");
+		}
 
-	/////////////////////////
-	// Load AFU parameters //
-	/////////////////////////
-	// Write physical address to AFU CSR
-	OPAE_SIMPLE_WRAPPER_mmio64_write ( accel_handle, mmio_ptr, KERNEL_ARG_DEVICE_READ_REG, buf_pa_in );
-	printf("%s:%d write @%x, value = 0x%lx\n", __FILE__, __LINE__, KERNEL_ARG_DEVICE_READ_REG, buf_pa_in);
+		
+		///////////////////////////
+		// Allocate MMIO buffers //
+		///////////////////////////
+		rs_erasure_input         = (volatile uint8_t*) OPAE_SIMPLE_WRAPPER_allocate_io_buffer (
+																					accel_handle,
+																					RS_INPUT_SIZE (cell_length),
+																					&wsid_in,
+																					&buf_pa_in
+																				);
+		reconstructed_blocks_out = (volatile uint8_t*) OPAE_SIMPLE_WRAPPER_allocate_io_buffer (
+																					accel_handle,
+																					RS_OUTPUT_SIZE(cell_length, ONE_ERASURE),
+																					&wsid_out,
+																					&buf_pa_out
+																				);
+		// Check pointers
+		assert(NULL != rs_erasure_input		   );
+		assert(NULL != reconstructed_blocks_out);
+							
+		/////////////////////////
+		// Load AFU parameters //
+		/////////////////////////
+		// Write physical address to AFU CSR
+		OPAE_SIMPLE_WRAPPER_mmio64_write ( accel_handle, mmio_ptr, KERNEL_ARG_DEVICE_READ_REG, buf_pa_in );
+		printf("%s:%d write @%x, value = 0x%lx\n", __FILE__, __LINE__, KERNEL_ARG_DEVICE_READ_REG, buf_pa_in);
 
-	// Write physical address to AFU CSR
-	OPAE_SIMPLE_WRAPPER_mmio64_write ( accel_handle, mmio_ptr, KERNEL_ARG_DEVICE_WRITE_REG, buf_pa_out );
-	printf("%s:%d write @%x, value = 0x%lx\n", __FILE__, __LINE__, KERNEL_ARG_DEVICE_WRITE_REG, buf_pa_out);
-
+		// Write physical address to AFU CSR
+		OPAE_SIMPLE_WRAPPER_mmio64_write ( accel_handle, mmio_ptr, KERNEL_ARG_DEVICE_WRITE_REG, buf_pa_out );
+		printf("%s:%d write @%x, value = 0x%lx\n", __FILE__, __LINE__, KERNEL_ARG_DEVICE_WRITE_REG, buf_pa_out);
+	}
+	
 	// Seed the PRNG
 	srand(prng_seed);
 
@@ -445,14 +451,19 @@ int main(int argc, char *argv[]) {
 		printf("%s:%d: New latency data appended on file %s\n", __FILE__, __LINE__, tmp_string);
 	}
 
-	// Clean up
-	res = OPAE_SIMPLE_WRAPPER_cleanup ( 
-										accel_handle, 
-										&fpgaInterruptEvent, 
-										wsid_in,  
-										wsid_out 
-									);
-	fpga_assert(res);
+	// Skip FPGA cleanup if only using ISA-L
+	if ( !(encode_isal && decode_isal) ) {
+		//////////////
+		// Clean up //
+		//////////////
+		res = OPAE_SIMPLE_WRAPPER_cleanup ( 
+											accel_handle, 
+											&fpgaInterruptEvent, 
+											wsid_in,  
+											wsid_out 
+										);
+		fpga_assert(res);
+	}
 
 	// Test summary
 	printf("%s:%d: Test passed\n RS[%d:%d]\n cell_length=%d,\n encodind with %s,\n decoding with %s,\n PRNG seed=%u\n",

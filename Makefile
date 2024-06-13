@@ -327,11 +327,8 @@ test_ase: afu_host
 #########
 # ISA-L #
 #########
-# Alias ISA-L on plain_c ASP or IP implementations
-# NOTE: Not using test_gbs since it would require gbs_configure first
-
-test_isal: test_ip_plain_c
-oneapi_isal: oneapi_ip_plain_c
+# Alias ISA-L on SYCL AFU host code
+test_isal: test_gbs
 
 ##################
 # Measures Power #
