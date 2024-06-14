@@ -16,7 +16,9 @@ export PAC_PCIE_BD=$(echo $PAC_PCIE_SBD | awk -F ':' '{print $2 ":" $3}')
 # Hitek Board
 export BOARD=htk-nc220-agf014
 
-# For HEM tests 
+#############
+# HEM tests #
+#############
 export HEM_OUT_DIR=$(pwd)/HEM/results 
 
 #################
@@ -42,18 +44,19 @@ export FPGA="$BOARD_VAR"
 #################
 # OFSS FIM flow # 
 #################
+export NO_HEMS=${NO_HEMS=1}
 
-export FIM_NUM_PF0_VFS=${FIM_NUM_PF0_VFS=10}
-# export OFSS_CONFIG=pf0_${FIM_NUM_PF0_VFS}vf
-export OFSS_CONFIG=pf0_${FIM_NUM_PF0_VFS}vf_no_hems
-
+export FIM_NUM_PF0_VFS=${FIM_NUM_PF0_VFS=4}
+export OFSS_CONFIG=pf0_${FIM_NUM_PF0_VFS}vf
 # First VF number exposing AFU logic
 export FIRST_AFU_VF=5
 # If HEMs are removed
-if [[ "${OFSS_CONFIG}" == *"no_hems"* ]]; then
+if [[ $NO_HEMS == 1 ]]; then
+    export OFSS_CONFIG=${OFSS_CONFIG}_no_hems
     export FIRST_AFU_VF=1
 fi
 
+# For simplicity, always build from custom OFSS configs
 export OFSS_CONFIG_DIR=${ROOT_DIR}/fim_flow/ofss_configs/ofss_config_${OFSS_CONFIG}
 
 # Adjust max number of AFUs
@@ -288,7 +291,7 @@ export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$OFS_ASP_ROOT/linux64/lib
 # Measures #
 ############
 # Select the exeriments profile
-export EXPERIMENT_PROFILE=${EXPERIMENT_PROFILE="1MB"} # Only one cell length
+# export EXPERIMENT_PROFILE=${EXPERIMENT_PROFILE="1MB"} # Only one cell length
 export EXPERIMENT_PROFILE=${EXPERIMENT_PROFILE="QUICK"} # Reduced number of samples
 # export EXPERIMENT_PROFILE=${EXPERIMENT_PROFILE="COMPLETE"}  # Full set of samples
 
@@ -331,15 +334,15 @@ fi
 ########################
 # Print out enviroment #  
 ########################
-echo "Dump environment:"
-# Printing all (Quartus, OpenCL SDK, GCC) versions for user info
-echo ""
-quartus_sh -v
-echo ""
-icpx --version # (for Intel® oneAPI Base Toolkit (Base Kit))
-echo ""
-gcc --version | grep gcc --color=none
-echo ""
+# echo "Dump environment:"
+# # Printing all (Quartus, OpenCL SDK, GCC) versions for user info
+# echo ""
+# quartus_sh -v
+# echo ""
+# icpx --version # (for Intel® oneAPI Base Toolkit (Base Kit))
+# echo ""
+# gcc --version | grep gcc --color=none
+# echo ""
 
 echo "PAC_PCIE_SBD          : $PAC_PCIE_SBD"
 echo "OFSS_CONFIG           : $OFSS_CONFIG"

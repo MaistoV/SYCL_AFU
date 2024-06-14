@@ -1,10 +1,12 @@
 # Default variables value
 TEST_ARGS ?=
+SBDF ?= ${PAC_PCIE_SBD}.${FIRST_AFU_VF}
 RESEED_FITTER ?= 0
 INTERRUPT_EVENTS ?= 0
 NO_ASE_SUPPORT ?= 0
 AFU_HOST_DEFINES ?=
-ACL_DEVICE ?= acl0 # Assuming only one device connected
+# Assuming only one device connected
+ACL_DEVICE ?= acl0
 SYCL_DEBUG ?= 0
 SYCL_FAST_COMPILE ?= 0
 SYCL_CMAKE_FLAGS ?=
@@ -12,6 +14,9 @@ MMD_DEBUG ?= 0
 FIM_IMAGE ?= ${FIM_IMAGE_USER1}
 FIM_UPDATE_DEBUG ?= 0
 RSU_DEBUG ?= 0
+
+# Append default VF number
+TEST_ARGS += -f ${SBDF}
 
 # Environment check
 ifndef ROOT_DIR
@@ -128,11 +133,8 @@ ifeq (${SYCL_DEBUG}, 1)
 endif
 
 # SYCL CMake flags
-# TODO: test
-#	-⁠Xsoptimize=throughput-area-balanced, reduced throughput
-#	-Xsoptimize=area, decreases fMax
-USER_HARDWARE_FLAGS ?=
-# USER_HARDWARE_FLAGS += "-Xsoptimize=latency -Xsno-hardware-kernel-invocation-queue"
+# NOTE: USER_HARDWARE_FLAGS must be between apices
+USER_HARDWARE_FLAGS := "-Xsoptimize=latency -Xsno-hardware-kernel-invocation-queue"
 SYCL_CMAKE_FLAGS += -DUSER_HARDWARE_FLAGS=${USER_HARDWARE_FLAGS}
 
 # SYCL IP-related environment
@@ -147,19 +149,21 @@ CMAKE_ENV = SYCL_IP_NAME=${SYCL_IP_NAME} \
 CMAKE = ${CMAKE_ENV} cmake .. ${SYCL_CMAKE_FLAGS}
 
 # Build-time variables
-SCYL_FREQ_MHZ ?= 600
+# Kernel-related
+SCYL_FREQ_MHZ ?= 350
 ifdef SCYL_FREQ_MHZ
 	SYCL_CXX_DEFINES += -DSCYL_FREQ_MHZ=${SCYL_FREQ_MHZ}
 endif
+LOOP_COALESCE ?= 1
+ifeq (${LOOP_COALESCE}, 1)
+	SYCL_CXX_DEFINES += -DLOOP_COALESCE
+endif
+# Host-related
 ifeq (${MULTI_ERASURE_SIMPLE}, 1)
 	SYCL_CXX_DEFINES += -DMULTI_ERASURE_SIMPLE
 endif
 ifeq (${SYCL_DEBUG}, 1)
 	SYCL_CXX_DEFINES += -DDEBUG
-endif
-LOOP_COALESCE ?= 0
-ifeq (${LOOP_COALESCE}, 1)
-	SYCL_CXX_DEFINES += -DLOOP_COALESCE
 endif
 SYCL_MAKE_ENV = "CXX_DEFINES=${SYCL_CXX_DEFINES}"
 
@@ -319,7 +323,8 @@ AFU_ELF_NAME ?= bin/${AFU_NAME}
 test_sycl_afu: test_gbs
 test_gbs: #afu_host
 #	Run host application
-	cd ${AFU_SW_DIR}; ./${AFU_ELF_NAME} ${TEST_ARGS}
+# 	NOTE: default SBDF will be overridden by content of TEST_ARGS ${TEST_ARGS}
+	cd ${AFU_SW_DIR}; ./${AFU_ELF_NAME} -f ${SBDF}
 
 test_ase: afu_host
 	cd ${AFU_SW_DIR}; with_ase ./${AFU_ELF_NAME} ${TEST_ARGS}
@@ -395,9 +400,8 @@ measure_multi_thread_asp_plain_c: # For debug
 measure_multi_thread_sycl_afu:
 measure_multi_thread_%:
 	${MEASURE_LATENCY_DIR}/scripts/measure_latency_multi_thread.sh \
-		measure_$* 		\
-		${NUM_THREADS} 	\
-		${SBDF}
+		$*		 		\
+		${NUM_THREADS}
 
 ########################
 # Plots (multi-thread) #
@@ -442,6 +446,7 @@ clean_oneapi_ip_report:
 #	Exported SYCL IP
 	rm -rf ${SYCL_IP_PRJ_AFU_EXPORT}
 
+clean_ip: clean_oneapi_ip
 clean_oneapi_ip: clean_oneapi_ip_report
 #	Build directory
 	rm -rf ${SYCL_IP_BUILD_DIR}
