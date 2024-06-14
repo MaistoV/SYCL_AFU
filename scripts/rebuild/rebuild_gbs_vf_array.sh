@@ -7,6 +7,7 @@ export FIM_NUM_PF0_VFS=13
 export NO_HEMS=1
 source settings.sh > /dev/null
 make clean_fim_pr
+make fim_build_pr &> fim_build_pr.${OFSS_CONFIG}.log
 # Build GBS
 export AFU_MAX_NUM=12
 export RS_SCHEMA=RS_3_2
@@ -19,6 +20,7 @@ unset OPAE_PLATFORM_ROOT
 # Rebuild PR-tree
 export FIM_NUM_PF0_VFS=4
 export NO_HEMS=1
+export RESEED_FITTER=1
 source settings.sh > /dev/null
 make clean_fim_pr
 make fim_build_pr &> fim_build_pr.${OFSS_CONFIG}.log
@@ -28,4 +30,5 @@ export RS_SCHEMA=RS_6_3
 source settings.sh > /dev/null
 make clean_gbs
 make gbs &> gbs.${AFU_PARAMS}.log
+unset RESEED_FITTER
 unset OPAE_PLATFORM_ROOT

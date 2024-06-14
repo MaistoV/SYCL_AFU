@@ -21,7 +21,7 @@ endif
 all: help
 
 help:
-	@cat "${ROOT_DIR}/scripts/make_help.txt"
+	@cat "${ROOT_DIR}/scripts/misc/make_help.txt"
 	
 #######
 # FIM #
@@ -97,7 +97,7 @@ pac_powercycle_%:
 	sudo rsu ${RSU_FLAGS} fpga --page=$* ${PAC_PCIE_SBD}.0
 
 opae.io_bind:
-	${ROOT_DIR}/scripts/opae.io_bind.sh
+	${ROOT_DIR}/scripts/opae.io/opae.io_bind.sh
 
 opae.io_bind_one:
 	sudo pci_device ${PAC_PCIE_SBD}.0 vf 1
@@ -105,7 +105,7 @@ opae.io_bind_one:
 	opae.io ls
 
 opae.io_release:
-	${ROOT_DIR}/scripts/opae.io_release.sh
+	${ROOT_DIR}/scripts/opae.io/opae.io_release.sh
 	
 pac_hot_plug:
 	sudo pci_device ${PAC_PCIE_SBD}.0 unplug
@@ -296,7 +296,7 @@ ase_launch: ${AFU_ASE_DIR}
 # Open Wafeform Log File
 ase_waves: ${AFU_ASE_DIR}/work/vsim.wlf
 	vsim $<										\
-		-do ${ROOT_DIR}/scripts/add_waves.do 	\
+		-do ${ROOT_DIR}/scripts/misc/add_waves.do 	\
 		-debugdb # ${AFU_ASE_DIR}/work/vsim.dbg
 
 # Setup AFU sysnthesis environment
