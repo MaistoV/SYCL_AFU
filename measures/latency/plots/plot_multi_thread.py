@@ -4,7 +4,7 @@ import pandas
 import numpy
 import sys
 import os
-import plot_latency_common as common
+import plot_common as common
 
 # Source data directory
 root_data_dir = "../data/"
@@ -25,7 +25,7 @@ os.makedirs(plot_dir, exist_ok=True)
 hw_configs_local = ["" for _ in range(2) ]
 hw_configs_local [common.ISA_L	 ] = common.hw_configs[common.ISA_L   ]
 hw_configs_local [common.SYCL_AFU] = common.hw_configs[common.SYCL_AFU]
-# hw_configs_local [common.PLAIN_C] = common.hw_configs[common.SYCLPLAIN_C_AFU]
+# hw_configs_local [common.PLAIN_C] = common.hw_configs[common.PLAIN_C_AFU]
 
 ###########################
 # Source data directories #
@@ -54,8 +54,10 @@ num_threads = [0. for _ in range(len(hw_configs_local))]
 for hw in range(0,len(hw_configs_local)):
 	# Compose base directories: <data_dirs[hw]>_<pid>
 	data_dirs_pid = glob.glob(data_dirs[hw] + "_*")
-	# Save how many threads
+	# Count how many threads
 	num_threads[hw] = len(data_dirs_pid)
+	assert(num_threads[hw] != 0)
+
     # Loop over directories, RS, common.cell_length
 	for dir_index in range(0,len(data_dirs_pid)):
 		for rs in range(0,len(common.RS_SCHEMA_list)):

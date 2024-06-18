@@ -6,7 +6,7 @@
 # $3: Profile, in {1MB, SIM, QUICK, COMPLETE}
 ###############################################
 
-num_runs=$1
+num_reps=$1
 filename=$2
 profile=$3
 
@@ -38,6 +38,10 @@ case $profile in
                 $((32*1024*1024))   $((64*1024*1024))
             )
         ;;
+    *)
+        printf "[ERROR] Experiment profile $1 not supported" >&2
+        exit -1
+        ;;
 esac
 
 # Create new empty file
@@ -47,7 +51,7 @@ touch $filename
 # Loop over various lengths
 for len in "${len_list[@]}"
 do
-    for (( i=1; i<=$num_runs; i++ ))
+    for (( i=1; i<=$num_reps; i++ ))
     do
         CMD="$len"
         echo ${CMD} >> $filename

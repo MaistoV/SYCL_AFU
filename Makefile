@@ -369,7 +369,7 @@ measure_asp_fpga_sim:
 measure_asp_plain_c: # For debug
 measure_sycl_afu:
 measure_%:
-	${MEASURE_LATENCY_DIR}/scripts/measure_latency_top.sh \
+	${MEASURE_LATENCY_DIR}/scripts/measure_top.sh \
 		$* 						\
 		${MEASURE_NUM_REPS} 	\
 		${MEASURE_MAX_DECODE} 	\
@@ -380,9 +380,9 @@ measure_%:
 # Plots (single-thread) #
 #########################
 
-plot_latency:
+plot:
 	cd ${MEASURE_LATENCY_DIR}/plots; \
-	python plot_latency.py ${MEASURE_LATENCY_DATA_DIR} ${MEASURE_LATENCY_PLOT_OUT_DIR}
+	python plot.py ${MEASURE_LATENCY_DATA_DIR} ${MEASURE_LATENCY_PLOT_OUT_DIR}
 
 plot_cycles:
 	cd ${MEASURE_LATENCY_DIR}/plots; \
@@ -395,25 +395,22 @@ plot_power:
 ###########################
 # Measures (multi-thread) #
 ###########################
-NUM_THREADS ?= 2
-
-# measure_all: measure_isal measure_asp_fpga measure_asp_plain_c measure_sycl_afu
+NUM_THREADS ?= 4
 
 measure_multi_thread_isal:
-# measure_multi_thread_asp_fpga: # Not supported
 measure_multi_thread_asp_plain_c: # For debug
 measure_multi_thread_sycl_afu:
 measure_multi_thread_%:
-	${MEASURE_LATENCY_DIR}/scripts/measure_latency_multi_thread.sh \
+	${MEASURE_LATENCY_DIR}/scripts/measure_multi_thread.sh \
 		$*		 		\
 		${NUM_THREADS}
 
 ########################
 # Plots (multi-thread) #
 ########################
-plot_multi_thread_latency:
+plot_multi_thread:
 	cd ${MEASURE_LATENCY_DIR}/plots; \
-	python plot_multi_thread_latency.py 	\
+	python plot_multi_thread.py 	\
 		${MEASURE_LATENCY_DATA_DIR}		\
 		${MEASURE_LATENCY_PLOT_OUT_DIR}
 
@@ -421,11 +418,10 @@ plot_multi_thread_latency:
 # 	cd ${MEASURE_LATENCY_DIR}/plots; \
 # 	python plot_power.py ${MEASURE_LATENCY_DATA_DIR} ${MEASURE_LATENCY_PLOT_OUT_DIR}
 
-
 ############
 # Clean up #
 ############
-clean_measure_latency:
+clean_measure:
 	rm -rf ${MEASURE_LATENCY_DATA_DIR}
 
 clean_fim_pr:

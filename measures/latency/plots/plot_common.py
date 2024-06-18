@@ -51,7 +51,6 @@ hw_name			[SYCL_AFU] = "SYCL AFU"
 # Reed-Solomon formats #
 ########################
 RS_SCHEMA_list = ["3_2", "6_3" ]
-# RS_SCHEMA_list = ["3_2" ]
 RS_SCHEMA_txt  = ["3:2", "6:3" ]
 RS_color = ["g", "b"]
 RS_6_3 = 1

@@ -4,7 +4,7 @@ import pandas
 import numpy
 import sys
 import os
-import plot_latency_common as common
+import plot_common as common
 
 # Source data directory
 root_data_dir = "../data/"

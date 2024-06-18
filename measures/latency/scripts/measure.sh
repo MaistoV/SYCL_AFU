@@ -31,11 +31,11 @@ fi
 echo decode_ISAL = $decode_ISAL
 
 # Nember of repetitions per run
-num_runs=30
+num_reps=30
 if [[ "$2" != "" ]]; then
-    num_runs=$2
+    num_reps=$2
 fi
-echo num_runs = $num_runs
+echo num_reps = $num_reps
 
 # Output directory for -o flag
 out_dir=${ROOT_DIR}/measures/latency/data/data_ASP_SYCL/
@@ -77,12 +77,13 @@ fi
 exp_file=tmp.cell_length_experiments.txt
 # Append pid for MULTI_THREADing
 if [ ${MULTI_THREAD} -eq 1 ]; then
-  exp_file=${exp_file}_$$
+    # Keep PID here
+    exp_file=${exp_file}_$$
 fi
 
 # Regenerate random experimental points
 bash ${ROOT_DIR}/measures/latency/scripts/gen_experiments.sh \
-    $num_runs               \
+    $num_reps               \
     $exp_file               \
     ${EXPERIMENT_PROFILE}
 
@@ -106,13 +107,10 @@ for length in "${experiment_list[@]}"
 do
     exp=$(($exp + 1))
     # Launch the experiment
-    # NOTE: Also re-seed PRNG with the -r flag
-    export TEST_ARGS="-e 1 -d $decode_ISAL -m 1 -o $out_dir -r $(($len + $exp)) -l $length -c $MAX_DECODE -f $SBDF"
+    TEST_ARGS="-e 1 -d $decode_ISAL -m 1 -o $out_dir -r $(($len + $exp)) -l $length -c $MAX_DECODE -f $SBDF"
     CMD="make ${MAKE_TEST_TARGET}"
     echo "[$$]: $RS_SCHEMA: Running experiment $exp/${#experiment_list[@]} length = $length"
-    # echo ${CMD} TEST_ARGS=\"${TEST_ARGS}\"
-    # ${CMD} > /dev/null
-    ${CMD} &>> $$.log
+    ${CMD} TEST_ARGS="${TEST_ARGS}" &>> $$.log # Keep PID here
     # EXIT_CODE=$?; check_exit_code "$EXIT_CODE" "$CMD" && return $EXIT_CODE
 
     ###################
