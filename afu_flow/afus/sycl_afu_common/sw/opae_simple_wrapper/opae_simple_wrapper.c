@@ -1,27 +1,3 @@
-////////////////////////////////////////////////////////////////
-// Some of this code is borrowed from opae_svc_wrapper.cpp
-////////////////////////////////////////////////////////////////
-#include <opae/fpga.h> // for opae types
-#include <uuid/uuid.h> // for uuid_parse
-#include <stdio.h>	// for fprintf
-#include <stdlib.h> // for malloc
-#include <unistd.h> // for usleep
-#include <poll.h> // For poll()
-// #include <errno.h>
-#include <chrono>	// for measures
-
-// Register map emitted for DFL
-#include "afu_regmap.h"
-
-// Measure macros for latency
-#include "measure_latency.h"
-
-// Utility functions
-#include "sycl_afu_utils.h"
-
-// RS header
-#include "rs_erasure.hpp"
-
 #include "opae_simple_wrapper.h"
 
 void OPAE_SIMPLE_WRAPPER_mmio64_write (
@@ -33,7 +9,7 @@ void OPAE_SIMPLE_WRAPPER_mmio64_write (
 #ifndef NO_ASE_SUPPORT
 	if ( getenv("WITH_ASE") != NULL ) {
         fpga_result res = fpgaWriteMMIO64(accel_handle, 0, offset, value);
-		fpga_assert(res);
+		OSW_fpga_assert(res);
 	}
 	else
 #endif // !NO_ASE_SUPPORT
@@ -49,7 +25,7 @@ void OPAE_SIMPLE_WRAPPER_mmio32_write (
 #ifndef NO_ASE_SUPPORT
 	if ( getenv("WITH_ASE") != NULL ) {
         fpga_result res = fpgaWriteMMIO32(accel_handle, 0, offset, value);
-		fpga_assert(res);
+		OSW_fpga_assert(res);
 	}
 	else
 #endif // !NO_ASE_SUPPORT
@@ -66,7 +42,7 @@ void OPAE_SIMPLE_WRAPPER_mmio64_read (
 #ifndef NO_ASE_SUPPORT
 	if ( getenv("WITH_ASE") != NULL ) {
         fpga_result res = fpgaReadMMIO64(accel_handle, 0, offset, dest);
-		fpga_assert(res);
+		OSW_fpga_assert(res);
 	}
 	else
 #endif // !NO_ASE_SUPPORT
@@ -164,9 +140,9 @@ fpga_result OPAE_SIMPLE_WRAPPER_init (
 	// Compose the filter object
 	fpga_properties filter = NULL;
     res = fpgaGetProperties(NULL, &filter);
-	fpga_assert(res);
+	OSW_fpga_assert(res);
     res = fpgaPropertiesSetObjectType(filter, FPGA_ACCELERATOR);
-	fpga_assert(res);
+	OSW_fpga_assert(res);
 
     // Add the desired UUID to the filter
     fpga_guid guid;
@@ -175,7 +151,7 @@ fpga_result OPAE_SIMPLE_WRAPPER_init (
 		return FPGA_INVALID_PARAM;
 	}	
 	res = fpgaPropertiesSetGUID(filter, guid);
-	fpga_assert(res);
+	OSW_fpga_assert(res);
 
 #ifdef DEBUG_OSW
 	printf("%s:%d: PCIe address %04x:%02x:%02x.%01x\n",
@@ -189,20 +165,20 @@ fpga_result OPAE_SIMPLE_WRAPPER_init (
 
 	// Add PCIe S:B:D:F to filter
 	res = fpgaPropertiesSetSegment	(filter, pcie_sbdf.segment	);
-	fpga_assert(res);
+	OSW_fpga_assert(res);
 	res = fpgaPropertiesSetBus		(filter, pcie_sbdf.bus		);
-	fpga_assert(res);
+	OSW_fpga_assert(res);
 	res = fpgaPropertiesSetDevice	(filter, pcie_sbdf.device	);
-	fpga_assert(res);
+	OSW_fpga_assert(res);
 	res = fpgaPropertiesSetFunction	(filter, pcie_sbdf.function	);
-	fpga_assert(res);
+	OSW_fpga_assert(res);
 
     // Enumerate and get the tokens
     uint32_t num_matches;
 	const uint32_t max_tokens = 1; // We need just one
     fpga_token accel_token;
     res = fpgaEnumerate(&filter, 1, &accel_token, max_tokens, &num_matches);
-	fpga_assert(res);
+	OSW_fpga_assert(res);
     if ( num_matches < 1 ) {
         fprintf(stderr, "%s:%d: PCIe address %04x:%02x:%02x.%01x\n AFU %s not found!\n",
 			__FILE__, __LINE__, 
@@ -217,14 +193,14 @@ fpga_result OPAE_SIMPLE_WRAPPER_init (
 
     // Open match
 	res = fpgaOpen(accel_token, accel_handle, 0);
-	fpga_assert(res);
+	OSW_fpga_assert(res);
 
 	// Map MMIO address space
 	// Not supported by ASE
 	if ( getenv("WITH_ASE") == NULL ) {
 		volatile uint64_t * tmp_ptr;
 		res = fpgaMapMMIO(*accel_handle, 0, ((uint64_t **)&tmp_ptr));
-		fpga_assert(res);
+		OSW_fpga_assert(res);
 		assert(tmp_ptr != NULL);
 		*mmio_ptr = tmp_ptr;
 	}
@@ -240,13 +216,13 @@ fpga_result OPAE_SIMPLE_WRAPPER_init (
 	// Reset AFU
 	// Not supported by vfio plugin
 	// res = fpgaReset( *accel_handle );
-	// fpga_assert(res);
+	// OSW_fpga_assert(res);
 	
     // Clean up
     res = fpgaDestroyProperties(&filter);
-    fpga_assert(res);
+    OSW_fpga_assert(res);
 	res = fpgaDestroyToken(&accel_token);
-	fpga_assert(res);
+	OSW_fpga_assert(res);
 
     return res;
 }
@@ -263,11 +239,11 @@ volatile void * OPAE_SIMPLE_WRAPPER_allocate_io_buffer (
 
     int flags = 0;
     res = fpgaPrepareBuffer(accel_handle, size, (void**)&buf, wsid, flags);
-    fpga_assert(res);
+    OSW_fpga_assert(res);
 
     // Get the physical address of the buffer for the accelerator
     res = fpgaGetIOAddress(accel_handle, *wsid, io_addr);
-    fpga_assert(res);
+    OSW_fpga_assert(res);
 
 #ifdef DEBUG_OSW
 	printf("%s:%d io_addr %016lx:\n", __FILE__, __LINE__, *io_addr );
@@ -309,7 +285,7 @@ fpga_result OPAE_SIMPLE_WRAPPER_call_afu (
 	uint64_t rs_erasure_csrs = 0;
 	uint64_t erasure_pattern_64 	= erasure_pattern;
 	uint64_t survived_cells_64 		= survived_cells;
-	uint64_t cell_length_64			= cell_length / LINE_BYTE_WIDTH;
+	uint64_t cell_length_64			= cell_length / OSW_LINE_BYTE_WIDTH;
 	rs_erasure_csrs |= erasure_pattern_64 	<< 0u ;
 	rs_erasure_csrs |= survived_cells_64 	<< 16u;
 	rs_erasure_csrs |= cell_length_64		<< 32u;
@@ -328,10 +304,10 @@ fpga_result OPAE_SIMPLE_WRAPPER_call_afu (
 #ifdef INTERRUPT_EVENTS
 	// Register user interrupt with event accel_handle
 	res = fpgaCreateEventHandle(fpgaInterruptEvent);
-	fpga_assert(res);
+	OSW_fpga_assert(res);
 	uint32_t flags = 0; // uses IRQ bit 0, see instantiation of acmm_ccip_host_wr in afu.sv
 	res = fpgaRegisterEvent(accel_handle, FPGA_EVENT_INTERRUPT, *fpgaInterruptEvent, flags);
-	fpga_assert(res);
+	OSW_fpga_assert(res);
 #endif // INTERRUPT_EVENTS
 
 	//////////////////////////////
@@ -355,12 +331,14 @@ fpga_result OPAE_SIMPLE_WRAPPER_call_afu (
 #ifdef INTERRUPT_EVENTS
 	pfd.events = POLLIN;
 	res = fpgaGetOSObjectFromEventHandle(*fpgaInterruptEvent, &pfd.fd);
-	fpga_assert(res);
+	OSW_fpga_assert(res);
 #endif // INTERRUPT_EVENTS
 
 	// Start measure by macro
 	if ( measure_latency ) {
-		MEASURE_LATENCY_START(start);
+		// MEASURE_LATENCY_START(start);
+		// Expand macro to reduce dependecies
+		start = std::chrono::steady_clock::now();
 	}
 
 	// Start the AFU by writing a '1' into the start register
@@ -402,7 +380,11 @@ fpga_result OPAE_SIMPLE_WRAPPER_call_afu (
 
 	// End measure by macro
 	if ( measure_latency ) {
-		MEASURE_LATENCY_END_AND_PRINT(start, time_sec, fd_latency);
+		// MEASURE_LATENCY_END_AND_PRINT(start, time_sec, fd_latency);
+		// Expand macro to reduce dependecies
+		end = std::chrono::steady_clock::now();
+		time_sec = std::chrono::duration_cast<std::chrono::duration<double>>(end - start).count();
+		fprintf(fd_latency, "%0.10f\n", time_sec);
 	}
 
 	// Clear interrupt

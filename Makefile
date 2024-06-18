@@ -284,6 +284,11 @@ afu_host:
 		RS_SCHEMA=${RS_SCHEMA} \
 		AFU_HOST_DEFINES="${AFU_HOST_DEFINES}"
 
+# Create a static library for OPAE Simple Wrapper
+osw:
+	${MAKE} -C ${AFU_SW_DIR} $@ \
+		AFU_HOST_DEFINES="${AFU_HOST_DEFINES}"
+
 # Build and launch simulation
 ase_setup: clean_ase ${OPAE_PLATFORM_ROOT}
 #	Setup and launch simulator

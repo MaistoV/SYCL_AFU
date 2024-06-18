@@ -1,9 +1,39 @@
 #ifndef _OPAE_SIMPLE_WRAPPER_
 #define _OPAE_SIMPLE_WRAPPER_
 
+#include <opae/fpga.h> 	// for opae types
+#include <uuid/uuid.h> 	// for uuid_parse()
+#include <stdio.h>		// for fprintf()
+#include <stdlib.h> 	// for malloc
+#include <unistd.h> 	// for usleep
+#include <assert.h> 	// for assert()
+#include <poll.h> 		// For poll()
+#include <chrono>		// for measures
+// #include <errno.h>
+
+// Register map emitted for DFL
+#include "afu_regmap.h"
+
+// Measure macros for latency
+// #include "measure_latency.h"
+
+// Utility functions
+// #include "sycl_afu_utils.h"
+
+// RS header
+// #include "rs_erasure.hpp"
+
+// Width of interface in bytes
+#define OSW_LINE_BYTE_WIDTH (64u)
+// Milliseconds wait for poll()
 #define POLL_TIMEOUT_MS 100
 // Microseconds wait for AFU CSR polling
 #define SLEEP_TIME_US 1
+
+#define OSW_fpga_assert(res) if (FPGA_OK != (res)) { \
+							printf("%s:%d %s\n", __FILE__, __LINE__, fpgaErrStr((res))); \
+							exit((res)); \
+						}
 
 typedef struct OPAE_SIMPLE_WRAPPER_pcie_sbdf {
 	uint16_t segment;
