@@ -123,6 +123,7 @@ int main(int argc, char *argv[]) {
 	// OPAE-related variables
     fpga_handle accel_handle;
     // MMIO pointers and metadata
+	uint32_t mmio_num;
     volatile uint8_t * rs_erasure_input        ;
 	volatile uint8_t * reconstructed_blocks_out;
     uint64_t wsid_in, wsid_out;
@@ -149,7 +150,8 @@ int main(int argc, char *argv[]) {
 									&accel_handle, 
 									AFU_ACCEL_UUID,
 									(volatile uint64_t**)&mmio_ptr,
-									pcie_sbdf
+									pcie_sbdf,
+									&mmio_num
 								);
 		fpga_assert(res);
 
@@ -181,11 +183,11 @@ int main(int argc, char *argv[]) {
 		// Load AFU parameters //
 		/////////////////////////
 		// Write physical address to AFU CSR
-		OPAE_SIMPLE_WRAPPER_mmio64_write ( accel_handle, mmio_ptr, KERNEL_ARG_DEVICE_READ_REG, buf_pa_in );
+		OPAE_SIMPLE_WRAPPER_mmio64_write ( accel_handle, mmio_num, mmio_ptr, KERNEL_ARG_DEVICE_READ_REG, buf_pa_in );
 		printf("%s:%d write @%x, value = 0x%lx\n", __FILE__, __LINE__, KERNEL_ARG_DEVICE_READ_REG, buf_pa_in);
 
 		// Write physical address to AFU CSR
-		OPAE_SIMPLE_WRAPPER_mmio64_write ( accel_handle, mmio_ptr, KERNEL_ARG_DEVICE_WRITE_REG, buf_pa_out );
+		OPAE_SIMPLE_WRAPPER_mmio64_write ( accel_handle, mmio_num, mmio_ptr, KERNEL_ARG_DEVICE_WRITE_REG, buf_pa_out );
 		printf("%s:%d write @%x, value = 0x%lx\n", __FILE__, __LINE__, KERNEL_ARG_DEVICE_WRITE_REG, buf_pa_out);
 	}
 	
@@ -282,6 +284,7 @@ int main(int argc, char *argv[]) {
 											&fpgaInterruptEvent,
 											false, // Don't measure here
 											mmio_ptr,
+											mmio_num,
 											NULL	// Don't pass any fd	
 									);
 		fpga_assert(res);
@@ -506,6 +509,7 @@ int main(int argc, char *argv[]) {
 												&fpgaInterruptEvent,
 												measure_latency,
 												mmio_ptr,
+												mmio_num,
 												fd_latency
 										);
 			fpga_assert(res);
@@ -572,11 +576,12 @@ int main(int argc, char *argv[]) {
 		//////////////
 		// Clean up //
 		//////////////
-		res = OPAE_SIMPLE_WRAPPER_cleanup ( 
-											accel_handle, 
-											&fpgaInterruptEvent, 
-											wsid_in,  
-											wsid_out 
+		res = OPAE_SIMPLE_WRAPPER_cleanup (
+											accel_handle,
+											mmio_num,
+											&fpgaInterruptEvent,
+											wsid_in,
+											wsid_out
 										);
 		fpga_assert(res);
 	}
