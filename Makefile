@@ -16,7 +16,7 @@ FIM_UPDATE_DEBUG ?= 0
 RSU_DEBUG ?= 0
 
 # Append default VF number
-TEST_ARGS += -f ${SBDF}
+TEST_ARGS := ${TEST_ARGS} -f ${SBDF}
 
 # Environment check
 ifndef ROOT_DIR
@@ -328,8 +328,8 @@ AFU_ELF_NAME ?= bin/${AFU_NAME}
 test_sycl_afu: test_gbs
 test_gbs: #afu_host
 #	Run host application
-# 	NOTE: default SBDF will be overridden by content of TEST_ARGS ${TEST_ARGS}
-	cd ${AFU_SW_DIR}; ./${AFU_ELF_NAME} -f ${SBDF}
+# 	NOTE: default SBDF will be overridden by content of TEST_ARGS 
+	cd ${AFU_SW_DIR}; ./${AFU_ELF_NAME} -f ${SBDF} ${TEST_ARGS}
 
 test_ase: afu_host
 	cd ${AFU_SW_DIR}; with_ase ./${AFU_ELF_NAME} ${TEST_ARGS}
