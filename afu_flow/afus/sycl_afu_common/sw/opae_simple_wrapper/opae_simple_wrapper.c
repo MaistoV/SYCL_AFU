@@ -10,7 +10,7 @@ void OPAE_SIMPLE_WRAPPER_mmio64_write (
 #ifndef NO_ASE_SUPPORT
 	if ( getenv("WITH_ASE") != NULL ) {
         fpga_result res = fpgaWriteMMIO64(accel_handle, mmio_num, offset, value);
-		fpga_assert(res);
+		OSW_fpga_assert(res);
 	}
 	else
 #endif // !NO_ASE_SUPPORT
@@ -22,12 +22,12 @@ void OPAE_SIMPLE_WRAPPER_mmio32_write (
                                     uint32_t            mmio_num,
                                     volatile uint64_t * mmio_ptr,
                                     uint64_t            offset,
-                                    uint64_t             value
+                                    uint32_t            value
                                 ) {
 #ifndef NO_ASE_SUPPORT
 	if ( getenv("WITH_ASE") != NULL ) {
         fpga_result res = fpgaWriteMMIO32(accel_handle, mmio_num, offset, value);
-		fpga_assert(res);
+		OSW_fpga_assert(res);
 	}
 	else
 #endif // !NO_ASE_SUPPORT
@@ -45,7 +45,7 @@ void OPAE_SIMPLE_WRAPPER_mmio64_read (
 #ifndef NO_ASE_SUPPORT
 	if ( getenv("WITH_ASE") != NULL ) {
         fpga_result res = fpgaReadMMIO64(accel_handle, mmio_num, offset, dest);
-		fpga_assert(res);
+		OSW_fpga_assert(res);
 	}
 	else
 #endif // !NO_ASE_SUPPORT
@@ -206,7 +206,7 @@ fpga_result OPAE_SIMPLE_WRAPPER_init (
 		volatile uint64_t * tmp_ptr;
 		*mmio_num = (pcie_sbdf.device << 3) + pcie_sbdf.function;
 		res = fpgaMapMMIO(*accel_handle, *mmio_num, ((uint64_t **)&tmp_ptr));
-		fpga_assert(res);
+		OSW_fpga_assert(res);
 		assert(tmp_ptr != NULL);
 		*mmio_ptr = tmp_ptr;
 	}
