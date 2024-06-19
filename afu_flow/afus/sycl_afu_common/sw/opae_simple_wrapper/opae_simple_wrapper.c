@@ -216,7 +216,7 @@ fpga_result OPAE_SIMPLE_WRAPPER_init (
 	OPAE_SIMPLE_WRAPPER_mmio64_write ( *accel_handle, *mmio_num, *mmio_ptr, AFU_IRQ_EN, AFU_IRQ_EN_VALUE );
 
 #ifdef DEBUG_OSW
-	res = OPAE_SIMPLE_WRAPPER_debug_read( *accel_handle, *mmio_ptr );
+	res = OPAE_SIMPLE_WRAPPER_debug_read( *accel_handle, *mmio_num, *mmio_ptr );
 #endif // DEBUG_OSW
 
 	// Reset AFU
@@ -252,6 +252,7 @@ volatile void * OPAE_SIMPLE_WRAPPER_allocate_io_buffer (
 
 #ifdef DEBUG_OSW
 	printf("%s:%d io_addr %016lx:\n", __FILE__, __LINE__, *io_addr );
+	printf("%s:%d wsid %016lx:\n", __FILE__, __LINE__, *wsid );
     printf("%s:%d buf %p:\n", __FILE__, __LINE__, buf );
 #endif // DEBUG_OSW
 
@@ -271,8 +272,11 @@ fpga_result OPAE_SIMPLE_WRAPPER_call_afu (
                                 FILE*       		fd_latency
                             ) {
 	fpga_result res = FPGA_OK;
+	// For AFU interrupts
+#ifdef INTERRUPT_EVENTS
 	int poll_res;
 	struct pollfd pfd;
+#endif // INTERRUPT_EVENTS
 	// For measures
 	double time_sec = 0.;
     std::chrono::time_point<
@@ -323,17 +327,16 @@ fpga_result OPAE_SIMPLE_WRAPPER_call_afu (
 	// TODO: is there a cleaner way?
 	uint64_t status_val;
 	do {
-		sleep( SLEEP_TIME_US );
+		usleep( sleep_time_us );
 		OPAE_SIMPLE_WRAPPER_mmio64_read ( accel_handle, mmio_num, mmio_ptr, KERNEL_STATUS, &status_val );
 	#ifdef DEBUG_OSW
-		print_kernel_status(status_val);
+		OSW_print_kernel_status(status_val);
 	#endif // DEBUG_OSW
 	} while ( status_val & KERNEL_REGISTER_MAP_BUSY_MASK );
 
 	////////////////////////
 	// Start and wait AFU //
 	////////////////////////
-	// fpga_result start_and_wait_afu(fpga_handle afc_handle, struct pollfd *pfd, int *poll_res)
 #ifdef INTERRUPT_EVENTS
 	pfd.events = POLLIN;
 	res = fpgaGetOSObjectFromEventHandle(*fpgaInterruptEvent, &pfd.fd);
@@ -376,10 +379,10 @@ fpga_result OPAE_SIMPLE_WRAPPER_call_afu (
 #else // !INTERRUPT_EVENTS
 	// Active polling on AFU
 	do {
-		usleep( SLEEP_TIME_US );
+		usleep( sleep_time_us );
 		OPAE_SIMPLE_WRAPPER_mmio64_read ( accel_handle, mmio_num, mmio_ptr, KERNEL_STATUS, &status_val );
 	#ifdef DEBUG_OSW
-		print_kernel_status(status_val);
+		OSW_print_kernel_status(status_val);
 	#endif // DEBUG_OSW
 	} while ( !(status_val & KERNEL_REGISTER_MAP_DONE_MASK) );
 #endif // INTERRUPT_EVENTS
@@ -398,7 +401,7 @@ fpga_result OPAE_SIMPLE_WRAPPER_call_afu (
 	OPAE_SIMPLE_WRAPPER_mmio64_read ( accel_handle, mmio_num, mmio_ptr, KERNEL_CLEAR_INTERRUPT, &status_val );
 #ifdef DEBUG_OSW
 	printf("%s:%d Read from KERNEL_CLEAR_INTERRUPT...\n", __FILE__, __LINE__);
-	print_kernel_status(status_val);
+	OSW_print_kernel_status(status_val);
 #endif // DEBUG_OSW
 
 	return res;

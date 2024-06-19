@@ -21,10 +21,22 @@
 // Microseconds wait for AFU CSR polling
 #define SLEEP_TIME_US 1
 
+// Redefine macros locally to minimize coupling
 #define OSW_fpga_assert(res) if (FPGA_OK != (res)) { \
 							printf("%s:%d %s\n", __FILE__, __LINE__, fpgaErrStr((res))); \
 							exit((res)); \
 						}
+#define OSW_RS_INPUT_SIZE(cell_length,rs_k)				( cell_length * rs_k 			)	// Size of input buffer
+#define OSW_RS_OUTPUT_SIZE(cell_length,num_erasures)	( cell_length * num_erasures 	)	// Size of output buffer
+
+#define OSW_print_kernel_status( status_val ) \
+    printf("%s:%d status_val = %0lx\n" , __FILE__, __LINE__ , status_val); \
+    printf("\t.done    = %lx\n", (status_val & KERNEL_REGISTER_MAP_DONE_MASK    ) >> KERNEL_REGISTER_MAP_DONE_OFFSET      ); \
+    printf("\t.busy    = %lx\n", (status_val & KERNEL_REGISTER_MAP_BUSY_MASK    ) >> KERNEL_REGISTER_MAP_BUSY_OFFSET      ); \
+    printf("\t.stalled = %lx\n", (status_val & KERNEL_REGISTER_MAP_STALLED_MASK ) >> KERNEL_REGISTER_MAP_STALLED_OFFSET   ); \
+    printf("\t.unstall = %lx\n", (status_val & KERNEL_REGISTER_MAP_UNSTALL_MASK ) >> KERNEL_REGISTER_MAP_UNSTALL_OFFSET   ); \
+    printf("\t.valid   = %lx\n", (status_val & KERNEL_REGISTER_MAP_VALID_IN_MASK) >> KERNEL_REGISTER_MAP_VALID_IN_OFFSET  ); \
+    printf("\t.started = %lx\n", (status_val & KERNEL_REGISTER_MAP_STARTED_MASK ) >> KERNEL_REGISTER_MAP_STARTED_OFFSET   );
 
 typedef struct OPAE_SIMPLE_WRAPPER_pcie_sbdf {
 	uint16_t segment;
@@ -32,7 +44,6 @@ typedef struct OPAE_SIMPLE_WRAPPER_pcie_sbdf {
 	uint8_t device;
 	uint8_t function;
 } OPAE_SIMPLE_WRAPPER_pcie_sbdf_t;
-
 
 /// @brief Parse string in format "SSSS:BB:DD.F"
 /// @param input_string Input string in expected format
