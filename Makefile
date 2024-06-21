@@ -338,7 +338,8 @@ test_ase: afu_host
 # ISA-L #
 #########
 # Alias ISA-L on SYCL AFU host code
-test_isal: test_gbs
+test_isal:
+	${MAKE} test_gbs TEST_ARGS="${TEST_ARGS} -e1 -d1"
 
 ##################
 # Measures Power #
