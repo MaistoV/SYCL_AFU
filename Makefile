@@ -101,9 +101,14 @@ pac_powercycle_%:
 # 	Power cycle PAC
 	sudo rsu ${RSU_FLAGS} fpga --page=$* ${PAC_PCIE_SBD}.0
 
-opae.io_bind:
+opae.io_bind_all:
 	${ROOT_DIR}/scripts/opae.io/opae.io_bind.sh
 
+# Bind N VFs
+opae.io_bind_%:
+	${ROOT_DIR}/scripts/opae.io/opae.io_bind.sh $*
+
+# Bind only ${PAC_PCIE_SBD}.${FIRST_AFU_VF}
 opae.io_bind_one:
 	sudo pci_device ${PAC_PCIE_SBD}.0 vf 1
 	sudo opae.io -d ${PAC_PCIE_SBD}.${FIRST_AFU_VF} init ${USER}:${USER}
