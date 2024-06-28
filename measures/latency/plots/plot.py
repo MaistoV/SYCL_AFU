@@ -27,6 +27,7 @@ data_dirs[common.ISA_L   ]	= root_data_dir + "/data_ISA_L/"
 data_dirs[common.SYCL_ASP] = root_data_dir + "/data_SYCL_ASP_ASP_ZERO_COPY/"
 data_dirs[common.SYCL_AFU] = root_data_dir + "/data_SYCL_AFU/"
 # data_dirs[PLAIN_C ] = root_data_dir + "/data_PLAIN_C/"
+data_dirs[common.VFProxy ] = root_data_dir + "/data_VFProxy/"
 
 #############
 # Read data #

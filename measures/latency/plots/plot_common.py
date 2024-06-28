@@ -7,11 +7,12 @@ import numpy
 ###############
 
 # Hardware configurations
-hw_configs = ["ISA-L", "SYCL_AFU", "SYCL_ASP" ] #, "PLAIN_C"]
+hw_configs = ["ISA-L", "SYCL_AFU", "SYCL_ASP", "VFProxy"]
 ISA_L		= 0
 SYCL_AFU  	= 1
 SYCL_ASP  	= 2
 # PLAIN_C		= 3
+VFProxy		= 3
 
 # Plot formats
 hw_marker 		= ["" for _ in range(len(hw_configs)) ]
@@ -46,6 +47,12 @@ hw_name			[SYCL_AFU] = "SYCL AFU"
 # hw_line	 		[PLAIN_C] = "--"
 # hw_linewidth	[PLAIN_C] = 1
 # hw_name			[PLAIN_C] = "Plain C"
+
+# VFProxyformat
+hw_marker		[VFProxy] = "+"
+hw_line	 		[VFProxy] = "--"
+hw_linewidth	[VFProxy] = 1
+hw_name			[VFProxy] = "VFProxy"
 
 ########################
 # Reed-Solomon formats #
