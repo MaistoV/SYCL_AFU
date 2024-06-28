@@ -18,7 +18,7 @@
     printf("\t.started = %lx\n", (status_val & KERNEL_REGISTER_MAP_STARTED_MASK ) >> KERNEL_REGISTER_MAP_STARTED_OFFSET   );
 
 #define fpga_assert(res) if (FPGA_OK != (res)) { \
-                            printf("%s:%d %s\n", __FILE__, __LINE__, fpgaErrStr((res))); \
+							fprintf(stderr, "%s:%d %s\n", __FILE__, __LINE__, fpgaErrStr((res))); \
                             exit((res)); \
                         }
 
