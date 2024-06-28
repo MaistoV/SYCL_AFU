@@ -216,6 +216,7 @@ fpga_result OPAE_SIMPLE_WRAPPER_init (
 	OPAE_SIMPLE_WRAPPER_mmio64_write ( *accel_handle, *mmio_num, *mmio_ptr, AFU_IRQ_EN, AFU_IRQ_EN_VALUE );
 
 #ifdef DEBUG_OSW
+	printf("mmio_num = %u\n", *mmio_num);
 	res = OPAE_SIMPLE_WRAPPER_debug_read( *accel_handle, *mmio_num, *mmio_ptr );
 #endif // DEBUG_OSW
 
@@ -422,21 +423,33 @@ fpga_result OPAE_SIMPLE_WRAPPER_cleanup  (
 
 #ifdef INTERRUPT_EVENTS
 	// Cleanup event accel_handle			
+	// Note: with the current OPAE version fpgaInterruptEvent not NULL
+	// does not really mean that it has been initialized.
+	// It is anyway safe to anyway to fpgaUnregisterEvent() and fpgaDestroyEventHandle(),
+	// since they just print to stderr and return.
+	// Although this looks dirty, just don't assert on returned fpga_result to allow the
+	// the rest of the clean up to happen.
 	if ( fpgaInterruptEvent != NULL ) {									
 		res = fpgaUnregisterEvent(accel_handle, FPGA_EVENT_INTERRUPT, *fpgaInterruptEvent);
+		// OSW_fpga_assert(res);
 		res = fpgaDestroyEventHandle(fpgaInterruptEvent);
+		// OSW_fpga_assert(res);
 	}
 #endif // INTERRUPT_EVENTS
 
 	// Release I/O buffers
 	res = fpgaReleaseBuffer(accel_handle, output_buf_workspace_id);
+	OSW_fpga_assert(res);
 	res = fpgaReleaseBuffer(accel_handle, input_buf_workspace_id);
+	OSW_fpga_assert(res);
 
 	// Unmap MMIO space 
 	res = fpgaUnmapMMIO(accel_handle, mmio_num); // Actually does nothing in vfio plugin
+	OSW_fpga_assert(res);
 
 	// Release accelerator 
 	res = fpgaClose(accel_handle);
+	OSW_fpga_assert(res);
 
 	return res;
 }

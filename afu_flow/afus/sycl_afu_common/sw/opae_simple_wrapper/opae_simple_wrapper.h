@@ -19,11 +19,11 @@
 // Milliseconds wait for poll()
 #define POLL_TIMEOUT_MS 100
 // Microseconds wait for AFU CSR polling
-#define SLEEP_TIME_US 1
+#define OSW_SLEEP_TIME_US 100
 
 // Redefine macros locally to minimize coupling
 #define OSW_fpga_assert(res) if (FPGA_OK != (res)) { \
-							printf("%s:%d %s\n", __FILE__, __LINE__, fpgaErrStr((res))); \
+							fprintf(stderr, "%s:%d %s\n", __FILE__, __LINE__, fpgaErrStr((res))); \
 							exit((res)); \
 						}
 #define OSW_RS_INPUT_SIZE(cell_length,rs_k)				( cell_length * rs_k 			)	// Size of input buffer
@@ -105,7 +105,7 @@ void OPAE_SIMPLE_WRAPPER_mmio64_read (
 /// @param[in]  accel_uuid UUID of the target AFU
 /// @param[out] mmio_ptr Pointer to mapped MMIO space
 /// @param[in]  pcie_sbdf Struct for PCIe S:B:D:F function ID
-/// @param[out] Reference to mmio_num MMIO space number
+/// @param[out] mmio_num Reference to mmio_num MMIO space number
 /// @return fpga_result-encoded exit code
 fpga_result OPAE_SIMPLE_WRAPPER_init ( 
 							fpga_handle * 					accel_handle,

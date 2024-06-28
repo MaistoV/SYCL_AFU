@@ -280,7 +280,7 @@ int main(int argc, char *argv[]) {
 											rs_erasure_csr.erasure_pattern,
 											rs_erasure_csr.survived_cells,
 											cell_length,
-											SLEEP_TIME_US,
+											OSW_SLEEP_TIME_US,
 											&fpgaInterruptEvent,
 											false, // Don't measure here
 											mmio_ptr,
@@ -505,7 +505,7 @@ int main(int argc, char *argv[]) {
 												rs_erasure_csr.erasure_pattern,
 												rs_erasure_csr.survived_cells,
 												cell_length,
-												SLEEP_TIME_US,
+												OSW_SLEEP_TIME_US,
 												&fpgaInterruptEvent,
 												measure_latency,
 												mmio_ptr,
