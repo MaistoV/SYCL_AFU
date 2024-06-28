@@ -22,6 +22,8 @@ To increase the number of VFs exposed in the PR region, you must increase the `n
 Preliminary experiments show that 10 VFs can be routed on the PR-region for the system target frequency. Further analysis si necessary to determine the number of VFs necessary to meet the system's throughput requirement.
 
 ### Caveat 
+> NOTE: this does not happen on cluster!
+
 Preliminary experiments show that the 8th VF, is mapped to a PF 0 of a subsequent device number, e.g. `0000:01:01.0`, which will not bind to a vfio-pci driver by the OPAE library. E.g.:
 
 ``` console
