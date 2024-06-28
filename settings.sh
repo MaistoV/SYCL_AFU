@@ -324,7 +324,7 @@ export MEASURE_POWER_PLOT_OUT_DIR=${MEASURE_POWER_DATA_DIR}/plots/output_plots
 #################
 
 # Use multi-erasure source code
-export MULTI_ERASURE_SIMPLE=${MULTI_ERASURE_SIMPLE=0}
+export MULTI_ERASURE_SIMPLE=${MULTI_ERASURE_SIMPLE=1}
 # Append MULTI_ERASURE_SIMPLE_SUFFIX (if MULTI_ERASURE_SIMPLE is set)
 if [[ ${MULTI_ERASURE_SIMPLE} == 1 ]]; then
     MULTI_ERASURE_SIMPLE_SUFFIX="_multi_erasure"
