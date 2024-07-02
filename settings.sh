@@ -133,11 +133,8 @@ export LD_LIBRARY_PATH=$OPAE_LOC/lib64:$LD_LIBRARY_PATH
 # Setup continuous mode
 export ASE_MODE=3
 
-# Is this necessary?
 export PATH=/usr/bin:$PATH
-cd /usr/lib/python*/site-packages
-export PYTHONPATH=$PWD
-cd $ROOT_DIR
+export PYTHONPATH=/usr/lib/python*/site-packages
 export LIBRARY_PATH=/usr/lib
 export LD_LIBRARY_PATH=/usr/lib64
 
