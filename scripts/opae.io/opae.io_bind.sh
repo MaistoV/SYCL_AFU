@@ -24,8 +24,9 @@ if [ $TARGET_VFs -gt 0 ]; then
     sudo pci_device ${PAC_PCIE_BD}.0 vf ${TARGET_VFs}
 
     # FIM and PR AFUs VFs
-    # Exclude PF0.VF0 (B:00.0)
-    OPAEIO_SDBFs=$( opae.io ls | sort | grep -v ${PAC_PCIE_SBD}.0 | awk '{print $1}' | sed -E "s/(\[|\])//g" )
+    # Exclude PF0.VF0 (BB:00.0) and BB:01.0
+    # NOTE: BB:01.0 would not bind on Ubuntu, but is safe to use on RHEL
+    OPAEIO_SDBFs=$( opae.io ls | sort | grep -v "\.0" | awk '{print $1}' | sed -E "s/(\[|\])//g" )
     for sbdf in ${OPAEIO_SDBFs}; do
         sudo opae.io init -d $sbdf $USER:$USER
     done
