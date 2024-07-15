@@ -19,16 +19,6 @@ if len(sys.argv) >= 2:
 # Create output directory
 os.makedirs(plot_dir, exist_ok=True)
 
-###########################
-# Source data directories #
-###########################
-data_dirs = ["" for _ in range(len(common.hw_configs)) ]
-data_dirs[common.ISA_L   ]	= root_data_dir + "/data_ISA_L/"
-data_dirs[common.SYCL_ASP] = root_data_dir + "/data_SYCL_ASP_ASP_ZERO_COPY/"
-data_dirs[common.SYCL_AFU] = root_data_dir + "/data_SYCL_AFU/"
-# data_dirs[PLAIN_C ] = root_data_dir + "/data_PLAIN_C/"
-data_dirs[common.VFProxy ] = root_data_dir + "/data_VFProxy/"
-
 #############
 # Read data #
 #############
@@ -41,8 +31,10 @@ afu_latency_s 		= [0. for _ in range(len(common.cell_length)) ]
 for hw in range(0,len(common.hw_configs)):
 	for rs in range(0,len(common.RS_SCHEMA_list)):
 		for l in range(0,len(common.cell_length)):
-			# Compose filename
-			afu_latency_s_file_name = data_dirs[hw] + 'latency_' + common.RS_SCHEMA_list[rs] + "_" + common.cell_length[l] + "_" + common.hw_configs[hw] + '.txt'
+			# Compose filename, must match filenames from this project and VFProxy, e.g.:
+			# - latency_3_2_1KB_SYCL_AFU
+			# - latency_RS_3_2_numVFP1_numClients1_clientID0_1KB
+			afu_latency_s_file_name = root_data_dir + common.data_dirs[hw] + 'latency_*' + common.RS_SCHEMA_list[rs] + "*_" + common.cell_length[l] + '*.txt'
 			file_name_ref = glob.glob(afu_latency_s_file_name)
 			if ( len(file_name_ref) != 1 ): 
 				print("File name error: " + afu_latency_s_file_name)
@@ -58,8 +50,8 @@ for hw in range(0,len(common.hw_configs)):
 				afu_latency_s = numpy.inf
 
 			# Save mean_latency_s
-			# mean_latency_s[rs][hw][l] = numpy.average(afu_latency_s)
-			mean_latency_s[rs][hw][l] = numpy.median(afu_latency_s)
+			mean_latency_s[rs][hw][l] = numpy.average(afu_latency_s)
+			# mean_latency_s[rs][hw][l] = numpy.median(afu_latency_s)
 
 			# Save throughput byte/second
 			throughput_B_s[rs][hw][l] = common.cell_length_int[l] / mean_latency_s[rs][hw][l]
@@ -81,15 +73,16 @@ for rs in range(0,len(common.RS_SCHEMA_list)):
 			 		mean_latency_s[rs][hw],
 					common.hw_line[hw] + common.hw_marker[hw],
 					label=common.hw_name[hw],
+					color=common.hw_color[hw],
 					linewidth=common.hw_linewidth[hw]
 				)
 	# Decorating
-	plt.title("RS[" + common.RS_SCHEMA_txt[rs] + "]")
+	plt.title(common.RS_SCHEMA_txt[rs])
 	plt.axvline(x = common.MB, linestyle='--', color="k") # Vertical line at 1MB
 	plt.xlabel("Cell length")
 	plt.ylabel("Seconds")
 	plt.xticks(common.cell_length_int, common.cell_length, rotation=45, minor=False)
-	plt.grid(visible=True)
+	plt.grid(visible=True) #, which="both")
 	plt.legend()
 figname = plot_dir + "/" + "Latency" + ".png"
 plt.savefig(figname, dpi=400, bbox_inches="tight")
@@ -109,6 +102,7 @@ for rs in range(0,len(common.RS_SCHEMA_list)):
 			 		throughput_B_s[rs][hw],
 					common.hw_line[hw] + common.hw_marker[hw],
 					label=common.hw_name[hw],
+					color=common.hw_color[hw],
 					linewidth=common.hw_linewidth[hw]
 				)
 		# print(throughput_B_s[rs][hw][len(common.cell_length)-1]/GB)
@@ -117,13 +111,58 @@ for rs in range(0,len(common.RS_SCHEMA_list)):
 	ax = plt.gca(); ax.set_xscale("log", base=2); ax.set_yscale("log", base=10)
 	plt.axvline(x = common.MB, linestyle='--', color="k") # Vertical line at 1MB
 	plt.grid(visible=True, which="both")
-	plt.title("RS[" + common.RS_SCHEMA_txt[rs] + "]")
+	plt.title(common.RS_SCHEMA_txt[rs])
 	plt.yticks(common.B_s_int, common.B_s)
 	plt.xticks(common.cell_length_int, common.cell_length, rotation=45)
 	plt.xlabel("Cell length")
 	plt.ylabel("Throughput (B/s)")
 	plt.legend()
 figname = plot_dir + "/" + "Throughput" + ".png"
+plt.savefig(figname, dpi=400, bbox_inches="tight")
+print("Figure available at " + figname)
+
+# Print difference between VFProxy and SYCL_AFU
+VFP_diff_overhead 		= [[0. for _ in range(len(common.cell_length)) ] for _ in range(len(common.cell_length))]
+VFP_percentage_overhead = [[0. for _ in range(len(common.cell_length)) ] for _ in range(len(common.cell_length))]
+for rs in range(0,len(common.RS_SCHEMA_list)):
+	for l in range(0,len(common.cell_length)):
+		VFP_diff_overhead[rs][l]       = mean_latency_s[rs][common.VFProxy][l] - mean_latency_s[rs][common.SYCL_AFU][l]
+		VFP_percentage_overhead[rs][l] = mean_latency_s[rs][common.VFProxy][l] / mean_latency_s[rs][common.SYCL_AFU][l]
+		
+plt.figure("VFProxy Overhead", figsize=[16,9])
+for rs in range(0,len(common.RS_SCHEMA_list)):
+	# print ("VFP_diff_overhead       RS[" + common.RS_SCHEMA_txt[rs] + "]")
+	# print (VFP_diff_overhead[rs])
+	
+	plt.subplot(1, 2, 1)
+	plt.title("Abosulte Difference Overhead (VFProxy - SYCL_AFU)")
+	plt.semilogx(
+		common.cell_length_int,
+		VFP_diff_overhead[rs], color=common.RS_color[rs],
+		label=common.RS_SCHEMA_txt[rs],
+		linewidth=2
+	)
+	# Decorate
+	plt.axvline(x = common.MB, linestyle='--', color="k") # Vertical line at 1MB
+	plt.grid(visible=True, which="both")
+	plt.xticks(common.cell_length_int, common.cell_length, rotation=45)
+	plt.legend()
+	plt.ylabel("Seconds")
+
+	plt.subplot(1, 2, 2)
+	plt.title("Percentage Overhead (VFProxy / SYCL_AFU)")
+	plt.semilogx(
+		common.cell_length_int,
+		VFP_percentage_overhead[rs], color=common.RS_color[rs],
+		label=common.RS_SCHEMA_txt[rs],
+		linewidth=2
+	)
+	# Decorate
+	plt.axvline(x = common.MB, linestyle='--', color="k") # Vertical line at 1MB
+	plt.grid(visible=True, which="both")
+	plt.xticks(common.cell_length_int, common.cell_length, rotation=45)
+
+figname = plot_dir + "/" + "VFProxy_Overhead" + ".png"
 plt.savefig(figname, dpi=400, bbox_inches="tight")
 print("Figure available at " + figname)
 
