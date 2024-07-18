@@ -38,7 +38,7 @@ fi
 echo num_reps = $num_reps
 
 # Output directory for -o flag
-out_dir=${ROOT_DIR}/measures/latency/data/data_ASP_SYCL/
+out_dir=${ROOT_DIR}/measures/latency/data/data_SYCL_AFU/
 if [[ "$decode_ISAL" == "1" ]]; then 
     out_dir=${ROOT_DIR}/measures/latency/data/data_ISA_L/
 fi
