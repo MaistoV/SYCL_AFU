@@ -5,8 +5,9 @@ FIM:
     fim_build_flat        Build flat FIM (takes around 1h10m)
     fim_update            Update flash images on the board (around 2m)
     pac_powercycle_<page> Power cycle from page <user1|user2|factory>, necessary after FIM udpate (fim_update) (waits for 10s)
-    opae.io_bind          Bind all VFs to VFIO driver
-    opae.io_bind_one      Bind only ${FIRST_AFU_VF} to VFIO driver
+    opae.io_bind_all      Bind all VFs to VFIO driver
+    opae.io_bind_<N>      Bind only N VFs to VFIO driver
+    opae.io_bind_one      Bind only ${FIRST_AFU_VF} VFs to VFIO driver
     opae.io_relese        Release all VFs from VFIO driver
     pac_hot_plug          Unplug and re-plug PAC from PCIe bus (virtually)
 
@@ -31,6 +32,7 @@ OneAPI IP flow:
 
 AFU flow:
     afu_host              Build AFU host application in ${AFU_SW_DIR}
+    osw                   Build OPAE Simple Wrapper static libary in afu_flow/afus/sycl_afu_common/sw/opae_simple_wrapper/libopae_simple_wrapper.a
     ase_setup             Setup and launch ASE simulation environment {locks a terminal}
     ase_launch            Subsequent launches of ASE simulator, if the source list of sim config has not changed {locks a terminal}
     ase_waves             Open simulated waveforms in ${AFU_ASE_DIR}/work/vsim.wlf
@@ -70,10 +72,7 @@ make variables:
     UPDATE_DEFAULT_AFU    [FIM] For FIM PR or flat builds, build ${AFU_NAME} in FIM afu_main
     FIM_NUM_PF0_VFS       [FIM] Select OFSS configuration by the number of PF0 VFs, i.e. AFU's
     RESEED_FITTER         [FIM] Randomly reseed fitter for FIM builds
-    AFU_MAX_NUM           [FIM/GBS] Override default number of AFUs for AFU arrays
-    AFU_MAX_NUM           [AFU] Override number of used VFs, defaults to ${FIM_NUM_PF0_VFS}
-    ACL_DEVICE            [ASP] Override default acl device for aocl_aocx_initalize
-    SYCL_FAST_COMPILE     [SYCL] Set -Xsfast-compile for SYCL builds
+    AFU_MAX_NUM           [FIM/AFU/GBS] Override default number of AFUs for AFU arrays, defaults to ${FIM_NUM_PF0_VFS}
     SYCL_CMAKE_FLAGS      [SYCL] Add user cmake flags for SYCL builds
     MMD_DEBUG             [Debug] Enable debug mode for OneAPI/OpenCL MMD driver
     RSU_DEBUG             [Debug] Enable debug mode for RSU operation (pac_powercycle_*)

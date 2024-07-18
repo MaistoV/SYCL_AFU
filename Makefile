@@ -92,7 +92,7 @@ fim_update:
 	@echo "[INFO]     ${MAKE} pac_powercycle_<bootpage>"
 
 ifeq (${RSU_DEBUG}, 1)
-	RSU_FLAGS += --debug fpga
+	RSU_FLAGS += --debug
 endif
 pac_powercycle_user1:
 pac_powercycle_user2:

@@ -59,6 +59,7 @@ $ make oneapi_asp_build_aocx OFS_ASP_BOARD_VARIANT=<e.g. ofs_nc220>
 Program PAC:
 ``` console 
 $ # Powercyle the PAC with the FIM related to the target PR tree
+$ make opae.io_bind_one FIRST_AFU_VF=5
 $ make aocl_aocx_initalize
 ```
 

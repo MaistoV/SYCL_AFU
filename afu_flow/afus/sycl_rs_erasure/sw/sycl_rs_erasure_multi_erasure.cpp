@@ -228,7 +228,7 @@ int main(int argc, char *argv[]) {
 #ifdef DEBUG
 	printf("%s:%d: cell_ptrs\n", __FILE__, __LINE__);
 	for ( unsigned int i = 0; i < RS_K; i++ ) {
-		print_contiguous_cell(stdout, cell_ptrs[i], ONE_ERASURE, cell_length, LINE_BYTE_WIDTH );
+		print_contiguous_cell(stdout, cell_ptrs[i], 1, cell_length, LINE_BYTE_WIDTH );
 	}
 	printf("\n");
 #endif
@@ -523,6 +523,11 @@ int main(int argc, char *argv[]) {
 			for ( unsigned int i = 0; i < NUM_ERASURES; i++ ) {
 				memcpy(recover_outp[i], ((uint8_t(*)[cell_length])reconstructed_blocks_out)[i], cell_length); // copy buffer
 			}
+
+			// Writedebug
+			reconstructed_blocks_out[4] = 0x55;
+			reconstructed_blocks_out[5] = 0xAA;
+			printf("%s:%d: 0x%02X 0x%02x:\n", __FILE__, __LINE__, reconstructed_blocks_out[4], reconstructed_blocks_out[5] );
 		} // !decode_isal
 
 		// Check that recovered buffers are the same as original
