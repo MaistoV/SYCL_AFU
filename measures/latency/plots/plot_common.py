@@ -2,16 +2,24 @@ import numpy
 
 # Common utilities and constants
 
+################
+# Figure sizes #
+################
+# 1 column
+figsize_1column=[16,9]
+# 2 columns
+figsize_2columns=[16,4.5]
+
 ###############
 # Set formats #
 ###############
 
 # Hardware configurations
-hw_configs = ["ISA-L", "SYCL_AFU", "SYCL_ASP", "VFProxy"]
+hw_configs = ["ISA-L", "SYCL_AFU", "SYCL_ASP"]#, "VFProxy"]
 ISA_L		= 0
 SYCL_AFU  	= 1
 SYCL_ASP  	= 2
-VFProxy		= 3
+# VFProxy		= 3
 # PLAIN_C		= 4
 
 # Source data directories
@@ -19,7 +27,7 @@ data_dirs = ["" for _ in range(len(hw_configs)) ]
 data_dirs[ISA_L   ]	= "/data_ISA_L/"
 data_dirs[SYCL_ASP] = "/data_SYCL_ASP_ASP_ZERO_COPY/"
 data_dirs[SYCL_AFU] = "/data_SYCL_AFU/"
-data_dirs[VFProxy ] = "/data_VFProxy/"
+# data_dirs[VFProxy ] = "/data_VFProxy/"
 # data_dirs[PLAIN_C ] = "/data_PLAIN_C/"
 
 # Plot formats
@@ -32,30 +40,30 @@ hw_name			= ["" for _ in range(len(hw_configs)) ]
 # ISA-L format
 hw_marker		[ISA_L] = "*"
 hw_line	 		[ISA_L] = "--"
-hw_linewidth	[ISA_L] = 2
+hw_linewidth	[ISA_L] = 1
 hw_color		[ISA_L] = "purple"
-hw_name			[ISA_L] = "ISA-L"
+hw_name			[ISA_L] = "ISA-L AVX-512"
 
 # SYCL ASP format
 hw_marker		[SYCL_ASP] = "x"
 hw_line			[SYCL_ASP] = "-"
-hw_linewidth	[SYCL_ASP] = 1
-hw_color		[SYCL_ASP] = "r"
+hw_linewidth	[SYCL_ASP] = 2
+hw_color		[SYCL_ASP] = "g"
 hw_name			[SYCL_ASP] = "SYCL ASP"
 
 # SYCL AFU format
 hw_marker		[SYCL_AFU] = "o"
 hw_line	 		[SYCL_AFU] = "-"
 hw_linewidth	[SYCL_AFU] = 2
-hw_color		[SYCL_AFU] = "g"
+hw_color		[SYCL_AFU] = "b"
 hw_name			[SYCL_AFU] = "SYCL AFU"
 
 # VFProxy format
-hw_marker		[VFProxy] = "o"
-hw_line	 		[VFProxy] = "--"
-hw_linewidth	[VFProxy] = 2
-hw_color		[VFProxy] = "b"
-hw_name			[VFProxy] = "VFProxy"
+# hw_marker		[VFProxy] = "o"
+# hw_line	 		[VFProxy] = "--"
+# hw_linewidth	[VFProxy] = 2
+# hw_color		[VFProxy] = "b"
+# hw_name			[VFProxy] = "VFProxy"
 
 # # Plain C format
 # hw_marker		[PLAIN_C] = "+"

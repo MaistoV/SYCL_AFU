@@ -50,8 +50,8 @@ for hw in range(0,len(common.hw_configs)):
 				afu_latency_s = numpy.inf
 
 			# Save mean_latency_s
-			mean_latency_s[rs][hw][l] = numpy.average(afu_latency_s)
-			# mean_latency_s[rs][hw][l] = numpy.median(afu_latency_s)
+			# mean_latency_s[rs][hw][l] = numpy.average(afu_latency_s)
+			mean_latency_s[rs][hw][l] = numpy.median(afu_latency_s)
 
 			# Save throughput byte/second
 			throughput_B_s[rs][hw][l] = common.cell_length_int[l] / mean_latency_s[rs][hw][l]
@@ -62,7 +62,7 @@ for hw in range(0,len(common.hw_configs)):
 ##################
 # Figure Latency #
 ##################
-plt.figure("Latency", figsize=[16,9])
+plt.figure("Latency", figsize=common.figsize_2columns)
 ax = plt.subplot(1,2,1)
 plt.tick_params(labelbottom=False, bottom=False)
 for rs in range(0,len(common.RS_SCHEMA_list)):
@@ -89,13 +89,13 @@ plt.savefig(figname, dpi=400, bbox_inches="tight")
 print("Figure available at " + figname)
 
 
-plt.figure("Throughput", figsize=[16,9])
+plt.figure("Throughput", figsize=common.figsize_2columns)
 ax = plt.subplot(1,2,1)
 plt.tick_params(labelbottom=False, bottom=False)
 for rs in range(0,len(common.RS_SCHEMA_list)):
 	ax = plt.subplot(1,2,rs+1, sharey=ax)
-	plt.axhline(y=common.peak_phy_throughput[rs], linestyle='-' , color="r", linewidth=2, label="Max PCIe read bandwidth")
-	plt.axhline(y=common.peak_asp_throughput[rs], linestyle='--', color="r", linewidth=2, label="Max ASP read bandwidth")
+	plt.axhline(y=common.peak_phy_throughput[rs], linestyle='--' , color="r", linewidth=2, label="Max PCIe read bandwidth")
+	# plt.axhline(y=common.peak_asp_throughput[rs], linestyle='--', color="r", linewidth=2, label="Max ASP read bandwidth")
 	for hw in range(0,len(common.hw_configs)):
 		plt.loglog(
 					common.cell_length_int, 
@@ -121,6 +121,8 @@ figname = plot_dir + "/" + "Throughput" + ".png"
 plt.savefig(figname, dpi=400, bbox_inches="tight")
 print("Figure available at " + figname)
 
+exit()
+
 # Print difference between VFProxy and SYCL_AFU
 VFP_diff_overhead 		= [[0. for _ in range(len(common.cell_length)) ] for _ in range(len(common.cell_length))]
 VFP_percentage_overhead = [[0. for _ in range(len(common.cell_length)) ] for _ in range(len(common.cell_length))]
@@ -129,7 +131,7 @@ for rs in range(0,len(common.RS_SCHEMA_list)):
 		VFP_diff_overhead[rs][l]       = mean_latency_s[rs][common.VFProxy][l] - mean_latency_s[rs][common.SYCL_AFU][l]
 		VFP_percentage_overhead[rs][l] = mean_latency_s[rs][common.VFProxy][l] / mean_latency_s[rs][common.SYCL_AFU][l]
 		
-plt.figure("VFProxy Overhead", figsize=[16,9])
+plt.figure("VFProxy Overhead", figsize=common.figsize_2columns)
 for rs in range(0,len(common.RS_SCHEMA_list)):
 	# print ("VFP_diff_overhead       RS[" + common.RS_SCHEMA_txt[rs] + "]")
 	# print (VFP_diff_overhead[rs])
