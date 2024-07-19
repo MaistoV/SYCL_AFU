@@ -1,4 +1,10 @@
-# intel-ofs-2023.2-ubuntu-hitek
+# SYCL AFU Project
+Custom BSP for Intel OFS, alternative to Intel OneAPI ASP. Supporting:
+- AFU development in SYCL
+- Multiple AFU instances with OFSS flow
+> NOTE: Currently not supporting local memory channels and HSSI interfaces.
+
+# Installation
 Installation steps for Intel OFS for Hitek C220 card on Ubuntu 22.04.
 
 > NOTE: the scripts provided in `install/`:
