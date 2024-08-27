@@ -16,3 +16,8 @@ echo ""
 echo "[INFO] Checking FME"
 fpgainfo fme
 echo "[INFO] Expecting FME output (if OPAE-SDK and PAC installed)"
+
+echo ""
+echo "[INFO] Checking ulimits"
+ulimit -l 
+echo "[INFO] Expecting unlimited"

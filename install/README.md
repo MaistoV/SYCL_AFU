@@ -79,18 +79,19 @@ For RHEL, install also libnsl.
 ## Simulator
 >*Requires license*.
 Install QuestaSim or VCS. 
-> For QuestaSim, set `MTI_HOME=<questasim home>`
+> For QuestaSim, set `MTI_HOME=<questasim home>` in your environment.
 
-## OneAPI
+## Memory limits configuration
+> NOTE: if you are also installing [OneAPI](#OneAPI), this configuration can be skipped.
+Sending and receiving data from and to the FPGA usually requires large buffers. Therefore, we must configure the memory limits in this system. Run:
+``` console 
+$ source install/config_memlock_limits.sh
+```
+
+## OneAPI<a id="OneAPI"></a>
 ### Base Toolkit
 Install OneAPI Base Toolkit:
 ``` console 
-$ source install/install_oneapi.sh ## WIP
+$ source install/install_oneapi.sh
 ```
 
-### ASP
-ASP requires Base Toolkit
-
-### IP Authoring flow
-Requires a BSP? (WIP)
- 
