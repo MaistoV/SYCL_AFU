@@ -14,7 +14,7 @@ LDFLAGS += -lisal
 # Add rom utils source
 SRCS += rs_rom_utils.c
 
-# Override GCC, for chrono
+# Override CC, for chrono
 CC = g++
 
 include ${AFU_DEF_DIR}/sycl_afu_common/sw/sycl_afu_common.mk

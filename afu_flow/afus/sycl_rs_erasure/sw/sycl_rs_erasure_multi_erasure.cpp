@@ -527,7 +527,6 @@ int main(int argc, char *argv[]) {
 			// Writedebug
 			reconstructed_blocks_out[4] = 0x55;
 			reconstructed_blocks_out[5] = 0xAA;
-			printf("%s:%d: 0x%02X 0x%02x:\n", __FILE__, __LINE__, reconstructed_blocks_out[4], reconstructed_blocks_out[5] );
 		} // !decode_isal
 
 		// Check that recovered buffers are the same as original
