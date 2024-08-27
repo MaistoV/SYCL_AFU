@@ -59,14 +59,83 @@ for hw in range(0,len(common.hw_configs)):
 			if os.environ['MULTI_ERASURE_SIMPLE'] == "1":
 				throughput_B_s[rs][hw][l] *= common.RS_P_list[rs]
 
-##################
-# Figure Latency #
-##################
-plt.figure("Latency", figsize=common.figsize_2columns)
-ax = plt.subplot(1,2,1)
-plt.tick_params(labelbottom=False, bottom=False)
+
+
+# Plot size
+plt.rcParams.update({'font.size': 18})
+
+# ##################
+# # Figure Latency #
+# ##################
+# plt.figure("Latency", figsize=common.figsize_2columns)
+# ax = plt.subplot(1,2,1)
+# plt.tick_params(labelbottom=False, bottom=False)
+# for rs in range(0,len(common.RS_SCHEMA_list)):
+# 	ax = plt.subplot(1,2,rs+1, sharey=ax)
+# 	for hw in range(0,len(common.hw_configs)):
+# 		plt.loglog(
+# 					common.cell_length_int, 
+# 			 		mean_latency_s[rs][hw],
+# 					common.hw_line[hw] + common.hw_marker[hw],
+# 					label=common.hw_name[hw],
+# 					color=common.hw_color[hw],
+# 					linewidth=common.hw_linewidth[hw]
+# 				)
+# 	# Decorating
+# 	plt.title(common.RS_SCHEMA_txt[rs])
+# 	plt.axvline(x = common.MB, linestyle='--', color="k") # Vertical line at 1MB
+# 	plt.xlabel("Cell length")
+# 	plt.ylabel("Seconds")
+# 	plt.xticks(common.cell_length_int, common.cell_length, rotation=45, minor=False)
+# 	plt.grid(visible=True) #, which="both")
+# 	plt.legend()
+# figname = plot_dir + "/" + "Latency" + ".png"
+# plt.savefig(figname, dpi=400, bbox_inches="tight")
+# print("Figure available at " + figname)
+
+
+# plt.figure("Throughput", figsize=common.figsize_2columns)
+# ax = plt.subplot(1,2,1)
+# plt.tick_params(labelbottom=False, bottom=False)
+# for rs in range(0,len(common.RS_SCHEMA_list)):
+# 	ax = plt.subplot(1,2,rs+1, sharey=ax)
+# 	plt.axhline(y=common.peak_phy_throughput[rs], linestyle='--' , color="r", linewidth=2, label="Max PCIe read bandwidth")
+# 	# plt.axhline(y=common.peak_asp_throughput[rs], linestyle='--', color="r", linewidth=2, label="Max ASP read bandwidth")
+# 	for hw in range(0,len(common.hw_configs)):
+# 		plt.loglog(
+# 					common.cell_length_int, 
+# 			 		throughput_B_s[rs][hw],
+# 					common.hw_line[hw] + common.hw_marker[hw],
+# 					label=common.hw_name[hw],
+# 					color=common.hw_color[hw],
+# 					linewidth=common.hw_linewidth[hw]
+# 				)
+# 		# print(throughput_B_s[rs][hw][len(common.cell_length)-1]/GB)
+
+# 	# Decoration
+# 	ax = plt.gca(); ax.set_xscale("log", base=2); ax.set_yscale("log", base=10)
+# 	plt.axvline(x = common.MB, linestyle='--', color="k") # Vertical line at 1MB
+# 	plt.grid(visible=True, which="both")
+# 	plt.title(common.RS_SCHEMA_txt[rs])
+# 	plt.yticks(common.B_s_int, common.B_s)
+# 	plt.xticks(common.cell_length_int, common.cell_length, rotation=45)
+# 	plt.xlabel("Cell length")
+# 	plt.ylabel("Throughput (B/s)")
+# 	plt.legend()
+# figname = plot_dir + "/" + "Throughput" + ".png"
+# plt.savefig(figname, dpi=400, bbox_inches="tight")
+# print("Figure available at " + figname)
+
+#################
+# Single figure #
+#################
+plt.figure("single_core", figsize=common.figsize_square)
 for rs in range(0,len(common.RS_SCHEMA_list)):
-	ax = plt.subplot(1,2,rs+1, sharey=ax)
+	# Plot latency
+	if rs == 0:
+		ax_latency = plt.subplot(2,2,rs+1)
+	else:
+		ax_latency = plt.subplot(2,2,rs+1, sharey=ax_latency)
 	for hw in range(0,len(common.hw_configs)):
 		plt.loglog(
 					common.cell_length_int, 
@@ -74,98 +143,98 @@ for rs in range(0,len(common.RS_SCHEMA_list)):
 					common.hw_line[hw] + common.hw_marker[hw],
 					label=common.hw_name[hw],
 					color=common.hw_color[hw],
+					markersize=10,
 					linewidth=common.hw_linewidth[hw]
 				)
 	# Decorating
 	plt.title(common.RS_SCHEMA_txt[rs])
 	plt.axvline(x = common.MB, linestyle='--', color="k") # Vertical line at 1MB
-	plt.xlabel("Cell length")
-	plt.ylabel("Seconds")
-	plt.xticks(common.cell_length_int, common.cell_length, rotation=45, minor=False)
+	plt.tick_params(which="minor", labelbottom=False, bottom=False)
+	plt.xticks(common.cell_length_int, common.cell_length, rotation=45)
 	plt.grid(visible=True) #, which="both")
-	plt.legend()
-figname = plot_dir + "/" + "Latency" + ".png"
-plt.savefig(figname, dpi=400, bbox_inches="tight")
-print("Figure available at " + figname)
-
-
-plt.figure("Throughput", figsize=common.figsize_2columns)
-ax = plt.subplot(1,2,1)
-plt.tick_params(labelbottom=False, bottom=False)
-for rs in range(0,len(common.RS_SCHEMA_list)):
-	ax = plt.subplot(1,2,rs+1, sharey=ax)
-	plt.axhline(y=common.peak_phy_throughput[rs], linestyle='--' , color="r", linewidth=2, label="Max PCIe read bandwidth")
-	# plt.axhline(y=common.peak_asp_throughput[rs], linestyle='--', color="r", linewidth=2, label="Max ASP read bandwidth")
+	if rs == 0:
+		plt.ylabel("Latency (s)")
+		plt.legend()
+	
+	# Plot throughput
+	if rs == 0:
+		ax_throughput = plt.subplot(2,2,rs+3)
+	else:
+		ax_throughput = plt.subplot(2,2,rs+3, sharey=ax_throughput)
 	for hw in range(0,len(common.hw_configs)):
 		plt.loglog(
 					common.cell_length_int, 
 			 		throughput_B_s[rs][hw],
 					common.hw_line[hw] + common.hw_marker[hw],
-					label=common.hw_name[hw],
+					# label=common.hw_name[hw],
 					color=common.hw_color[hw],
+					markersize=10,
 					linewidth=common.hw_linewidth[hw]
 				)
-		# print(throughput_B_s[rs][hw][len(common.cell_length)-1]/GB)
-
 	# Decoration
+	plt.axhline(y=common.peak_phy_throughput[rs], linestyle='--' , color="r", linewidth=2, label="Max PCIe read bandwidth")
 	ax = plt.gca(); ax.set_xscale("log", base=2); ax.set_yscale("log", base=10)
 	plt.axvline(x = common.MB, linestyle='--', color="k") # Vertical line at 1MB
 	plt.grid(visible=True, which="both")
-	plt.title(common.RS_SCHEMA_txt[rs])
 	plt.yticks(common.B_s_int, common.B_s)
 	plt.xticks(common.cell_length_int, common.cell_length, rotation=45)
 	plt.xlabel("Cell length")
-	plt.ylabel("Throughput (B/s)")
-	plt.legend()
-figname = plot_dir + "/" + "Throughput" + ".png"
+	if rs == 0:
+		plt.ylabel("Throughput (B/s)")
+		plt.legend()
+
+# Save
+figname = plot_dir + "/" + "single_core" + ".png"
 plt.savefig(figname, dpi=400, bbox_inches="tight")
 print("Figure available at " + figname)
 
-exit()
 
-# Print difference between VFProxy and SYCL_AFU
-VFP_diff_overhead 		= [[0. for _ in range(len(common.cell_length)) ] for _ in range(len(common.cell_length))]
-VFP_percentage_overhead = [[0. for _ in range(len(common.cell_length)) ] for _ in range(len(common.cell_length))]
-for rs in range(0,len(common.RS_SCHEMA_list)):
-	for l in range(0,len(common.cell_length)):
-		VFP_diff_overhead[rs][l]       = mean_latency_s[rs][common.VFProxy][l] - mean_latency_s[rs][common.SYCL_AFU][l]
-		VFP_percentage_overhead[rs][l] = mean_latency_s[rs][common.VFProxy][l] / mean_latency_s[rs][common.SYCL_AFU][l]
+################
+# VFP Overhead #
+################
+# # Print difference between VFProxy and SYCL_AFU
+# VFP_diff_overhead 		= [[0. for _ in range(len(common.cell_length)) ] for _ in range(len(common.cell_length))]
+# VFP_percentage_overhead = [[0. for _ in range(len(common.cell_length)) ] for _ in range(len(common.cell_length))]
+# for rs in range(0,len(common.RS_SCHEMA_list)):
+# 	for l in range(0,len(common.cell_length)):
+# 		VFP_diff_overhead[rs][l]       = mean_latency_s[rs][common.VFProxy][l] - mean_latency_s[rs][common.SYCL_AFU][l]
+# 		VFP_percentage_overhead[rs][l] = mean_latency_s[rs][common.VFProxy][l] / mean_latency_s[rs][common.SYCL_AFU][l]
 		
-plt.figure("VFProxy Overhead", figsize=common.figsize_2columns)
-for rs in range(0,len(common.RS_SCHEMA_list)):
-	# print ("VFP_diff_overhead       RS[" + common.RS_SCHEMA_txt[rs] + "]")
-	# print (VFP_diff_overhead[rs])
+# plt.figure("VFProxy Overhead", figsize=common.figsize_2columns)
+# for rs in range(0,len(common.RS_SCHEMA_list)):
+# 	# print ("VFP_diff_overhead       RS[" + common.RS_SCHEMA_txt[rs] + "]")
+# 	# print (VFP_diff_overhead[rs])
 	
-	plt.subplot(1, 2, 1)
-	plt.title("Abosulte Difference Overhead (VFProxy - SYCL_AFU)")
-	plt.semilogx(
-		common.cell_length_int,
-		VFP_diff_overhead[rs], color=common.RS_color[rs],
-		label=common.RS_SCHEMA_txt[rs],
-		linewidth=2
-	)
-	# Decorate
-	plt.axvline(x = common.MB, linestyle='--', color="k") # Vertical line at 1MB
-	plt.grid(visible=True, which="both")
-	plt.xticks(common.cell_length_int, common.cell_length, rotation=45)
-	plt.legend()
-	plt.ylabel("Seconds")
+# 	plt.subplot(1, 2, 1)
+# 	plt.title("Abosulte Difference Overhead (VFProxy - SYCL_AFU)")
+# 	plt.semilogx(
+# 		common.cell_length_int,
+# 		VFP_diff_overhead[rs], color=common.RS_color[rs],
+# 		label=common.RS_SCHEMA_txt[rs],
+# 		linewidth=2
+# 	)
+# 	# Decorate
+# 	plt.axvline(x = common.MB, linestyle='--', color="k") # Vertical line at 1MB
+# 	plt.grid(visible=True, which="both")
+# 	plt.xticks(common.cell_length_int, common.cell_length, rotation=45)
+# 	plt.legend()
+# 	plt.ylabel("Seconds")
 
-	plt.subplot(1, 2, 2)
-	plt.title("Percentage Overhead (VFProxy / SYCL_AFU)")
-	plt.semilogx(
-		common.cell_length_int,
-		VFP_percentage_overhead[rs], color=common.RS_color[rs],
-		label=common.RS_SCHEMA_txt[rs],
-		linewidth=2
-	)
-	# Decorate
-	plt.axvline(x = common.MB, linestyle='--', color="k") # Vertical line at 1MB
-	plt.grid(visible=True, which="both")
-	plt.xticks(common.cell_length_int, common.cell_length, rotation=45)
+# 	plt.subplot(1, 2, 2)
+# 	plt.title("Percentage Overhead (VFProxy / SYCL_AFU)")
+# 	plt.semilogx(
+# 		common.cell_length_int,
+# 		VFP_percentage_overhead[rs], color=common.RS_color[rs],
+# 		label=common.RS_SCHEMA_txt[rs],
+# 		linewidth=2
+# 	)
+# 	# Decorate
+# 	plt.axvline(x = common.MB, linestyle='--', color="k") # Vertical line at 1MB
+# 	plt.grid(visible=True, which="both")
+# 	plt.xticks(common.cell_length_int, common.cell_length, rotation=45)
 
-figname = plot_dir + "/" + "VFProxy_Overhead" + ".png"
-plt.savefig(figname, dpi=400, bbox_inches="tight")
-print("Figure available at " + figname)
+# figname = plot_dir + "/" + "VFProxy_Overhead" + ".png"
+# plt.savefig(figname, dpi=400, bbox_inches="tight")
+# print("Figure available at " + figname)
 
 print("Plots are available at " + plot_dir)
