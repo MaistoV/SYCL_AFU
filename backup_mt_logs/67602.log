@@ -1,0 +1,621 @@
+make[1]: Entering directory '/home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220'
+cd /home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220/afu_flow/afus/sycl_rs_erasure/sw; ./bin/sycl_rs_erasure -f 0000:8a:00.1 -e 1 -d 1 -m 1 -o /home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220/measures/latency/data/data_ISA_L_2 -r 1 -l 1048576 -c 10 -f 0000:8a:00.3
+sycl_rs_erasure_one_erasure.cpp:237: Encoding parity cells for RS[3:2] cell_length=1048576, using ISA-L
+sycl_rs_erasure_one_erasure.cpp:308: Decoding/Reconstructing blocks RS[3:2] cell_length=1048576, using ISA-L
+sycl_rs_erasure_one_erasure.cpp:328: Appending data on file /home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220/measures/latency/data/data_ISA_L_2/latency_3_2_1MB_ISA-L.txt
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 0 [1/5] with survival pattern [1/4], count 0
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 0 [1/5] with survival pattern [2/4], count 1
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 0 [1/5] with survival pattern [3/4], count 2
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 0 [1/5] with survival pattern [4/4], count 3
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 1 [2/5] with survival pattern [1/4], count 4
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 1 [2/5] with survival pattern [2/4], count 5
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 1 [2/5] with survival pattern [3/4], count 6
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 1 [2/5] with survival pattern [4/4], count 7
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 2 [3/5] with survival pattern [1/4], count 8
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 2 [3/5] with survival pattern [2/4], count 9
+sycl_rs_erasure_one_erasure.cpp:455: New latency data appended on file /home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220/measures/latency/data/data_ISA_L_2/latency_3_2_1MB_ISA-L.txt
+sycl_rs_erasure_one_erasure.cpp:475: Test passed
+ RS[3:2]
+ cell_length=1048576,
+ encodind with ISA-L,
+ decoding with ISA-L,
+ PRNG seed=1
+make[1]: Leaving directory '/home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220'
+make[1]: Entering directory '/home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220'
+cd /home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220/afu_flow/afus/sycl_rs_erasure/sw; ./bin/sycl_rs_erasure -f 0000:8a:00.1 -e 1 -d 1 -m 1 -o /home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220/measures/latency/data/data_ISA_L_2 -r 2 -l 131072 -c 10 -f 0000:8a:00.3
+sycl_rs_erasure_one_erasure.cpp:237: Encoding parity cells for RS[3:2] cell_length=131072, using ISA-L
+sycl_rs_erasure_one_erasure.cpp:308: Decoding/Reconstructing blocks RS[3:2] cell_length=131072, using ISA-L
+sycl_rs_erasure_one_erasure.cpp:328: Appending data on file /home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220/measures/latency/data/data_ISA_L_2/latency_3_2_128KB_ISA-L.txt
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 0 [1/5] with survival pattern [1/4], count 0
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 0 [1/5] with survival pattern [2/4], count 1
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 0 [1/5] with survival pattern [3/4], count 2
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 0 [1/5] with survival pattern [4/4], count 3
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 1 [2/5] with survival pattern [1/4], count 4
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 1 [2/5] with survival pattern [2/4], count 5
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 1 [2/5] with survival pattern [3/4], count 6
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 1 [2/5] with survival pattern [4/4], count 7
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 2 [3/5] with survival pattern [1/4], count 8
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 2 [3/5] with survival pattern [2/4], count 9
+sycl_rs_erasure_one_erasure.cpp:455: New latency data appended on file /home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220/measures/latency/data/data_ISA_L_2/latency_3_2_128KB_ISA-L.txt
+sycl_rs_erasure_one_erasure.cpp:475: Test passed
+ RS[3:2]
+ cell_length=131072,
+ encodind with ISA-L,
+ decoding with ISA-L,
+ PRNG seed=2
+make[1]: Leaving directory '/home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220'
+make[1]: Entering directory '/home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220'
+cd /home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220/afu_flow/afus/sycl_rs_erasure/sw; ./bin/sycl_rs_erasure -f 0000:8a:00.1 -e 1 -d 1 -m 1 -o /home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220/measures/latency/data/data_ISA_L_2 -r 3 -l 131072 -c 10 -f 0000:8a:00.3
+sycl_rs_erasure_one_erasure.cpp:237: Encoding parity cells for RS[3:2] cell_length=131072, using ISA-L
+sycl_rs_erasure_one_erasure.cpp:308: Decoding/Reconstructing blocks RS[3:2] cell_length=131072, using ISA-L
+sycl_rs_erasure_one_erasure.cpp:328: Appending data on file /home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220/measures/latency/data/data_ISA_L_2/latency_3_2_128KB_ISA-L.txt
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 0 [1/5] with survival pattern [1/4], count 0
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 0 [1/5] with survival pattern [2/4], count 1
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 0 [1/5] with survival pattern [3/4], count 2
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 0 [1/5] with survival pattern [4/4], count 3
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 1 [2/5] with survival pattern [1/4], count 4
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 1 [2/5] with survival pattern [2/4], count 5
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 1 [2/5] with survival pattern [3/4], count 6
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 1 [2/5] with survival pattern [4/4], count 7
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 2 [3/5] with survival pattern [1/4], count 8
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 2 [3/5] with survival pattern [2/4], count 9
+sycl_rs_erasure_one_erasure.cpp:455: New latency data appended on file /home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220/measures/latency/data/data_ISA_L_2/latency_3_2_128KB_ISA-L.txt
+sycl_rs_erasure_one_erasure.cpp:475: Test passed
+ RS[3:2]
+ cell_length=131072,
+ encodind with ISA-L,
+ decoding with ISA-L,
+ PRNG seed=3
+make[1]: Leaving directory '/home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220'
+make[1]: Entering directory '/home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220'
+cd /home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220/afu_flow/afus/sycl_rs_erasure/sw; ./bin/sycl_rs_erasure -f 0000:8a:00.1 -e 1 -d 1 -m 1 -o /home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220/measures/latency/data/data_ISA_L_2 -r 4 -l 1048576 -c 10 -f 0000:8a:00.3
+sycl_rs_erasure_one_erasure.cpp:237: Encoding parity cells for RS[3:2] cell_length=1048576, using ISA-L
+sycl_rs_erasure_one_erasure.cpp:308: Decoding/Reconstructing blocks RS[3:2] cell_length=1048576, using ISA-L
+sycl_rs_erasure_one_erasure.cpp:328: Appending data on file /home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220/measures/latency/data/data_ISA_L_2/latency_3_2_1MB_ISA-L.txt
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 0 [1/5] with survival pattern [1/4], count 0
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 0 [1/5] with survival pattern [2/4], count 1
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 0 [1/5] with survival pattern [3/4], count 2
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 0 [1/5] with survival pattern [4/4], count 3
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 1 [2/5] with survival pattern [1/4], count 4
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 1 [2/5] with survival pattern [2/4], count 5
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 1 [2/5] with survival pattern [3/4], count 6
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 1 [2/5] with survival pattern [4/4], count 7
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 2 [3/5] with survival pattern [1/4], count 8
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 2 [3/5] with survival pattern [2/4], count 9
+sycl_rs_erasure_one_erasure.cpp:455: New latency data appended on file /home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220/measures/latency/data/data_ISA_L_2/latency_3_2_1MB_ISA-L.txt
+sycl_rs_erasure_one_erasure.cpp:475: Test passed
+ RS[3:2]
+ cell_length=1048576,
+ encodind with ISA-L,
+ decoding with ISA-L,
+ PRNG seed=4
+make[1]: Leaving directory '/home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220'
+make[1]: Entering directory '/home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220'
+cd /home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220/afu_flow/afus/sycl_rs_erasure/sw; ./bin/sycl_rs_erasure -f 0000:8a:00.1 -e 1 -d 1 -m 1 -o /home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220/measures/latency/data/data_ISA_L_2 -r 5 -l 524288 -c 10 -f 0000:8a:00.3
+sycl_rs_erasure_one_erasure.cpp:237: Encoding parity cells for RS[3:2] cell_length=524288, using ISA-L
+sycl_rs_erasure_one_erasure.cpp:308: Decoding/Reconstructing blocks RS[3:2] cell_length=524288, using ISA-L
+sycl_rs_erasure_one_erasure.cpp:328: Appending data on file /home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220/measures/latency/data/data_ISA_L_2/latency_3_2_512KB_ISA-L.txt
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 0 [1/5] with survival pattern [1/4], count 0
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 0 [1/5] with survival pattern [2/4], count 1
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 0 [1/5] with survival pattern [3/4], count 2
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 0 [1/5] with survival pattern [4/4], count 3
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 1 [2/5] with survival pattern [1/4], count 4
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 1 [2/5] with survival pattern [2/4], count 5
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 1 [2/5] with survival pattern [3/4], count 6
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 1 [2/5] with survival pattern [4/4], count 7
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 2 [3/5] with survival pattern [1/4], count 8
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 2 [3/5] with survival pattern [2/4], count 9
+sycl_rs_erasure_one_erasure.cpp:455: New latency data appended on file /home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220/measures/latency/data/data_ISA_L_2/latency_3_2_512KB_ISA-L.txt
+sycl_rs_erasure_one_erasure.cpp:475: Test passed
+ RS[3:2]
+ cell_length=524288,
+ encodind with ISA-L,
+ decoding with ISA-L,
+ PRNG seed=5
+make[1]: Leaving directory '/home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220'
+make[1]: Entering directory '/home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220'
+cd /home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220/afu_flow/afus/sycl_rs_erasure/sw; ./bin/sycl_rs_erasure -f 0000:8a:00.1 -e 1 -d 1 -m 1 -o /home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220/measures/latency/data/data_ISA_L_2 -r 6 -l 16777216 -c 10 -f 0000:8a:00.3
+sycl_rs_erasure_one_erasure.cpp:237: Encoding parity cells for RS[3:2] cell_length=16777216, using ISA-L
+sycl_rs_erasure_one_erasure.cpp:308: Decoding/Reconstructing blocks RS[3:2] cell_length=16777216, using ISA-L
+sycl_rs_erasure_one_erasure.cpp:328: Appending data on file /home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220/measures/latency/data/data_ISA_L_2/latency_3_2_16MB_ISA-L.txt
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 0 [1/5] with survival pattern [1/4], count 0
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 0 [1/5] with survival pattern [2/4], count 1
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 0 [1/5] with survival pattern [3/4], count 2
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 0 [1/5] with survival pattern [4/4], count 3
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 1 [2/5] with survival pattern [1/4], count 4
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 1 [2/5] with survival pattern [2/4], count 5
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 1 [2/5] with survival pattern [3/4], count 6
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 1 [2/5] with survival pattern [4/4], count 7
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 2 [3/5] with survival pattern [1/4], count 8
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 2 [3/5] with survival pattern [2/4], count 9
+sycl_rs_erasure_one_erasure.cpp:455: New latency data appended on file /home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220/measures/latency/data/data_ISA_L_2/latency_3_2_16MB_ISA-L.txt
+sycl_rs_erasure_one_erasure.cpp:475: Test passed
+ RS[3:2]
+ cell_length=16777216,
+ encodind with ISA-L,
+ decoding with ISA-L,
+ PRNG seed=6
+make[1]: Leaving directory '/home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220'
+make[1]: Entering directory '/home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220'
+cd /home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220/afu_flow/afus/sycl_rs_erasure/sw; ./bin/sycl_rs_erasure -f 0000:8a:00.1 -e 1 -d 1 -m 1 -o /home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220/measures/latency/data/data_ISA_L_2 -r 7 -l 524288 -c 10 -f 0000:8a:00.3
+sycl_rs_erasure_one_erasure.cpp:237: Encoding parity cells for RS[3:2] cell_length=524288, using ISA-L
+sycl_rs_erasure_one_erasure.cpp:308: Decoding/Reconstructing blocks RS[3:2] cell_length=524288, using ISA-L
+sycl_rs_erasure_one_erasure.cpp:328: Appending data on file /home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220/measures/latency/data/data_ISA_L_2/latency_3_2_512KB_ISA-L.txt
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 0 [1/5] with survival pattern [1/4], count 0
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 0 [1/5] with survival pattern [2/4], count 1
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 0 [1/5] with survival pattern [3/4], count 2
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 0 [1/5] with survival pattern [4/4], count 3
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 1 [2/5] with survival pattern [1/4], count 4
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 1 [2/5] with survival pattern [2/4], count 5
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 1 [2/5] with survival pattern [3/4], count 6
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 1 [2/5] with survival pattern [4/4], count 7
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 2 [3/5] with survival pattern [1/4], count 8
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 2 [3/5] with survival pattern [2/4], count 9
+sycl_rs_erasure_one_erasure.cpp:455: New latency data appended on file /home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220/measures/latency/data/data_ISA_L_2/latency_3_2_512KB_ISA-L.txt
+sycl_rs_erasure_one_erasure.cpp:475: Test passed
+ RS[3:2]
+ cell_length=524288,
+ encodind with ISA-L,
+ decoding with ISA-L,
+ PRNG seed=7
+make[1]: Leaving directory '/home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220'
+make[1]: Entering directory '/home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220'
+cd /home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220/afu_flow/afus/sycl_rs_erasure/sw; ./bin/sycl_rs_erasure -f 0000:8a:00.1 -e 1 -d 1 -m 1 -o /home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220/measures/latency/data/data_ISA_L_2 -r 8 -l 2097152 -c 10 -f 0000:8a:00.3
+sycl_rs_erasure_one_erasure.cpp:237: Encoding parity cells for RS[3:2] cell_length=2097152, using ISA-L
+sycl_rs_erasure_one_erasure.cpp:308: Decoding/Reconstructing blocks RS[3:2] cell_length=2097152, using ISA-L
+sycl_rs_erasure_one_erasure.cpp:328: Appending data on file /home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220/measures/latency/data/data_ISA_L_2/latency_3_2_2MB_ISA-L.txt
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 0 [1/5] with survival pattern [1/4], count 0
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 0 [1/5] with survival pattern [2/4], count 1
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 0 [1/5] with survival pattern [3/4], count 2
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 0 [1/5] with survival pattern [4/4], count 3
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 1 [2/5] with survival pattern [1/4], count 4
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 1 [2/5] with survival pattern [2/4], count 5
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 1 [2/5] with survival pattern [3/4], count 6
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 1 [2/5] with survival pattern [4/4], count 7
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 2 [3/5] with survival pattern [1/4], count 8
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 2 [3/5] with survival pattern [2/4], count 9
+sycl_rs_erasure_one_erasure.cpp:455: New latency data appended on file /home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220/measures/latency/data/data_ISA_L_2/latency_3_2_2MB_ISA-L.txt
+sycl_rs_erasure_one_erasure.cpp:475: Test passed
+ RS[3:2]
+ cell_length=2097152,
+ encodind with ISA-L,
+ decoding with ISA-L,
+ PRNG seed=8
+make[1]: Leaving directory '/home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220'
+make[1]: Entering directory '/home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220'
+cd /home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220/afu_flow/afus/sycl_rs_erasure/sw; ./bin/sycl_rs_erasure -f 0000:8a:00.1 -e 1 -d 1 -m 1 -o /home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220/measures/latency/data/data_ISA_L_2 -r 9 -l 8192 -c 10 -f 0000:8a:00.3
+sycl_rs_erasure_one_erasure.cpp:237: Encoding parity cells for RS[3:2] cell_length=8192, using ISA-L
+sycl_rs_erasure_one_erasure.cpp:308: Decoding/Reconstructing blocks RS[3:2] cell_length=8192, using ISA-L
+sycl_rs_erasure_one_erasure.cpp:328: Appending data on file /home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220/measures/latency/data/data_ISA_L_2/latency_3_2_8KB_ISA-L.txt
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 0 [1/5] with survival pattern [1/4], count 0
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 0 [1/5] with survival pattern [2/4], count 1
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 0 [1/5] with survival pattern [3/4], count 2
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 0 [1/5] with survival pattern [4/4], count 3
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 1 [2/5] with survival pattern [1/4], count 4
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 1 [2/5] with survival pattern [2/4], count 5
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 1 [2/5] with survival pattern [3/4], count 6
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 1 [2/5] with survival pattern [4/4], count 7
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 2 [3/5] with survival pattern [1/4], count 8
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 2 [3/5] with survival pattern [2/4], count 9
+sycl_rs_erasure_one_erasure.cpp:455: New latency data appended on file /home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220/measures/latency/data/data_ISA_L_2/latency_3_2_8KB_ISA-L.txt
+sycl_rs_erasure_one_erasure.cpp:475: Test passed
+ RS[3:2]
+ cell_length=8192,
+ encodind with ISA-L,
+ decoding with ISA-L,
+ PRNG seed=9
+make[1]: Leaving directory '/home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220'
+make[1]: Entering directory '/home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220'
+cd /home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220/afu_flow/afus/sycl_rs_erasure/sw; ./bin/sycl_rs_erasure -f 0000:8a:00.1 -e 1 -d 1 -m 1 -o /home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220/measures/latency/data/data_ISA_L_2 -r 10 -l 8388608 -c 10 -f 0000:8a:00.3
+sycl_rs_erasure_one_erasure.cpp:237: Encoding parity cells for RS[3:2] cell_length=8388608, using ISA-L
+sycl_rs_erasure_one_erasure.cpp:308: Decoding/Reconstructing blocks RS[3:2] cell_length=8388608, using ISA-L
+sycl_rs_erasure_one_erasure.cpp:328: Appending data on file /home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220/measures/latency/data/data_ISA_L_2/latency_3_2_8MB_ISA-L.txt
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 0 [1/5] with survival pattern [1/4], count 0
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 0 [1/5] with survival pattern [2/4], count 1
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 0 [1/5] with survival pattern [3/4], count 2
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 0 [1/5] with survival pattern [4/4], count 3
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 1 [2/5] with survival pattern [1/4], count 4
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 1 [2/5] with survival pattern [2/4], count 5
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 1 [2/5] with survival pattern [3/4], count 6
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 1 [2/5] with survival pattern [4/4], count 7
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 2 [3/5] with survival pattern [1/4], count 8
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 2 [3/5] with survival pattern [2/4], count 9
+sycl_rs_erasure_one_erasure.cpp:455: New latency data appended on file /home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220/measures/latency/data/data_ISA_L_2/latency_3_2_8MB_ISA-L.txt
+sycl_rs_erasure_one_erasure.cpp:475: Test passed
+ RS[3:2]
+ cell_length=8388608,
+ encodind with ISA-L,
+ decoding with ISA-L,
+ PRNG seed=10
+make[1]: Leaving directory '/home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220'
+make[1]: Entering directory '/home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220'
+cd /home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220/afu_flow/afus/sycl_rs_erasure/sw; ./bin/sycl_rs_erasure -f 0000:8a:00.1 -e 1 -d 1 -m 1 -o /home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220/measures/latency/data/data_ISA_L_2 -r 11 -l 32768 -c 10 -f 0000:8a:00.3
+sycl_rs_erasure_one_erasure.cpp:237: Encoding parity cells for RS[3:2] cell_length=32768, using ISA-L
+sycl_rs_erasure_one_erasure.cpp:308: Decoding/Reconstructing blocks RS[3:2] cell_length=32768, using ISA-L
+sycl_rs_erasure_one_erasure.cpp:328: Appending data on file /home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220/measures/latency/data/data_ISA_L_2/latency_3_2_32KB_ISA-L.txt
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 0 [1/5] with survival pattern [1/4], count 0
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 0 [1/5] with survival pattern [2/4], count 1
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 0 [1/5] with survival pattern [3/4], count 2
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 0 [1/5] with survival pattern [4/4], count 3
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 1 [2/5] with survival pattern [1/4], count 4
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 1 [2/5] with survival pattern [2/4], count 5
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 1 [2/5] with survival pattern [3/4], count 6
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 1 [2/5] with survival pattern [4/4], count 7
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 2 [3/5] with survival pattern [1/4], count 8
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 2 [3/5] with survival pattern [2/4], count 9
+sycl_rs_erasure_one_erasure.cpp:455: New latency data appended on file /home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220/measures/latency/data/data_ISA_L_2/latency_3_2_32KB_ISA-L.txt
+sycl_rs_erasure_one_erasure.cpp:475: Test passed
+ RS[3:2]
+ cell_length=32768,
+ encodind with ISA-L,
+ decoding with ISA-L,
+ PRNG seed=11
+make[1]: Leaving directory '/home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220'
+make[1]: Entering directory '/home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220'
+cd /home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220/afu_flow/afus/sycl_rs_erasure/sw; ./bin/sycl_rs_erasure -f 0000:8a:00.1 -e 1 -d 1 -m 1 -o /home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220/measures/latency/data/data_ISA_L_2 -r 12 -l 16777216 -c 10 -f 0000:8a:00.3
+sycl_rs_erasure_one_erasure.cpp:237: Encoding parity cells for RS[3:2] cell_length=16777216, using ISA-L
+sycl_rs_erasure_one_erasure.cpp:308: Decoding/Reconstructing blocks RS[3:2] cell_length=16777216, using ISA-L
+sycl_rs_erasure_one_erasure.cpp:328: Appending data on file /home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220/measures/latency/data/data_ISA_L_2/latency_3_2_16MB_ISA-L.txt
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 0 [1/5] with survival pattern [1/4], count 0
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 0 [1/5] with survival pattern [2/4], count 1
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 0 [1/5] with survival pattern [3/4], count 2
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 0 [1/5] with survival pattern [4/4], count 3
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 1 [2/5] with survival pattern [1/4], count 4
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 1 [2/5] with survival pattern [2/4], count 5
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 1 [2/5] with survival pattern [3/4], count 6
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 1 [2/5] with survival pattern [4/4], count 7
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 2 [3/5] with survival pattern [1/4], count 8
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 2 [3/5] with survival pattern [2/4], count 9
+sycl_rs_erasure_one_erasure.cpp:455: New latency data appended on file /home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220/measures/latency/data/data_ISA_L_2/latency_3_2_16MB_ISA-L.txt
+sycl_rs_erasure_one_erasure.cpp:475: Test passed
+ RS[3:2]
+ cell_length=16777216,
+ encodind with ISA-L,
+ decoding with ISA-L,
+ PRNG seed=12
+make[1]: Leaving directory '/home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220'
+make[1]: Entering directory '/home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220'
+cd /home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220/afu_flow/afus/sycl_rs_erasure/sw; ./bin/sycl_rs_erasure -f 0000:8a:00.1 -e 1 -d 1 -m 1 -o /home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220/measures/latency/data/data_ISA_L_2 -r 13 -l 524288 -c 10 -f 0000:8a:00.3
+sycl_rs_erasure_one_erasure.cpp:237: Encoding parity cells for RS[3:2] cell_length=524288, using ISA-L
+sycl_rs_erasure_one_erasure.cpp:308: Decoding/Reconstructing blocks RS[3:2] cell_length=524288, using ISA-L
+sycl_rs_erasure_one_erasure.cpp:328: Appending data on file /home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220/measures/latency/data/data_ISA_L_2/latency_3_2_512KB_ISA-L.txt
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 0 [1/5] with survival pattern [1/4], count 0
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 0 [1/5] with survival pattern [2/4], count 1
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 0 [1/5] with survival pattern [3/4], count 2
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 0 [1/5] with survival pattern [4/4], count 3
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 1 [2/5] with survival pattern [1/4], count 4
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 1 [2/5] with survival pattern [2/4], count 5
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 1 [2/5] with survival pattern [3/4], count 6
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 1 [2/5] with survival pattern [4/4], count 7
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 2 [3/5] with survival pattern [1/4], count 8
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 2 [3/5] with survival pattern [2/4], count 9
+sycl_rs_erasure_one_erasure.cpp:455: New latency data appended on file /home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220/measures/latency/data/data_ISA_L_2/latency_3_2_512KB_ISA-L.txt
+sycl_rs_erasure_one_erasure.cpp:475: Test passed
+ RS[3:2]
+ cell_length=524288,
+ encodind with ISA-L,
+ decoding with ISA-L,
+ PRNG seed=13
+make[1]: Leaving directory '/home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220'
+make[1]: Entering directory '/home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220'
+cd /home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220/afu_flow/afus/sycl_rs_erasure/sw; ./bin/sycl_rs_erasure -f 0000:8a:00.1 -e 1 -d 1 -m 1 -o /home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220/measures/latency/data/data_ISA_L_2 -r 14 -l 16777216 -c 10 -f 0000:8a:00.3
+sycl_rs_erasure_one_erasure.cpp:237: Encoding parity cells for RS[3:2] cell_length=16777216, using ISA-L
+sycl_rs_erasure_one_erasure.cpp:308: Decoding/Reconstructing blocks RS[3:2] cell_length=16777216, using ISA-L
+sycl_rs_erasure_one_erasure.cpp:328: Appending data on file /home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220/measures/latency/data/data_ISA_L_2/latency_3_2_16MB_ISA-L.txt
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 0 [1/5] with survival pattern [1/4], count 0
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 0 [1/5] with survival pattern [2/4], count 1
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 0 [1/5] with survival pattern [3/4], count 2
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 0 [1/5] with survival pattern [4/4], count 3
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 1 [2/5] with survival pattern [1/4], count 4
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 1 [2/5] with survival pattern [2/4], count 5
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 1 [2/5] with survival pattern [3/4], count 6
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 1 [2/5] with survival pattern [4/4], count 7
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 2 [3/5] with survival pattern [1/4], count 8
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 2 [3/5] with survival pattern [2/4], count 9
+sycl_rs_erasure_one_erasure.cpp:455: New latency data appended on file /home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220/measures/latency/data/data_ISA_L_2/latency_3_2_16MB_ISA-L.txt
+sycl_rs_erasure_one_erasure.cpp:475: Test passed
+ RS[3:2]
+ cell_length=16777216,
+ encodind with ISA-L,
+ decoding with ISA-L,
+ PRNG seed=14
+make[1]: Leaving directory '/home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220'
+make[1]: Entering directory '/home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220'
+cd /home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220/afu_flow/afus/sycl_rs_erasure/sw; ./bin/sycl_rs_erasure -f 0000:8a:00.1 -e 1 -d 1 -m 1 -o /home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220/measures/latency/data/data_ISA_L_2 -r 15 -l 1024 -c 10 -f 0000:8a:00.3
+sycl_rs_erasure_one_erasure.cpp:237: Encoding parity cells for RS[3:2] cell_length=1024, using ISA-L
+sycl_rs_erasure_one_erasure.cpp:308: Decoding/Reconstructing blocks RS[3:2] cell_length=1024, using ISA-L
+sycl_rs_erasure_one_erasure.cpp:328: Appending data on file /home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220/measures/latency/data/data_ISA_L_2/latency_3_2_1KB_ISA-L.txt
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 0 [1/5] with survival pattern [1/4], count 0
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 0 [1/5] with survival pattern [2/4], count 1
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 0 [1/5] with survival pattern [3/4], count 2
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 0 [1/5] with survival pattern [4/4], count 3
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 1 [2/5] with survival pattern [1/4], count 4
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 1 [2/5] with survival pattern [2/4], count 5
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 1 [2/5] with survival pattern [3/4], count 6
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 1 [2/5] with survival pattern [4/4], count 7
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 2 [3/5] with survival pattern [1/4], count 8
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 2 [3/5] with survival pattern [2/4], count 9
+sycl_rs_erasure_one_erasure.cpp:455: New latency data appended on file /home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220/measures/latency/data/data_ISA_L_2/latency_3_2_1KB_ISA-L.txt
+sycl_rs_erasure_one_erasure.cpp:475: Test passed
+ RS[3:2]
+ cell_length=1024,
+ encodind with ISA-L,
+ decoding with ISA-L,
+ PRNG seed=15
+make[1]: Leaving directory '/home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220'
+make[1]: Entering directory '/home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220'
+cd /home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220/afu_flow/afus/sycl_rs_erasure/sw; ./bin/sycl_rs_erasure -f 0000:8a:00.1 -e 1 -d 1 -m 1 -o /home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220/measures/latency/data/data_ISA_L_2 -r 16 -l 2097152 -c 10 -f 0000:8a:00.3
+sycl_rs_erasure_one_erasure.cpp:237: Encoding parity cells for RS[3:2] cell_length=2097152, using ISA-L
+sycl_rs_erasure_one_erasure.cpp:308: Decoding/Reconstructing blocks RS[3:2] cell_length=2097152, using ISA-L
+sycl_rs_erasure_one_erasure.cpp:328: Appending data on file /home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220/measures/latency/data/data_ISA_L_2/latency_3_2_2MB_ISA-L.txt
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 0 [1/5] with survival pattern [1/4], count 0
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 0 [1/5] with survival pattern [2/4], count 1
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 0 [1/5] with survival pattern [3/4], count 2
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 0 [1/5] with survival pattern [4/4], count 3
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 1 [2/5] with survival pattern [1/4], count 4
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 1 [2/5] with survival pattern [2/4], count 5
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 1 [2/5] with survival pattern [3/4], count 6
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 1 [2/5] with survival pattern [4/4], count 7
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 2 [3/5] with survival pattern [1/4], count 8
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 2 [3/5] with survival pattern [2/4], count 9
+sycl_rs_erasure_one_erasure.cpp:455: New latency data appended on file /home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220/measures/latency/data/data_ISA_L_2/latency_3_2_2MB_ISA-L.txt
+sycl_rs_erasure_one_erasure.cpp:475: Test passed
+ RS[3:2]
+ cell_length=2097152,
+ encodind with ISA-L,
+ decoding with ISA-L,
+ PRNG seed=16
+make[1]: Leaving directory '/home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220'
+make[1]: Entering directory '/home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220'
+cd /home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220/afu_flow/afus/sycl_rs_erasure/sw; ./bin/sycl_rs_erasure -f 0000:8a:00.1 -e 1 -d 1 -m 1 -o /home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220/measures/latency/data/data_ISA_L_2 -r 17 -l 8388608 -c 10 -f 0000:8a:00.3
+sycl_rs_erasure_one_erasure.cpp:237: Encoding parity cells for RS[3:2] cell_length=8388608, using ISA-L
+sycl_rs_erasure_one_erasure.cpp:308: Decoding/Reconstructing blocks RS[3:2] cell_length=8388608, using ISA-L
+sycl_rs_erasure_one_erasure.cpp:328: Appending data on file /home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220/measures/latency/data/data_ISA_L_2/latency_3_2_8MB_ISA-L.txt
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 0 [1/5] with survival pattern [1/4], count 0
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 0 [1/5] with survival pattern [2/4], count 1
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 0 [1/5] with survival pattern [3/4], count 2
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 0 [1/5] with survival pattern [4/4], count 3
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 1 [2/5] with survival pattern [1/4], count 4
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 1 [2/5] with survival pattern [2/4], count 5
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 1 [2/5] with survival pattern [3/4], count 6
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 1 [2/5] with survival pattern [4/4], count 7
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 2 [3/5] with survival pattern [1/4], count 8
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 2 [3/5] with survival pattern [2/4], count 9
+sycl_rs_erasure_one_erasure.cpp:455: New latency data appended on file /home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220/measures/latency/data/data_ISA_L_2/latency_3_2_8MB_ISA-L.txt
+sycl_rs_erasure_one_erasure.cpp:475: Test passed
+ RS[3:2]
+ cell_length=8388608,
+ encodind with ISA-L,
+ decoding with ISA-L,
+ PRNG seed=17
+make[1]: Leaving directory '/home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220'
+make[1]: Entering directory '/home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220'
+cd /home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220/afu_flow/afus/sycl_rs_erasure/sw; ./bin/sycl_rs_erasure -f 0000:8a:00.1 -e 1 -d 1 -m 1 -o /home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220/measures/latency/data/data_ISA_L_2 -r 18 -l 32768 -c 10 -f 0000:8a:00.3
+sycl_rs_erasure_one_erasure.cpp:237: Encoding parity cells for RS[3:2] cell_length=32768, using ISA-L
+sycl_rs_erasure_one_erasure.cpp:308: Decoding/Reconstructing blocks RS[3:2] cell_length=32768, using ISA-L
+sycl_rs_erasure_one_erasure.cpp:328: Appending data on file /home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220/measures/latency/data/data_ISA_L_2/latency_3_2_32KB_ISA-L.txt
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 0 [1/5] with survival pattern [1/4], count 0
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 0 [1/5] with survival pattern [2/4], count 1
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 0 [1/5] with survival pattern [3/4], count 2
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 0 [1/5] with survival pattern [4/4], count 3
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 1 [2/5] with survival pattern [1/4], count 4
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 1 [2/5] with survival pattern [2/4], count 5
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 1 [2/5] with survival pattern [3/4], count 6
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 1 [2/5] with survival pattern [4/4], count 7
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 2 [3/5] with survival pattern [1/4], count 8
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 2 [3/5] with survival pattern [2/4], count 9
+sycl_rs_erasure_one_erasure.cpp:455: New latency data appended on file /home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220/measures/latency/data/data_ISA_L_2/latency_3_2_32KB_ISA-L.txt
+sycl_rs_erasure_one_erasure.cpp:475: Test passed
+ RS[3:2]
+ cell_length=32768,
+ encodind with ISA-L,
+ decoding with ISA-L,
+ PRNG seed=18
+make[1]: Leaving directory '/home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220'
+make[1]: Entering directory '/home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220'
+cd /home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220/afu_flow/afus/sycl_rs_erasure/sw; ./bin/sycl_rs_erasure -f 0000:8a:00.1 -e 1 -d 1 -m 1 -o /home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220/measures/latency/data/data_ISA_L_2 -r 19 -l 1048576 -c 10 -f 0000:8a:00.3
+sycl_rs_erasure_one_erasure.cpp:237: Encoding parity cells for RS[3:2] cell_length=1048576, using ISA-L
+sycl_rs_erasure_one_erasure.cpp:308: Decoding/Reconstructing blocks RS[3:2] cell_length=1048576, using ISA-L
+sycl_rs_erasure_one_erasure.cpp:328: Appending data on file /home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220/measures/latency/data/data_ISA_L_2/latency_3_2_1MB_ISA-L.txt
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 0 [1/5] with survival pattern [1/4], count 0
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 0 [1/5] with survival pattern [2/4], count 1
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 0 [1/5] with survival pattern [3/4], count 2
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 0 [1/5] with survival pattern [4/4], count 3
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 1 [2/5] with survival pattern [1/4], count 4
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 1 [2/5] with survival pattern [2/4], count 5
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 1 [2/5] with survival pattern [3/4], count 6
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 1 [2/5] with survival pattern [4/4], count 7
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 2 [3/5] with survival pattern [1/4], count 8
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 2 [3/5] with survival pattern [2/4], count 9
+sycl_rs_erasure_one_erasure.cpp:455: New latency data appended on file /home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220/measures/latency/data/data_ISA_L_2/latency_3_2_1MB_ISA-L.txt
+sycl_rs_erasure_one_erasure.cpp:475: Test passed
+ RS[3:2]
+ cell_length=1048576,
+ encodind with ISA-L,
+ decoding with ISA-L,
+ PRNG seed=19
+make[1]: Leaving directory '/home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220'
+make[1]: Entering directory '/home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220'
+cd /home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220/afu_flow/afus/sycl_rs_erasure/sw; ./bin/sycl_rs_erasure -f 0000:8a:00.1 -e 1 -d 1 -m 1 -o /home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220/measures/latency/data/data_ISA_L_2 -r 20 -l 8192 -c 10 -f 0000:8a:00.3
+sycl_rs_erasure_one_erasure.cpp:237: Encoding parity cells for RS[3:2] cell_length=8192, using ISA-L
+sycl_rs_erasure_one_erasure.cpp:308: Decoding/Reconstructing blocks RS[3:2] cell_length=8192, using ISA-L
+sycl_rs_erasure_one_erasure.cpp:328: Appending data on file /home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220/measures/latency/data/data_ISA_L_2/latency_3_2_8KB_ISA-L.txt
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 0 [1/5] with survival pattern [1/4], count 0
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 0 [1/5] with survival pattern [2/4], count 1
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 0 [1/5] with survival pattern [3/4], count 2
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 0 [1/5] with survival pattern [4/4], count 3
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 1 [2/5] with survival pattern [1/4], count 4
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 1 [2/5] with survival pattern [2/4], count 5
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 1 [2/5] with survival pattern [3/4], count 6
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 1 [2/5] with survival pattern [4/4], count 7
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 2 [3/5] with survival pattern [1/4], count 8
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 2 [3/5] with survival pattern [2/4], count 9
+sycl_rs_erasure_one_erasure.cpp:455: New latency data appended on file /home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220/measures/latency/data/data_ISA_L_2/latency_3_2_8KB_ISA-L.txt
+sycl_rs_erasure_one_erasure.cpp:475: Test passed
+ RS[3:2]
+ cell_length=8192,
+ encodind with ISA-L,
+ decoding with ISA-L,
+ PRNG seed=20
+make[1]: Leaving directory '/home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220'
+make[1]: Entering directory '/home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220'
+cd /home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220/afu_flow/afus/sycl_rs_erasure/sw; ./bin/sycl_rs_erasure -f 0000:8a:00.1 -e 1 -d 1 -m 1 -o /home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220/measures/latency/data/data_ISA_L_2 -r 21 -l 8388608 -c 10 -f 0000:8a:00.3
+sycl_rs_erasure_one_erasure.cpp:237: Encoding parity cells for RS[3:2] cell_length=8388608, using ISA-L
+sycl_rs_erasure_one_erasure.cpp:308: Decoding/Reconstructing blocks RS[3:2] cell_length=8388608, using ISA-L
+sycl_rs_erasure_one_erasure.cpp:328: Appending data on file /home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220/measures/latency/data/data_ISA_L_2/latency_3_2_8MB_ISA-L.txt
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 0 [1/5] with survival pattern [1/4], count 0
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 0 [1/5] with survival pattern [2/4], count 1
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 0 [1/5] with survival pattern [3/4], count 2
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 0 [1/5] with survival pattern [4/4], count 3
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 1 [2/5] with survival pattern [1/4], count 4
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 1 [2/5] with survival pattern [2/4], count 5
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 1 [2/5] with survival pattern [3/4], count 6
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 1 [2/5] with survival pattern [4/4], count 7
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 2 [3/5] with survival pattern [1/4], count 8
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 2 [3/5] with survival pattern [2/4], count 9
+sycl_rs_erasure_one_erasure.cpp:455: New latency data appended on file /home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220/measures/latency/data/data_ISA_L_2/latency_3_2_8MB_ISA-L.txt
+sycl_rs_erasure_one_erasure.cpp:475: Test passed
+ RS[3:2]
+ cell_length=8388608,
+ encodind with ISA-L,
+ decoding with ISA-L,
+ PRNG seed=21
+make[1]: Leaving directory '/home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220'
+make[1]: Entering directory '/home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220'
+cd /home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220/afu_flow/afus/sycl_rs_erasure/sw; ./bin/sycl_rs_erasure -f 0000:8a:00.1 -e 1 -d 1 -m 1 -o /home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220/measures/latency/data/data_ISA_L_2 -r 22 -l 2097152 -c 10 -f 0000:8a:00.3
+sycl_rs_erasure_one_erasure.cpp:237: Encoding parity cells for RS[3:2] cell_length=2097152, using ISA-L
+sycl_rs_erasure_one_erasure.cpp:308: Decoding/Reconstructing blocks RS[3:2] cell_length=2097152, using ISA-L
+sycl_rs_erasure_one_erasure.cpp:328: Appending data on file /home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220/measures/latency/data/data_ISA_L_2/latency_3_2_2MB_ISA-L.txt
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 0 [1/5] with survival pattern [1/4], count 0
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 0 [1/5] with survival pattern [2/4], count 1
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 0 [1/5] with survival pattern [3/4], count 2
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 0 [1/5] with survival pattern [4/4], count 3
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 1 [2/5] with survival pattern [1/4], count 4
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 1 [2/5] with survival pattern [2/4], count 5
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 1 [2/5] with survival pattern [3/4], count 6
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 1 [2/5] with survival pattern [4/4], count 7
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 2 [3/5] with survival pattern [1/4], count 8
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 2 [3/5] with survival pattern [2/4], count 9
+sycl_rs_erasure_one_erasure.cpp:455: New latency data appended on file /home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220/measures/latency/data/data_ISA_L_2/latency_3_2_2MB_ISA-L.txt
+sycl_rs_erasure_one_erasure.cpp:475: Test passed
+ RS[3:2]
+ cell_length=2097152,
+ encodind with ISA-L,
+ decoding with ISA-L,
+ PRNG seed=22
+make[1]: Leaving directory '/home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220'
+make[1]: Entering directory '/home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220'
+cd /home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220/afu_flow/afus/sycl_rs_erasure/sw; ./bin/sycl_rs_erasure -f 0000:8a:00.1 -e 1 -d 1 -m 1 -o /home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220/measures/latency/data/data_ISA_L_2 -r 23 -l 8192 -c 10 -f 0000:8a:00.3
+sycl_rs_erasure_one_erasure.cpp:237: Encoding parity cells for RS[3:2] cell_length=8192, using ISA-L
+sycl_rs_erasure_one_erasure.cpp:308: Decoding/Reconstructing blocks RS[3:2] cell_length=8192, using ISA-L
+sycl_rs_erasure_one_erasure.cpp:328: Appending data on file /home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220/measures/latency/data/data_ISA_L_2/latency_3_2_8KB_ISA-L.txt
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 0 [1/5] with survival pattern [1/4], count 0
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 0 [1/5] with survival pattern [2/4], count 1
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 0 [1/5] with survival pattern [3/4], count 2
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 0 [1/5] with survival pattern [4/4], count 3
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 1 [2/5] with survival pattern [1/4], count 4
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 1 [2/5] with survival pattern [2/4], count 5
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 1 [2/5] with survival pattern [3/4], count 6
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 1 [2/5] with survival pattern [4/4], count 7
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 2 [3/5] with survival pattern [1/4], count 8
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 2 [3/5] with survival pattern [2/4], count 9
+sycl_rs_erasure_one_erasure.cpp:455: New latency data appended on file /home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220/measures/latency/data/data_ISA_L_2/latency_3_2_8KB_ISA-L.txt
+sycl_rs_erasure_one_erasure.cpp:475: Test passed
+ RS[3:2]
+ cell_length=8192,
+ encodind with ISA-L,
+ decoding with ISA-L,
+ PRNG seed=23
+make[1]: Leaving directory '/home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220'
+make[1]: Entering directory '/home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220'
+cd /home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220/afu_flow/afus/sycl_rs_erasure/sw; ./bin/sycl_rs_erasure -f 0000:8a:00.1 -e 1 -d 1 -m 1 -o /home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220/measures/latency/data/data_ISA_L_2 -r 24 -l 131072 -c 10 -f 0000:8a:00.3
+sycl_rs_erasure_one_erasure.cpp:237: Encoding parity cells for RS[3:2] cell_length=131072, using ISA-L
+sycl_rs_erasure_one_erasure.cpp:308: Decoding/Reconstructing blocks RS[3:2] cell_length=131072, using ISA-L
+sycl_rs_erasure_one_erasure.cpp:328: Appending data on file /home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220/measures/latency/data/data_ISA_L_2/latency_3_2_128KB_ISA-L.txt
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 0 [1/5] with survival pattern [1/4], count 0
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 0 [1/5] with survival pattern [2/4], count 1
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 0 [1/5] with survival pattern [3/4], count 2
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 0 [1/5] with survival pattern [4/4], count 3
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 1 [2/5] with survival pattern [1/4], count 4
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 1 [2/5] with survival pattern [2/4], count 5
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 1 [2/5] with survival pattern [3/4], count 6
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 1 [2/5] with survival pattern [4/4], count 7
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 2 [3/5] with survival pattern [1/4], count 8
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 2 [3/5] with survival pattern [2/4], count 9
+sycl_rs_erasure_one_erasure.cpp:455: New latency data appended on file /home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220/measures/latency/data/data_ISA_L_2/latency_3_2_128KB_ISA-L.txt
+sycl_rs_erasure_one_erasure.cpp:475: Test passed
+ RS[3:2]
+ cell_length=131072,
+ encodind with ISA-L,
+ decoding with ISA-L,
+ PRNG seed=24
+make[1]: Leaving directory '/home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220'
+make[1]: Entering directory '/home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220'
+cd /home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220/afu_flow/afus/sycl_rs_erasure/sw; ./bin/sycl_rs_erasure -f 0000:8a:00.1 -e 1 -d 1 -m 1 -o /home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220/measures/latency/data/data_ISA_L_2 -r 25 -l 32768 -c 10 -f 0000:8a:00.3
+sycl_rs_erasure_one_erasure.cpp:237: Encoding parity cells for RS[3:2] cell_length=32768, using ISA-L
+sycl_rs_erasure_one_erasure.cpp:308: Decoding/Reconstructing blocks RS[3:2] cell_length=32768, using ISA-L
+sycl_rs_erasure_one_erasure.cpp:328: Appending data on file /home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220/measures/latency/data/data_ISA_L_2/latency_3_2_32KB_ISA-L.txt
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 0 [1/5] with survival pattern [1/4], count 0
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 0 [1/5] with survival pattern [2/4], count 1
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 0 [1/5] with survival pattern [3/4], count 2
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 0 [1/5] with survival pattern [4/4], count 3
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 1 [2/5] with survival pattern [1/4], count 4
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 1 [2/5] with survival pattern [2/4], count 5
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 1 [2/5] with survival pattern [3/4], count 6
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 1 [2/5] with survival pattern [4/4], count 7
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 2 [3/5] with survival pattern [1/4], count 8
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 2 [3/5] with survival pattern [2/4], count 9
+sycl_rs_erasure_one_erasure.cpp:455: New latency data appended on file /home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220/measures/latency/data/data_ISA_L_2/latency_3_2_32KB_ISA-L.txt
+sycl_rs_erasure_one_erasure.cpp:475: Test passed
+ RS[3:2]
+ cell_length=32768,
+ encodind with ISA-L,
+ decoding with ISA-L,
+ PRNG seed=25
+make[1]: Leaving directory '/home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220'
+make[1]: Entering directory '/home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220'
+cd /home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220/afu_flow/afus/sycl_rs_erasure/sw; ./bin/sycl_rs_erasure -f 0000:8a:00.1 -e 1 -d 1 -m 1 -o /home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220/measures/latency/data/data_ISA_L_2 -r 26 -l 1024 -c 10 -f 0000:8a:00.3
+sycl_rs_erasure_one_erasure.cpp:237: Encoding parity cells for RS[3:2] cell_length=1024, using ISA-L
+sycl_rs_erasure_one_erasure.cpp:308: Decoding/Reconstructing blocks RS[3:2] cell_length=1024, using ISA-L
+sycl_rs_erasure_one_erasure.cpp:328: Appending data on file /home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220/measures/latency/data/data_ISA_L_2/latency_3_2_1KB_ISA-L.txt
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 0 [1/5] with survival pattern [1/4], count 0
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 0 [1/5] with survival pattern [2/4], count 1
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 0 [1/5] with survival pattern [3/4], count 2
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 0 [1/5] with survival pattern [4/4], count 3
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 1 [2/5] with survival pattern [1/4], count 4
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 1 [2/5] with survival pattern [2/4], count 5
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 1 [2/5] with survival pattern [3/4], count 6
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 1 [2/5] with survival pattern [4/4], count 7
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 2 [3/5] with survival pattern [1/4], count 8
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 2 [3/5] with survival pattern [2/4], count 9
+sycl_rs_erasure_one_erasure.cpp:455: New latency data appended on file /home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220/measures/latency/data/data_ISA_L_2/latency_3_2_1KB_ISA-L.txt
+sycl_rs_erasure_one_erasure.cpp:475: Test passed
+ RS[3:2]
+ cell_length=1024,
+ encodind with ISA-L,
+ decoding with ISA-L,
+ PRNG seed=26
+make[1]: Leaving directory '/home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220'
+make[1]: Entering directory '/home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220'
+cd /home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220/afu_flow/afus/sycl_rs_erasure/sw; ./bin/sycl_rs_erasure -f 0000:8a:00.1 -e 1 -d 1 -m 1 -o /home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220/measures/latency/data/data_ISA_L_2 -r 27 -l 1024 -c 10 -f 0000:8a:00.3
+sycl_rs_erasure_one_erasure.cpp:237: Encoding parity cells for RS[3:2] cell_length=1024, using ISA-L
+sycl_rs_erasure_one_erasure.cpp:308: Decoding/Reconstructing blocks RS[3:2] cell_length=1024, using ISA-L
+sycl_rs_erasure_one_erasure.cpp:328: Appending data on file /home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220/measures/latency/data/data_ISA_L_2/latency_3_2_1KB_ISA-L.txt
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 0 [1/5] with survival pattern [1/4], count 0
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 0 [1/5] with survival pattern [2/4], count 1
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 0 [1/5] with survival pattern [3/4], count 2
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 0 [1/5] with survival pattern [4/4], count 3
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 1 [2/5] with survival pattern [1/4], count 4
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 1 [2/5] with survival pattern [2/4], count 5
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 1 [2/5] with survival pattern [3/4], count 6
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 1 [2/5] with survival pattern [4/4], count 7
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 2 [3/5] with survival pattern [1/4], count 8
+sycl_rs_erasure_one_erasure.cpp:338: Reconstructing cell 2 [3/5] with survival pattern [2/4], count 9
+sycl_rs_erasure_one_erasure.cpp:455: New latency data appended on file /home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220/measures/latency/data/data_ISA_L_2/latency_3_2_1KB_ISA-L.txt
+sycl_rs_erasure_one_erasure.cpp:475: Test passed
+ RS[3:2]
+ cell_length=1024,
+ encodind with ISA-L,
+ decoding with ISA-L,
+ PRNG seed=27
+make[1]: Leaving directory '/home/vmaisto/AGILEX/c220/intel-ofs-hitek_C220'
