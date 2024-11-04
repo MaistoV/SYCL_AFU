@@ -139,7 +139,7 @@ for rs in range(0,len(RS_SCHEMA_list)):
 plt.grid(visible=True, which="both")
 plt.xticks(cell_length_int, cell_length)
 plt.xlabel("Cell length")
-plt.ylabel("Throughput (GB/cycle)")
+plt.ylabel("Throughput (GB/s)")
 plt.yticks(B_s_int, B_s)
 plt.legend()
 figname = plot_dir + "/Troughput_seconds.png"

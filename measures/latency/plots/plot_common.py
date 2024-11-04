@@ -118,14 +118,14 @@ cell_length = [
 				"1KB"	,	"2KB"	,	"4KB"	,	"8KB"	,	"16KB"	,
 				"32KB"	,	"64KB"	,	"128KB"	, 	"256KB"	,	"512KB"	,
 				"1MB"	,	"2MB"	,	"4MB"	,	"8MB"	, 	"16MB"	,
-				#  "32MB"	,	"64MB"#	,	"128MB"	, 	"256MB"	,	"512MB"	,
+				 "32MB"	,	"64MB"	,	"128MB"	#, 	"256MB"	,	"512MB"	,
 				]
 cell_length_int = [ 
 					# 64				, 128			, 256			, 512			, 
 					1*KB	, 2*KB    , 4*KB    , 8*KB	 	, 16*KB 	,
 					32*KB	, 64*KB   , 128*KB  , 256*KB	, 512*KB 	,
 					1*MB    , 2*MB    , 4*MB    , 8*MB		, 16*MB 	,
-					# 32*MB  , 64*MB   #, 128*MB  , 256*MB, 512*MB ,
+					32*MB  , 64*MB	  , 128*MB  #, 256*MB, 512*MB ,
 				]
 # index_1MB = cell_length.index("1MB")
 

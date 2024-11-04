@@ -19,10 +19,10 @@ export BOARD=htk-nc220-agf014
 #############
 # HEM tests #
 #############
-export HEM_OUT_DIR=$(pwd)/HEM/results 
+export HEM_OUT_DIR=$(pwd)/HEM/results
 
 #################
-# Quartus Tools # 
+# Quartus Tools #
 #################
 # Note, QUARTUS_HOME is your Quartus installation directory, e.g. $QUARTUS_HOME/bin contains Quartus executable.
 : ${QUARTUS_HOME=~/intelFPGA_pro/23.2/quartus}
@@ -42,7 +42,7 @@ export BOARD_VAR=agf014
 export FPGA="$BOARD_VAR"
 
 #################
-# OFSS FIM flow # 
+# OFSS FIM flow #
 #################
 export NO_HEMS=${NO_HEMS=1}
 
@@ -109,15 +109,15 @@ export FIM_IMAGE_USER2=${OPAE_PLATFORM_ROOT}/hw/blue_bits/ofs_top_page2_unsigned
 export OPAE_SDK_VERSION=2.8.0-1
 export OPAE_SDK_REPO_BRANCH=release/$OPAE_SDK_VERSION
 
-# The following environment variables are required for compiling the AFU examples. 
+# The following environment variables are required for compiling the AFU examples.
 
 # Location to clone the ofs-platform-afu-bbb repository which contains PIM files and AFU examples.
-export OFS_PLATFORM_AFU_BBB=$OFS_BUILD_ROOT/external/ofs-platform-afu-bbb 
+export OFS_PLATFORM_AFU_BBB=$OFS_BUILD_ROOT/external/ofs-platform-afu-bbb
 
 # Location to the example-afu clone
 export EXAMPLES_AFU=${ROOT_DIR}/afu_flow/afus/examples-afu
 
-# OPAE and MPF libraries must either be on the default linker search paths or on both LIBRARY_PATH and LD_LIBRARY_PATH.  
+# OPAE and MPF libraries must either be on the default linker search paths or on both LIBRARY_PATH and LD_LIBRARY_PATH.
 export OPAE_LOC=/usr
 export LIBRARY_PATH=$OPAE_LOC/lib:$LIBRARY_PATH
 export LD_LIBRARY_PATH=$OPAE_LOC/lib64:$LD_LIBRARY_PATH
@@ -128,7 +128,7 @@ export LD_LIBRARY_PATH=$OPAE_LOC/lib64:$LD_LIBRARY_PATH
 # ASE only #
 ############
 # Add -debugdb to vsim builds
-# export DEBUG_VSIM=1 # Currently not working  
+# export DEBUG_VSIM=1 # Currently not working
 
 # Setup continuous mode
 export ASE_MODE=3
@@ -145,7 +145,7 @@ export MTI_HOME=/home/vincenzo/intelFPGA_pro/23.2/questa_fe
 export PATH=$MTI_HOME/linux_x86_64/:$MTI_HOME/bin/:$PATH
 
 ############
-# AFU flow # 
+# AFU flow #
 ############
 # Utility AFUs
 # export AFU_NAME=${AFU_NAME="my_custom_afu"}
@@ -171,7 +171,7 @@ if [ "${AFU_NAME}" == "sycl_rs_erasure" ] ||
     #         export AFU_MAX_NUM=1?
     #         ;;
     # esac
-else 
+else
     unset RS_SCHEMA
 fi
 
@@ -210,7 +210,7 @@ export ONEAPI_ROOT=${ONEAPI_ROOT=/opt/intel/oneapi}
 export QUARTUS_ROOTDIR_OVERRIDE=$QUARTUS_ROOTDIR
 # Other OFS environment variables
 export WORKDIR=$OFS_ROOTDIR
-export LIBOPAE_C_ROOT=/usr 
+export LIBOPAE_C_ROOT=/usr
 
 # Setup OneAPI Base Toolkit, force re-execution
 source ${ONEAPI_ROOT}/setvars.sh --force
@@ -229,7 +229,7 @@ if [[ "${RS_SCHEMA}" != "" ]]; then
 fi
 
 ############################
-# OneAPI FPGA IP Authoring #  
+# OneAPI FPGA IP Authoring #
 ############################
 
 # OneAPI includes
@@ -281,7 +281,7 @@ export SYCL_ASP_BUILD_DIR=${SYCL_ASP_BUILD_DIR}_${OFS_ASP_BOARD_VARIANT}
 export ASP_ZERO_COPY=${ASP_ZERO_COPY=1}
 if [[ $ASP_ZERO_COPY == 1 ]]; then
     export SYCL_ASP_BUILD_DIR=${SYCL_ASP_BUILD_DIR}_ASP_ZERO_COPY
-fi 
+fi
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$OFS_ASP_ROOT/linux64/lib
 
 ############
@@ -293,9 +293,9 @@ export EXPERIMENT_PROFILE=${EXPERIMENT_PROFILE="QUICK"} # Reduced number of samp
 # export EXPERIMENT_PROFILE=${EXPERIMENT_PROFILE="COMPLETE"}  # Full set of samples
 
 # Number of repetitions
-export MEASURE_NUM_REPS=${MEASURE_NUM_REPS=3} 
+export MEASURE_NUM_REPS=${MEASURE_NUM_REPS=3}
 # Number of reconstructions per run
-export MEASURE_MAX_DECODE=${MEASURE_MAX_DECODE=10} 
+export MEASURE_MAX_DECODE=${MEASURE_MAX_DECODE=10}
 
 ####################
 # Measures Latency #
@@ -313,7 +313,7 @@ export MEASURE_CYCLES_PLOT_OUT_DIR=${MEASURE_LATENCY_DIR}/plots/output_plots
 ##################
 # Measures Power #
 ##################
-export MEASURE_POWER_DATA_DIR=${ROOT_DIR}/measures/power
+export MEASURE_POWER_DATA_DIR=${ROOT_DIR}/measures/power/data
 export MEASURE_POWER_PLOT_OUT_DIR=${MEASURE_POWER_DATA_DIR}/plots/output_plots
 
 #################
@@ -332,7 +332,7 @@ if [[ ${MULTI_ERASURE_SIMPLE} == 1 ]]; then
 fi
 
 ########################
-# Print out enviroment #  
+# Print out enviroment #
 ########################
 # echo "Dump environment:"
 # # Printing all (Quartus, OpenCL SDK, GCC) versions for user info

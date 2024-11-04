@@ -27,7 +27,7 @@ all: help
 
 help:
 	@cat "${ROOT_DIR}/scripts/misc/make_help.txt"
-	
+
 #######
 # FIM #
 #######
@@ -37,7 +37,7 @@ BASE_OFS_TOP_QSF = ${OFS_BUILD_ROOT}/syn/board/htk-nc220-agf014/syn_top/ofs_top.
 PR_BUILD_OFS_TOP_QSF = ${OPAE_PLATFORM_ROOT}/hw/lib/build/syn/board/htk-nc220-agf014/syn_top/ofs_top.qsf
 
 # Copy OFSS configuration files
-# NOTE: this requires th OFSS configuration to be exposed in ${OFSS_CONFIG_DIR} 
+# NOTE: this requires th OFSS configuration to be exposed in ${OFSS_CONFIG_DIR}
 fim_ofss_config: ${OFSS_CONFIG_DIR}
 	cp -vr ${OFSS_CONFIG_DIR}/* ${OFS_BUILD_ROOT}/tools/ofss_config/
 
@@ -65,11 +65,11 @@ fim_restore_defaults: fim_restore_fitter_seed fim_include_pr fim_restore_pr
 
 # Override script
 TARGET_PR_ASSIGNMENTS_TCL=${OFS_ROOTDIR}/syn/board/${BOARD}/setup/pr_assignments.tcl
-fim_resize_pr: 
+fim_resize_pr:
 	if [ ${RESIZE_PR} -eq 1 ]; then \
 		cp -v ${ROOT_DIR}/fim_flow/resize_pr/resize_pr_assignments.tcl ${TARGET_PR_ASSIGNMENTS_TCL}; \
 	fi
-fim_restore_pr: 
+fim_restore_pr:
 		cp -v ${ROOT_DIR}/fim_flow/resize_pr/default_pr_assignments.tcl ${TARGET_PR_ASSIGNMENTS_TCL}
 
 fim_build_pr: fim_resize_pr # Only for PR builds
@@ -83,10 +83,10 @@ fim_build_%: fim_ofss_config fim_reseed_fitter
 
 FPGASUPDATE_FLAGS ?=
 ifeq (${FIM_UPDATE_DEBUG}, 1)
-	FPGASUPDATE_FLAGS += --log-level debug 
+	FPGASUPDATE_FLAGS += --log-level debug
 endif
-fim_update: 
-#	Update flash images 
+fim_update:
+#	Update flash images
 	sudo fpgasupdate ${FPGASUPDATE_FLAGS} ${FIM_IMAGE} ${PAC_PCIE_SBD}.0
 	@echo "[INFO] To configure the new FIM, powercycle the PAC with:"
 	@echo "[INFO]     ${MAKE} pac_powercycle_<bootpage>"
@@ -116,7 +116,7 @@ opae.io_bind_one:
 
 opae.io_release:
 	${ROOT_DIR}/scripts/opae.io/opae.io_release.sh
-	
+
 pac_hot_plug:
 	sudo pci_device ${PAC_PCIE_SBD}.0 unplug
 	sudo pci_device ${PAC_PCIE_SBD}.0 plug
@@ -192,7 +192,7 @@ aocl_bsp_uninstall:
 
 # Make sure to make opae.io_bind_one with the correct VF number
 aocl_aocx_initialize:
-	${ONEAPI_DEBUG_ENV} aocl initialize ${ACL_DEVICE} ${OFS_ASP_BOARD_VARIANT} 
+	${ONEAPI_DEBUG_ENV} aocl initialize ${ACL_DEVICE} ${OFS_ASP_BOARD_VARIANT}
 
 CMAKE_ASP_FLAGS = -DFPGA_DEVICE=${OFS_ASP_FPGA_DEVICE} \
 	-DIS_BSP=1 ${OFS_ASP_USM_FLAG}
@@ -214,7 +214,7 @@ oneapi_asp_%: oneapi_cmake_asp
 	${MAKE} $* ${SYCL_MAKE_ENV}
 
 # requires CL_CONTEXT_MPSIM_DEVICE_INTELFPGA=1
-test_asp_fpga_sim: 
+test_asp_fpga_sim:
 #	Run simulation
 	cd ${SYCL_ASP_BUILD_DIR}; \
 	CL_CONTEXT_MPSIM_DEVICE_INTELFPGA=1 \
@@ -297,7 +297,7 @@ osw:
 # Build and launch simulation
 ase_setup: clean_ase ${OPAE_PLATFORM_ROOT}
 #	Setup and launch simulator
-	${SYCL_IP_ENV} VERBOSE=1 ${AFU_FLOW_DIR}/afu_ase.sh 
+	${SYCL_IP_ENV} VERBOSE=1 ${AFU_FLOW_DIR}/afu_ase.sh
 
 # Launch simulation without rebuilding it
 ase_launch: ${AFU_ASE_DIR}
@@ -333,7 +333,7 @@ AFU_ELF_NAME ?= bin/${AFU_NAME}
 test_sycl_afu: test_gbs
 test_gbs: #afu_host
 #	Run host application
-# 	NOTE: default SBDF will be overridden by content of TEST_ARGS 
+# 	NOTE: default SBDF will be overridden by content of TEST_ARGS
 	cd ${AFU_SW_DIR}; ./${AFU_ELF_NAME} -f ${SBDF} ${TEST_ARGS}
 
 test_ase: afu_host
@@ -350,8 +350,10 @@ test_isal:
 # Measures Power #
 ##################
 # TODO: test, evaluate and refine
+OUT_FILE ?= power_default.csv
 measure_power:
-	${ROOT_DIR}/measures/power/measure_power_top.sh ${MEASURE_POWER_DATA_DIR}
+	${ROOT_DIR}/measures/power/measure_power_top.sh
+		${MEASURE_POWER_DATA_DIR}/${OUT_FILE}
 
 ############################
 # Measures (single-thread) #
@@ -465,5 +467,5 @@ clean_oneapi_asp:
 clean_aocx:
 	rm -rf ${AOCX_ROOT}
 
-clean_all: # clean_ase clean_sw clean_gbs clean_ase clean_oneapi_ip clean_oneapi_asp 
+clean_all: # clean_ase clean_sw clean_gbs clean_ase clean_oneapi_ip clean_oneapi_asp
 	# TBD: clean for all flows?

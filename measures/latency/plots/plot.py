@@ -36,11 +36,11 @@ for hw in range(0,len(common.hw_configs)):
 			# - latency_RS_3_2_numVFP1_numClients1_clientID0_1KB
 			afu_latency_s_file_name = root_data_dir + common.data_dirs[hw] + 'latency_*' + common.RS_SCHEMA_list[rs] + "*_" + common.cell_length[l] + '*.txt'
 			file_name_ref = glob.glob(afu_latency_s_file_name)
-			if ( len(file_name_ref) != 1 ): 
+			if ( len(file_name_ref) != 1 ):
 				print("File name error: " + afu_latency_s_file_name)
 				afu_latency_s = numpy.inf
 				continue
-			
+
 			# Load data
 			try:
 				afu_latency_s = pandas.read_csv(file_name_ref[0], sep=";", header=None)
@@ -74,7 +74,7 @@ plt.rcParams.update({'font.size': 18})
 # 	ax = plt.subplot(1,2,rs+1, sharey=ax)
 # 	for hw in range(0,len(common.hw_configs)):
 # 		plt.loglog(
-# 					common.cell_length_int, 
+# 					common.cell_length_int,
 # 			 		mean_latency_s[rs][hw],
 # 					common.hw_line[hw] + common.hw_marker[hw],
 # 					label=common.hw_name[hw],
@@ -103,7 +103,7 @@ plt.rcParams.update({'font.size': 18})
 # 	# plt.axhline(y=common.peak_asp_throughput[rs], linestyle='--', color="r", linewidth=2, label="Max ASP read bandwidth")
 # 	for hw in range(0,len(common.hw_configs)):
 # 		plt.loglog(
-# 					common.cell_length_int, 
+# 					common.cell_length_int,
 # 			 		throughput_B_s[rs][hw],
 # 					common.hw_line[hw] + common.hw_marker[hw],
 # 					label=common.hw_name[hw],
@@ -138,7 +138,7 @@ for rs in range(0,len(common.RS_SCHEMA_list)):
 		ax_latency = plt.subplot(2,2,rs+1, sharey=ax_latency)
 	for hw in range(0,len(common.hw_configs)):
 		plt.loglog(
-					common.cell_length_int, 
+					common.cell_length_int,
 			 		mean_latency_s[rs][hw],
 					common.hw_line[hw] + common.hw_marker[hw],
 					label=common.hw_name[hw],
@@ -155,7 +155,7 @@ for rs in range(0,len(common.RS_SCHEMA_list)):
 	if rs == 0:
 		plt.ylabel("Latency (s)")
 		plt.legend()
-	
+
 	# Plot throughput
 	if rs == 0:
 		ax_throughput = plt.subplot(2,2,rs+3)
@@ -163,7 +163,7 @@ for rs in range(0,len(common.RS_SCHEMA_list)):
 		ax_throughput = plt.subplot(2,2,rs+3, sharey=ax_throughput)
 	for hw in range(0,len(common.hw_configs)):
 		plt.loglog(
-					common.cell_length_int, 
+					common.cell_length_int,
 			 		throughput_B_s[rs][hw],
 					common.hw_line[hw] + common.hw_marker[hw],
 					# label=common.hw_name[hw],
@@ -199,12 +199,12 @@ print("Figure available at " + figname)
 # 	for l in range(0,len(common.cell_length)):
 # 		VFP_diff_overhead[rs][l]       = mean_latency_s[rs][common.VFProxy][l] - mean_latency_s[rs][common.SYCL_AFU][l]
 # 		VFP_percentage_overhead[rs][l] = mean_latency_s[rs][common.VFProxy][l] / mean_latency_s[rs][common.SYCL_AFU][l]
-		
+
 # plt.figure("VFProxy Overhead", figsize=common.figsize_2columns)
 # for rs in range(0,len(common.RS_SCHEMA_list)):
 # 	# print ("VFP_diff_overhead       RS[" + common.RS_SCHEMA_txt[rs] + "]")
 # 	# print (VFP_diff_overhead[rs])
-	
+
 # 	plt.subplot(1, 2, 1)
 # 	plt.title("Abosulte Difference Overhead (VFProxy - SYCL_AFU)")
 # 	plt.semilogx(
