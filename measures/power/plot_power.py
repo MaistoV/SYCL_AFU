@@ -106,11 +106,35 @@ for rs in range(0,len(RS_SCHEMA_list)):
             color="r",
             label="ASP 12V"
         )
+    # Print ASP projections
+    numVFs = data_df.loc[
+                    (data_df["K:P"] == RS_SCHEMA_txt[rs]) &
+                    (data_df["Bitstream"] == "flat")
+                ]["numVFs"]
+    asp_projection = numVFs * print_df["power_12V (W)"].values
+    plt.plot(
+            numVFs,
+            asp_projection,
+            "--o",
+            markersize=MARKER_SIZE / 2,
+            markerfacecolor='none',
+            color="r",
+        )
+    asp_projection = numVFs * print_df["board_power (W)"].values
+    plt.plot(
+            numVFs,
+            asp_projection,
+            "--o",
+            markersize=MARKER_SIZE / 2,
+            markerfacecolor='none',
+            color="r",
+        )
 
     # Decorate
+    plt.yscale('log')
     plt.xlabel("Number of VFs")
     plt.ylabel("Power (W)")
-    plt.grid(visible=True, axis="y")
+    plt.grid(visible=True, axis="y", which="both")
     plt.legend()
     plt.xticks( data_df.loc[
                         (data_df["K:P"] == RS_SCHEMA_txt[rs]) &
@@ -129,6 +153,8 @@ plt.figure("VF power scaling (board-only)", figsize=[5,5])
 # Loop over RS_SCHEMAs
 # ax = plt.subplot(1,2,1)
 # plt.xticks([])
+# Reduce marker size here
+MARKER_SIZE = MARKER_SIZE - 2
 for rs in range(0,len(RS_SCHEMA_list)):
     rs_name = "RS[" + RS_SCHEMA_txt[rs] + "]"
 
@@ -162,19 +188,26 @@ for rs in range(0,len(RS_SCHEMA_list)):
             color="r",
             label= rs_name + " ASP"
         )
-    # plt.plot(
-    #         print_df["numVFs"],
-    #         print_df["power_12V (W)"],
-    #         "*",
-    #         markersize=MARKER_SIZE,
-    #         color="r",
-    #         label="ASP 12V"
-    #     )
+    # Print ASP projections
+    numVFs = data_df.loc[
+                    (data_df["K:P"] == RS_SCHEMA_txt[rs]) &
+                    (data_df["Bitstream"] == "flat")
+                ]["numVFs"]
+    asp_projection = numVFs * print_df[column].values
+    plt.plot(
+            numVFs,
+            asp_projection,
+            "--" + markers[2*rs + 1],
+            markersize=MARKER_SIZE / 2,
+            markerfacecolor='none',
+            color="r",
+        )
 
     # Decorate
     plt.xlabel("Number of VFs")
     plt.ylabel("Power (W)")
-    plt.grid(visible=True, axis="y")
+    plt.yscale('log')
+    plt.grid(visible=True, axis="y", which="both")
     plt.legend()
     plt.xticks( range_numVFs )
 
