@@ -16,21 +16,21 @@ os.makedirs(plot_dir, exist_ok=True)
 # Read data
 data_df = pandas.read_csv(input_file, sep=";")
 pandas.to_numeric(data_df["numVFs"])
-print(data_df)
+# print(data_df)
 
-# RS[3:2]
-rs_3_2_df = data_df.loc[
-                (data_df["K:P"] == "3:2") &
-                (data_df["Bitstream"] == "flat")
-            ]
-print(rs_3_2_df)
+# # RS[3:2]
+# rs_3_2_df = data_df.loc[
+#                 (data_df["K:P"] == "3:2") &
+#                 (data_df["Bitstream"] == "flat")
+#             ]
+# print(rs_3_2_df)
 
-# RS[6:3]
-rs_6_3_df = data_df.loc[
-                (data_df["K:P"] == "6:3") &
-                (data_df["Bitstream"] == "flat")
-            ]
-print(rs_6_3_df)
+# # RS[6:3]
+# rs_6_3_df = data_df.loc[
+#                 (data_df["K:P"] == "6:3") &
+#                 (data_df["Bitstream"] == "flat")
+#             ]
+# print(rs_6_3_df)
 
 
 # Common
@@ -130,6 +130,29 @@ for rs in range(0,len(RS_SCHEMA_list)):
             color="r",
         )
 
+    # 0x VFs
+    # print_df = data_df.loc[
+    #                 (data_df["numVFs"] == 0)
+    #             ]
+    # plt.plot(
+    #         print_df["numVFs"],
+    #         print_df["board_power (W)"],
+    #         "o",
+    #         markersize=MARKER_SIZE,
+    #         color="grey",
+    #         markerfacecolor='none',
+    #         label=""
+    #     )
+    # plt.plot(
+    #         print_df["numVFs"],
+    #         print_df["power_12V (W)"],
+    #         "o",
+    #         markersize=MARKER_SIZE,
+    #         color="grey",
+    #         markerfacecolor='none',
+    #         label=""
+    #     )
+
     # Decorate
     plt.yscale('log')
     plt.xlabel("Number of VFs")
@@ -215,3 +238,23 @@ for rs in range(0,len(RS_SCHEMA_list)):
 figname = plot_dir + "/vf_power_board.png"
 print(figname)
 plt.savefig(figname, dpi=400, bbox_inches="tight")
+
+# Compute power range
+power_range = [0. for _ in range(len(RS_SCHEMA_list))]
+for rs in range(0,len(RS_SCHEMA_list)):
+    # Compose label
+    rs_name = "RS[" + RS_SCHEMA_txt[rs] + "]"
+
+    # Select data
+    print_df = data_df.loc[
+                    (data_df["K:P"] == RS_SCHEMA_txt[rs]) &
+                    (data_df["Bitstream"] == "flat")
+                ]
+    # Get max and min
+    power_max = print_df["power_12V (W)"].max()
+    power_min = print_df["power_12V (W)"].min()
+    # Compute range
+    power_range[rs] = power_min / power_max
+
+    # Print out
+    print("power_range " + RS_SCHEMA_txt[rs] + " " + str(100 * power_range[rs]) + " %")

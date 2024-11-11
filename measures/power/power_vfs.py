@@ -1,10 +1,11 @@
 #!/bin/python
+# Description:
+#   Pre-processing script for power measures. For now, it just computes averages.
 
 import pandas
-import numpy
 
 # Default args
-input_file = "measures/power/data/power_2x_RS_6_3.csv"
+input_file = "measures/power/data/power_0x.csv"
 # output_file = "measures/power/power_vfs.csv"
 
 # Parse args
@@ -26,3 +27,4 @@ print("power_12V (W),power_3V3 (W),board_power (W)")
 print(str(power_12V_W) + ";" + str(power_3V3_W) + ";" + str(board_power_W))
 
 # Append to output file
+# TBD

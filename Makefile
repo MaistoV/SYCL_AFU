@@ -352,7 +352,7 @@ test_isal:
 # TODO: test, evaluate and refine
 OUT_FILE ?= power_default.csv
 measure_power:
-	${ROOT_DIR}/measures/power/measure_power_top.sh
+	${ROOT_DIR}/measures/power/measure_power_top.sh \
 		${MEASURE_POWER_DATA_DIR}/${OUT_FILE}
 
 ############################
@@ -421,10 +421,6 @@ plot_multi_thread:
 	python plot_multi_thread.py 	\
 		${MEASURE_LATENCY_DATA_DIR}		\
 		${MEASURE_LATENCY_PLOT_OUT_DIR}
-
-# plot_multi_thread_power:
-# 	cd ${MEASURE_LATENCY_DIR}/plots; \
-# 	python plot_power.py ${MEASURE_LATENCY_DATA_DIR} ${MEASURE_LATENCY_PLOT_OUT_DIR}
 
 ############
 # Clean up #
