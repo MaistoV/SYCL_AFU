@@ -10,7 +10,7 @@ export INSTALL_BUILD_DIR=${INSTALL_BUILD_DIR=${ROOT_DIR}/install/build}
 # Directory for Hitek release, parent of ofs-agx7-pcie-attach
 export HTS_RELEASE=${HTS_RELEASE=${ROOT_DIR}/hitek_release/AG_C220_NC220_OFS_Release_v1_0_2024-01-22/htk_ofs_nc220}
 # PCIe address of PAC (if not set)
-export PAC_PCIE_SBD=${PAC_PCIE_SBD:="0000:8a:00"}
+export PAC_PCIE_SBD=$(lspci -D -d 8086:bcce | head -n1 | awk '{print $1}' | sed "s/\.0//g")
 # PCIe bus:device address, remove segment value
 export PAC_PCIE_BD=$(echo $PAC_PCIE_SBD | awk -F ':' '{print $2 ":" $3}')
 # Hitek Board
@@ -313,8 +313,9 @@ export MEASURE_CYCLES_PLOT_OUT_DIR=${MEASURE_LATENCY_DIR}/plots/output_plots
 ##################
 # Measures Power #
 ##################
-export MEASURE_POWER_DATA_DIR=${ROOT_DIR}/measures/power/data
-export MEASURE_POWER_PLOT_OUT_DIR=${MEASURE_POWER_DATA_DIR}/plots/output_plots
+export MEASURE_POWER_DIR=${ROOT_DIR}/measures/power
+export MEASURE_POWER_DATA_DIR=${MEASURE_POWER_DIR}/data
+export MEASURE_POWER_PLOT_OUT_DIR=${MEASURE_POWER_DIR}/plots
 
 #################
 # Multi-erasure #

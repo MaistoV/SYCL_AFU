@@ -1,4 +1,5 @@
 # Set download directory
+export INSTALL_BUILD_DIR=$ROOT_DIR/install
 export DOWNLOADS_DIR=$ROOT_DIR/install/downloads
 
 # Set Hitek patch directory

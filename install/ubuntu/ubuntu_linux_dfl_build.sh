@@ -6,7 +6,7 @@ sudo apt install -y python3 python3-pip python3-dev \
     python3-jsonschema libjson-c-dev libtbb-dev libcap-dev \
     libspdlog-dev libcli11-dev python3-pyyaml-env-tag python3-pybind11 \
     libhwloc-dev libedit-dev build-essential flex bison libelf-dev libssl-dev \
-    libncurses-dev libssl-dev libelf-dev 
+    libncurses-dev libssl-dev libelf-dev
 # librpm-dev
 #   kernel-headers kernel-devel
 
@@ -28,18 +28,18 @@ cd $INSTALL_BUILD_DIR
 git clone https://github.com/OFS/linux-dfl.git
 cd linux-dfl
 # checkout Linux DFL tag ofs-2023.2-6.1-1
-git checkout tags/ofs-2023.2-6.1-1 -b nc220 
+git checkout tags/ofs-2023.2-6.1-1 -b nc220
 git describe --tags
 echo "Expected ofs-2023.2-6.1-1"
 git apply $HTS_PATCHES_DIR/linux-dfl-nc220-flashv1.patch
-# Note: 
+# Note:
 # For fpga flash layout V3 or V2, use following commands
 # git apply <path-to-patches-dir>/linux-dfl-nc220-flashv3.patch
 # -or-
 # git apply <path-to-patches-dir>/linux-dfl-nc220-flashv2.patch
 
 # Configure build
-cd $UTILS_BUILD_DIRlinux-dfl
+cd linux-dfl
 cp /boot/config-`uname -r` .config
 cat configs/dfl-config >> .config
 echo 'CONFIG_LOCALVERSION="-dfl"' >> .config
@@ -71,10 +71,10 @@ time sudo make -j `nproc` install
 # Update grub boot config
 # Add following selection string to /etc/default/grub:GRUB_CMDLINE_LINUX
 # NOTE: this assumes GRUB_CMDLINE_LINUX to be empty, hence it may only work only the first time you set up a system
-sudo sed "s/GRUB_CMDLINE_LINUX=\"\"/GRUB_CMDLINE_LINUX=\"intel_iommu=on pcie=realloc default_hugepagesz=2MB hugepagesz=1G hugepages=2 hugepagesz=2M hugepages=200\"/g" /etc/default/grub
+sudo sed -i "s/GRUB_CMDLINE_LINUX=\"\"/GRUB_CMDLINE_LINUX=\"intel_iommu=on pcie=realloc default_hugepagesz=2MB hugepagesz=1G hugepages=13 hugepagesz=2M hugepages=200\"/g" /etc/default/grub
 
 # Update default grub entry
-sudo sed -i "s/GRUB_DEFAULT=.+/GRUB_DEFAULT=\"Advanced options for Ubuntu>Ubuntu, with Linux 6.1.41-dfl-dirty\"/g" /etc/default/grub
+sudo sed -i -E "s/GRUB_DEFAULT=.+/GRUB_DEFAULT=\"Advanced options for Ubuntu>Ubuntu, with Linux 6.1.41-dfl-dirty\"/g" /etc/default/grub
 sudo update-grub
 
 echo "Reboot system and check:"

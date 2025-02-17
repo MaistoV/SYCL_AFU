@@ -1,4 +1,4 @@
-#!/bin/python
+#!/usr/local/bin/python
 
 # Imports
 import os
@@ -45,14 +45,14 @@ RS_6_3 = 1
 RS_3_2 = 0
 
 # Figure
-plt.figure("VF power scaling", figsize=[15,5])
+plt.figure("VF power scaling", figsize=[10,10])
 
 # Loop over RS_SCHEMAs
-ax = plt.subplot(1,2,1)
+ax = plt.subplot(2,1,1)
 plt.xticks([])
 for rs in range(0,len(RS_SCHEMA_list)):
     # Subplot
-    ax = plt.subplot(1,2,rs+1, sharey=ax)
+    ax = plt.subplot(2,1,rs+1, sharey=ax)
     plt.title("RS[" + RS_SCHEMA_txt[rs] + "]")
 
     # Select data

@@ -397,8 +397,7 @@ plot_cycles:
 	python plot_cycles.py ${MEASURE_CYCLES_DATA_DIR} ${MEASURE_CYCLES_PLOT_OUT_DIR}
 
 plot_power:
-	cd ${MEASURE_LATENCY_DIR}/plots; \
-	python plot_power.py ${MEASURE_POWER_DATA_DIR} ${MEASURE_POWER_PLOT_OUT_DIR}
+	python plot_power.py ${MEASURE_POWER_DIR}/power_vfs.csv ${MEASURE_POWER_PLOT_OUT_DIR}
 
 ###########################
 # Measures (multi-thread) #
