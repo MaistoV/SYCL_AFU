@@ -19,7 +19,7 @@
 // Milliseconds wait for poll()
 #define POLL_TIMEOUT_MS 100
 // Microseconds wait for AFU CSR polling
-#define OSW_SLEEP_TIME_US 100
+#define OSW_SLEEP_TIME_US 1000
 
 // Redefine macros locally to minimize coupling
 #define OSW_fpga_assert(res) if (FPGA_OK != (res)) { \
@@ -50,7 +50,7 @@ typedef struct OPAE_SIMPLE_WRAPPER_pcie_sbdf {
 /// @param pcie_sbdf Pointer to desination struct
 /// @return 0 if ok, -1 if wrong format
 /// @note This function uses strtol(), if chars in @input_string are not hex digits, 0 will be used instead
-int OPAE_SIMPLE_WRAPPER_parse_pcie_sbdf ( 
+int OPAE_SIMPLE_WRAPPER_parse_pcie_sbdf (
 									const char* input_string,
 									OPAE_SIMPLE_WRAPPER_pcie_sbdf_t* pcie_sbdf
 								);
@@ -107,7 +107,7 @@ void OPAE_SIMPLE_WRAPPER_mmio64_read (
 /// @param[in]  pcie_sbdf Struct for PCIe S:B:D:F function ID
 /// @param[out] mmio_num Reference to mmio_num MMIO space number
 /// @return fpga_result-encoded exit code
-fpga_result OPAE_SIMPLE_WRAPPER_init ( 
+fpga_result OPAE_SIMPLE_WRAPPER_init (
 							fpga_handle * 					accel_handle,
 							const char *					accel_uuid,
                            	volatile uint64_t **			mmio_ptr,
@@ -117,7 +117,7 @@ fpga_result OPAE_SIMPLE_WRAPPER_init (
 
 /// @brief Allocate the input and output buffers for AFU
 /// @param[in]  accel_handle Handle to the AFU accelerator
-/// @param[in]  size Requested size for buffer 
+/// @param[in]  size Requested size for buffer
 /// @param[out] io_addr Pointer to memory where the address will be returned
 /// @param[out] wsid Buffer handle / workspace ID  (for later OPAE_SIMPLE_WRAPPER_cleanup)
 /// @return host-side pointer
@@ -141,8 +141,8 @@ volatile void * OPAE_SIMPLE_WRAPPER_allocate_io_buffer (
 /// @param[in]  fd_latency File descriptor of an opened file for latency measuring, needed only if measure_latency is true
 /// @return fpga_result-encoded exit code
 fpga_result OPAE_SIMPLE_WRAPPER_call_afu (
-                                fpga_handle 		accel_handle, 
-                                uint16_t			erasure_pattern,	 	
+                                fpga_handle 		accel_handle,
+                                uint16_t			erasure_pattern,
                                 uint16_t			survived_cells,
                                 uint32_t			cell_length,
                                 uint32_t 			sleep_time_us,
@@ -173,7 +173,7 @@ fpga_result OPAE_SIMPLE_WRAPPER_cleanup (
 /// @param[in]  mmio_num MMIO space number
 /// @param[in]  mmio_ptr Pointer to mapped MMIO space
 /// @return fpga_result-encoded exit code
-fpga_result OPAE_SIMPLE_WRAPPER_debug_read ( 
+fpga_result OPAE_SIMPLE_WRAPPER_debug_read (
                                 fpga_handle 		accel_handle,
 								uint32_t			mmio_num,
 								volatile uint64_t *	mmio_ptr

@@ -104,7 +104,7 @@ int main(int argc, char *argv[]) {
 			break;
 		case 'f':
 			int ret_val_local;
-			ret_val_local = OPAE_SIMPLE_WRAPPER_parse_pcie_sbdf ( 
+			ret_val_local = OPAE_SIMPLE_WRAPPER_parse_pcie_sbdf (
 												optarg,
 												&pcie_sbdf
 											);
@@ -146,8 +146,8 @@ int main(int argc, char *argv[]) {
 		//////////////////////////////////
 		// Discover/Grab FPGA Resources //
 		//////////////////////////////////
-		res = OPAE_SIMPLE_WRAPPER_init ( 
-									&accel_handle, 
+		res = OPAE_SIMPLE_WRAPPER_init (
+									&accel_handle,
 									AFU_ACCEL_UUID,
 									(volatile uint64_t**)&mmio_ptr,
 									pcie_sbdf,
@@ -190,7 +190,7 @@ int main(int argc, char *argv[]) {
 		OPAE_SIMPLE_WRAPPER_mmio64_write ( accel_handle, mmio_num, mmio_ptr, KERNEL_ARG_DEVICE_WRITE_REG, buf_pa_out );
 		printf("%s:%d write @%x, value = 0x%lx\n", __FILE__, __LINE__, KERNEL_ARG_DEVICE_WRITE_REG, buf_pa_out);
 	}
-	
+
 	// Seed the PRNG
 	srand(prng_seed);
 
@@ -239,14 +239,14 @@ int main(int argc, char *argv[]) {
 		// Pick an encode matrix. A Cauchy matrix is a good choice as even
 		// large RS_K are always invertable keeping the recovery rule simple.
 		gf_gen_cauchy1_matrix(encode_matrix, RS_M, RS_K);
-	#ifdef DEBUG	
+	#ifdef DEBUG
 		print_matrix_2d(stdout, RS_M, RS_K, encode_matrix, "encode_matrix ");
 	#endif
 	}
 
 	printf("%s:%d: Encoding parity cells for RS[%d:%d] cell_length=%d, using %s\n",
 		 __FILE__, __LINE__, RS_K, RS_P, cell_length, (encode_isal) ? "ISA-L" : "SYCL_AFU kernel");
-	
+
 	// Encode with ISA-L
 	if ( encode_isal ) {
 		// Generate g_tbls
@@ -285,7 +285,7 @@ int main(int argc, char *argv[]) {
 											false, // Don't measure here
 											mmio_ptr,
 											mmio_num,
-											NULL	// Don't pass any fd	
+											NULL	// Don't pass any fd
 									);
 		fpga_assert(res);
 
@@ -327,7 +327,7 @@ int main(int argc, char *argv[]) {
 		fd_latency = fopen(tmp_string, "a");
 		printf("%s:%d: Appending data on file %s\n", __FILE__, __LINE__, tmp_string);
 	}
-	
+
 	// Loop over all possible RS_K:RS_P permutations
 	int reconstruction_count = 0;
 	printf("%s:%d: max_permutations %lu, max_reconstruction %u\n", __FILE__, __LINE__, max_permutations, max_reconstruction);
@@ -335,6 +335,7 @@ int main(int argc, char *argv[]) {
 	// Start from the last group, i.e. the one with P erasures
 	unsigned int p_erasure_patterns = compute_p_erasure_patterns( RS_K, RS_P );
 	unsigned int erasure_pattern_offset = max_permutations - p_erasure_patterns;
+	for ( unsigned int repeat = 0; repeat < max_reconstruction; repeat++ )
 	for ( unsigned int permutation_index = erasure_pattern_offset;
 			(permutation_index < max_permutations) & (reconstruction_count < max_reconstruction);
 			permutation_index++ ) {
@@ -466,7 +467,7 @@ int main(int argc, char *argv[]) {
 			if ( measure_latency ) {
 				MEASURE_LATENCY_END_AND_PRINT(start, time_sec, fd_latency);
 			}
-		#ifdef DEBUG			
+		#ifdef DEBUG
 			printf("%s:%d: recover_outp:\n", __FILE__, __LINE__);
 			for ( unsigned int i = 0; i < NUM_ERASURES; i++ ) {
 				print_contiguous_cell(stdout, (uint8_t*)recover_outp[i], 1, cell_length, LINE_BYTE_WIDTH );
@@ -498,7 +499,7 @@ int main(int argc, char *argv[]) {
 			rs_erasure_csr.erasure_pattern	= erasure_pattern;
 			rs_erasure_csr.survived_cells	= survival_pattern;
 
-			
+
 			// Call to FPGA AFU
 			res = OPAE_SIMPLE_WRAPPER_call_afu (
 												accel_handle,
@@ -513,8 +514,8 @@ int main(int argc, char *argv[]) {
 												fd_latency
 										);
 			fpga_assert(res);
-			
-		#ifdef DEBUG			
+
+		#ifdef DEBUG
 			printf("%s:%d: reconstructed_blocks_out:\n", __FILE__, __LINE__);
 			print_contiguous_cell(stdout, (uint8_t*)reconstructed_blocks_out, NUM_ERASURES, cell_length, LINE_BYTE_WIDTH );
 		#endif
@@ -560,7 +561,7 @@ int main(int argc, char *argv[]) {
 			j_init = j + 1;
 
 		} // Check results
-			
+
 		// Break out of the permutation_index loop
 		if ( decode_once ) {
 			break;
@@ -589,7 +590,7 @@ int main(int argc, char *argv[]) {
 										);
 		fpga_assert(res);
 	}
-	
+
 	// Test summary
 	printf("%s:%d: Test passed\n RS[%d:%d]\n cell_length=%d,\n encodind with %s,\n decoding with %s,\n PRNG seed=%u\n",
 		 __FILE__, __LINE__, RS_K, RS_P, cell_length,
