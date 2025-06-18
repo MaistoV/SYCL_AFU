@@ -6,6 +6,9 @@ import pandas
 import matplotlib.pyplot as plt
 # import plot_common as common
 
+# Font size
+plt.rcParams.update({'font.size': 15})
+
 # Parse args
 input_file = "measures/power/power_vfs.csv"
 plot_dir = "measures/power/plots"
@@ -45,14 +48,16 @@ RS_6_3 = 1
 RS_3_2 = 0
 
 # Figure
-plt.figure("VF power scaling", figsize=[10,10])
+plt.figure("VF power scaling", figsize=[15,5])
 
 # Loop over RS_SCHEMAs
-ax = plt.subplot(2,1,1)
+num_cols = 2
+num_rows = 1
+ax = plt.subplot(num_rows,num_cols,1)
 plt.xticks([])
 for rs in range(0,len(RS_SCHEMA_list)):
     # Subplot
-    ax = plt.subplot(2,1,rs+1, sharey=ax)
+    ax = plt.subplot(num_rows,num_cols,rs+1, sharey=ax)
     plt.title("RS[" + RS_SCHEMA_txt[rs] + "]")
 
     # Select data
@@ -158,7 +163,7 @@ for rs in range(0,len(RS_SCHEMA_list)):
     plt.xlabel("Number of VFs")
     plt.ylabel("Power (W)")
     plt.grid(visible=True, axis="y", which="both")
-    plt.legend()
+    plt.legend(loc="upper left")
     plt.xticks( data_df.loc[
                         (data_df["K:P"] == RS_SCHEMA_txt[rs]) &
                         (data_df["Bitstream"] == "flat")
