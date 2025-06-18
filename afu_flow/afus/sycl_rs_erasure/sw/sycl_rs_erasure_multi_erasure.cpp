@@ -335,7 +335,6 @@ int main(int argc, char *argv[]) {
 	// Start from the last group, i.e. the one with P erasures
 	unsigned int p_erasure_patterns = compute_p_erasure_patterns( RS_K, RS_P );
 	unsigned int erasure_pattern_offset = max_permutations - p_erasure_patterns;
-	for ( unsigned int repeat = 0; repeat < max_reconstruction; repeat++ )
 	for ( unsigned int permutation_index = erasure_pattern_offset;
 			(permutation_index < max_permutations) & (reconstruction_count < max_reconstruction);
 			permutation_index++ ) {
