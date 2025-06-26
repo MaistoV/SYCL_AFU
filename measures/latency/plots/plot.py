@@ -5,11 +5,12 @@ import numpy
 import sys
 import os
 import plot_common as common
+from scipy.stats import trim_mean # for outliers
 
 # Source data directory
 root_data_dir = "../data/"
 if len(sys.argv) >= 1:
-	root_data_dir = sys.argv[1]
+	root_data_dir = sys.argv[1] + "/"
 
 # Output directory for plots
 plot_dir = "./output_plots"
@@ -50,8 +51,31 @@ for hw in range(0,len(common.hw_configs)):
 				afu_latency_s = numpy.inf
 
 			# Save mean_latency_s
+			mean_latency_s[rs][hw][l] = trim_mean(afu_latency_s, 0.05) # Ditch low and high 10%s
 			# mean_latency_s[rs][hw][l] = numpy.average(afu_latency_s)
-			mean_latency_s[rs][hw][l] = numpy.median(afu_latency_s)
+			# mean_latency_s[rs][hw][l] = numpy.median(afu_latency_s)
+
+			# Adjust SYCL_GPU data
+			if common.hw_configs[hw] == "SYCL_GPU":
+			# 	# Divide by the number of Xe-HPG cores
+			# 	mean_latency_s[rs][hw][l] /= 16
+				# Adjust by Russian Peasant (RP) to ISA-L opts:
+				#	int
+				# 	Small tables (ST)
+				# 	Large tables (LT)
+				# from Chen et al. https://doi.org/10.1109/ASAP.2016.7760770
+				# GB/s
+				RP=0.4
+				ST=0.9
+				LT=1.8
+				# RP to small tables
+				# SYCL_GPU_ADJ = ST/RP # 0.9 / 0.4 = 2.25
+				# RP to large tables
+				SYCL_GPU_ADJ = LT/RP # 1.8 / 0.4 = 4.5
+				# RP int to int64
+				SYCL_GPU_ADJ *= 2
+				# Divide by adjustment factor
+				mean_latency_s[rs][hw][l] /= SYCL_GPU_ADJ
 
 			# Save throughput byte/second
 			throughput_B_s[rs][hw][l] = common.cell_length_int[l] / mean_latency_s[rs][hw][l]
@@ -59,7 +83,19 @@ for hw in range(0,len(common.hw_configs)):
 			if os.environ['MULTI_ERASURE_SIMPLE'] == "1":
 				throughput_B_s[rs][hw][l] *= common.RS_P_list[rs]
 
+# print("RS_K_P, SYCL_ASP, SYCL_GPU, GPU / AFU")
+# print("RS_3_2",
+# 	  	mean_latency_s[common.RS_3_2][common.SYCL_ASP][common.index_1MB],
+# 	  	mean_latency_s[common.RS_3_2][common.SYCL_GPU][common.index_1MB],
+# 	  	float(mean_latency_s[common.RS_3_2][common.SYCL_GPU][common.index_1MB]) / float(mean_latency_s[common.RS_3_2][common.SYCL_ASP][common.index_1MB]),
+# 	)
+# print("RS_6_3",
+# 	  	mean_latency_s[common.RS_6_3][common.SYCL_ASP][common.index_1MB],
+# 	  	mean_latency_s[common.RS_6_3][common.SYCL_GPU][common.index_1MB],
+# 	  	float(mean_latency_s[common.RS_6_3][common.SYCL_GPU][common.index_1MB]) / float(mean_latency_s[common.RS_6_3][common.SYCL_ASP][common.index_1MB]),
+# 	)
 
+# exit()
 
 # Plot size
 plt.rcParams.update({'font.size': 18})
@@ -137,17 +173,20 @@ for rs in range(0,len(common.RS_SCHEMA_list)):
 	else:
 		ax_latency = plt.subplot(2,2,rs+1, sharey=ax_latency)
 	for hw in range(0,len(common.hw_configs)):
-		plt.loglog(
+		plt.plot(
 					common.cell_length_int,
 			 		mean_latency_s[rs][hw],
 					common.hw_line[hw] + common.hw_marker[hw],
 					label=common.hw_name[hw],
 					color=common.hw_color[hw],
+					fillstyle=common.hw_marker_fill[hw],
 					markersize=10,
 					linewidth=common.hw_linewidth[hw]
 				)
 	# Decorating
 	plt.title(common.RS_SCHEMA_txt[rs])
+	ax_latency.set_yscale('log',base=10)
+	ax_latency.set_xscale('log',base=2)
 	plt.axvline(x = common.MB, linestyle='--', color="k") # Vertical line at 1MB
 	plt.tick_params(which="minor", labelbottom=False, bottom=False)
 	plt.xticks(common.cell_length_int, common.cell_length, rotation=45)
@@ -166,6 +205,7 @@ for rs in range(0,len(common.RS_SCHEMA_list)):
 					common.cell_length_int,
 			 		throughput_B_s[rs][hw],
 					common.hw_line[hw] + common.hw_marker[hw],
+					fillstyle=common.hw_marker_fill[hw],
 					# label=common.hw_name[hw],
 					color=common.hw_color[hw],
 					markersize=10,

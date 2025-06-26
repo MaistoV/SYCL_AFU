@@ -17,12 +17,20 @@ figsize_square=[16,16]
 ###############
 
 # Hardware configurations
-hw_configs = ["ISA-L", "SYCL_AFU", "SYCL_ASP", "VFProxy", "VFProxy_NonPersistent", "VFProxy_Priority"]
+hw_configs = ["ISA-L",
+              	"SYCL_AFU",
+                "SYCL_ASP",
+                "SYCL_GPU",
+                # "VFProxy",
+                # "VFProxy_NonPersistent",
+                # "VFProxy_Priority"
+                ]
 ISA_L		= 0
 SYCL_AFU  	= 1
 SYCL_ASP  	= 2
-VFProxy		= 3
-VFProxy_NonPersistent = 4
+SYCL_GPU	= 3
+# VFProxy		= 3
+# VFProxy_NonPersistent = 4
 # VFProxy_Priority = 5
 # PLAIN_C		= 4
 
@@ -31,13 +39,14 @@ data_dirs = ["" for _ in range(len(hw_configs)) ]
 data_dirs[ISA_L   ]	= "/data_ISA_L/"
 data_dirs[SYCL_ASP] = "/data_SYCL_ASP_ASP_ZERO_COPY/"
 data_dirs[SYCL_AFU] = "/data_SYCL_AFU/"
-data_dirs[VFProxy ] = "/data_VFProxy/"
-data_dirs[VFProxy_NonPersistent ] = "/data_VFProxy_NON_PERSISTENT/"
+data_dirs[SYCL_GPU] = "/data_SYCL_GPU/"
+# data_dirs[VFProxy_NonPersistent ] = "/data_VFProxy_NON_PERSISTENT/"
 # data_dirs[VFProxy_Priority ] = "/data_VFProxy_NON_PERSISTENT_PRIORITY/"
 # data_dirs[PLAIN_C ] = "/data_PLAIN_C/"
 
 # Plot formats
 hw_marker 		= ["" for _ in range(len(hw_configs)) ]
+hw_marker_fill	= ["" for _ in range(len(hw_configs)) ]
 hw_line 		= ["" for _ in range(len(hw_configs)) ]
 hw_linewidth	= ["" for _ in range(len(hw_configs)) ]
 hw_color		= ["" for _ in range(len(hw_configs)) ]
@@ -45,6 +54,7 @@ hw_name			= ["" for _ in range(len(hw_configs)) ]
 
 # ISA-L format
 hw_marker		[ISA_L] = "d"
+hw_marker_fill	[ISA_L] = "full"
 hw_line	 		[ISA_L] = "--"
 hw_linewidth	[ISA_L] = 2
 hw_color		[ISA_L] = "purple"
@@ -52,6 +62,7 @@ hw_name			[ISA_L] = "ISA-L AVX-512"
 
 # SYCL ASP format
 hw_marker		[SYCL_ASP] = "v"
+hw_marker_fill	[SYCL_ASP] = "full"
 hw_line			[SYCL_ASP] = "-"
 hw_linewidth	[SYCL_ASP] = 2
 hw_color		[SYCL_ASP] = "g"
@@ -59,17 +70,18 @@ hw_name			[SYCL_ASP] = "SYCL ASP"
 
 # SYCL AFU format
 hw_marker		[SYCL_AFU] = "o"
+hw_marker_fill	[SYCL_AFU] = "full"
 hw_line	 		[SYCL_AFU] = "-"
 hw_linewidth	[SYCL_AFU] = 2
 hw_color		[SYCL_AFU] = "b"
 hw_name			[SYCL_AFU] = "SYCL AFU"
 
 # VFProxy format
-hw_marker		[VFProxy_NonPersistent] = "o"
-hw_line	 		[VFProxy_NonPersistent] = "--"
-hw_linewidth	[VFProxy_NonPersistent] = 2
-hw_color		[VFProxy_NonPersistent] = "m"
-hw_name			[VFProxy_NonPersistent] = "VFProxy_NonPersistent"
+# hw_marker		[VFProxy_NonPersistent] = "o"
+# hw_line	 		[VFProxy_NonPersistent] = "--"
+# hw_linewidth	[VFProxy_NonPersistent] = 2
+# hw_color		[VFProxy_NonPersistent] = "m"
+# hw_name			[VFProxy_NonPersistent] = "VFProxy_NonPersistent"
 
 # hw_marker		[VFProxy_Priority] = "X"
 # hw_line	 		[VFProxy_Priority] = "--"
@@ -77,11 +89,12 @@ hw_name			[VFProxy_NonPersistent] = "VFProxy_NonPersistent"
 # hw_color		[VFProxy_Priority] = "k"
 # hw_name			[VFProxy_Priority] = "VFProxy_Priority"
 
-hw_marker		[VFProxy] = "o"
-hw_line	 		[VFProxy] = "--"
-hw_linewidth	[VFProxy] = 2
-hw_color		[VFProxy] = "c"
-hw_name			[VFProxy] = "VFProxy"
+hw_marker		[SYCL_GPU] = "o"
+hw_marker_fill	[SYCL_GPU] = "none"
+hw_line	 		[SYCL_GPU] = "--"
+hw_linewidth	[SYCL_GPU] = 2
+hw_color		[SYCL_GPU] = "c"
+hw_name			[SYCL_GPU] = "SYCL_GPU"
 
 # # Plain C format
 # hw_marker		[PLAIN_C] = "+"
@@ -113,21 +126,21 @@ GB = 1024 * MB
 # Cell length #
 ###############
 
-cell_length = [ 
-				# "64B"	,	"128B",	"256B",	"512B", 
+cell_length = [
+				# "64B"	,	"128B",	"256B",	"512B",
 				"1KB"	,	"2KB"	,	"4KB"	,	"8KB"	,	"16KB"	,
 				"32KB"	,	"64KB"	,	"128KB"	, 	"256KB"	,	"512KB"	,
 				"1MB"	,	"2MB"	,	"4MB"	,	"8MB"	, 	"16MB"	,
-				 "32MB"	,	"64MB"	,	"128MB"	#, 	"256MB"	,	"512MB"	,
+				#  "32MB"	,	"64MB"	,	"128MB"	#, 	"256MB"	,	"512MB"	,
 				]
-cell_length_int = [ 
-					# 64				, 128			, 256			, 512			, 
+cell_length_int = [
+					# 64				, 128			, 256			, 512			,
 					1*KB	, 2*KB    , 4*KB    , 8*KB	 	, 16*KB 	,
 					32*KB	, 64*KB   , 128*KB  , 256*KB	, 512*KB 	,
 					1*MB    , 2*MB    , 4*MB    , 8*MB		, 16*MB 	,
-					32*MB  , 64*MB	  , 128*MB  #, 256*MB, 512*MB ,
+					# 32*MB  , 64*MB	  , 128*MB  #, 256*MB, 512*MB ,
 				]
-# index_1MB = cell_length.index("1MB")
+index_1MB = cell_length.index("1MB")
 
 
 
@@ -142,7 +155,7 @@ B_s_int = [ 100*MB, 1*GB, 10*GB]
 PCIE_PHY_BANDWIDTH = 32 * GB # 32 GB/s
 # Max read bandwidth as reported by "aocl diagnose acl0"
 PCIE_ASP_BANDWIDTH = 16 * GB # 16 GB/s
-# PAC is full duplex 32GB/s tx and 32G/s rx, tx and rx bandwidth should hinder each other, 
+# PAC is full duplex 32GB/s tx and 32G/s rx, tx and rx bandwidth should hinder each other,
 # therefore we just need to consider the worst case, which is reading the K input blocks
 data_amount = [0. for _ in range(len(RS_SCHEMA_list))]
 data_amount = numpy.array(data_amount)
