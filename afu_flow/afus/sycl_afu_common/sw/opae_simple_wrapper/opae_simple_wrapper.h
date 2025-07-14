@@ -19,7 +19,8 @@
 // Milliseconds wait for poll()
 #define POLL_TIMEOUT_MS 100
 // Microseconds wait for AFU CSR polling
-#define OSW_SLEEP_TIME_US 1000
+#define OSW_SLEEP_TIME_US 1
+#define OSW_SLEEP_TIME_NS 10L
 
 // Redefine macros locally to minimize coupling
 #define OSW_fpga_assert(res) if (FPGA_OK != (res)) { \

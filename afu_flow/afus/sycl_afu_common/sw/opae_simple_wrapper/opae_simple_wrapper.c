@@ -52,7 +52,7 @@ void OPAE_SIMPLE_WRAPPER_mmio64_read (
 		*dest = MAPPED_MMIO(mmio_ptr, offset);
 }
 
-fpga_result OPAE_SIMPLE_WRAPPER_debug_read ( 
+fpga_result OPAE_SIMPLE_WRAPPER_debug_read (
                                 fpga_handle         accel_handle,
                                 uint32_t            mmio_num,
                                 volatile uint64_t * mmio_ptr
@@ -76,7 +76,7 @@ fpga_result OPAE_SIMPLE_WRAPPER_debug_read (
 }
 
 // Parse string in format "SSSS:BB:DD.F"
-int OPAE_SIMPLE_WRAPPER_parse_pcie_sbdf ( 
+int OPAE_SIMPLE_WRAPPER_parse_pcie_sbdf (
                                     const char* input_string,
                                     OPAE_SIMPLE_WRAPPER_pcie_sbdf_t* pcie_sbdf
                                 ) {
@@ -103,7 +103,7 @@ int OPAE_SIMPLE_WRAPPER_parse_pcie_sbdf (
 	if (
 		(sbdf_string[ 4] != ':') ||
 		(sbdf_string[ 7] != ':') ||
-		(sbdf_string[10] != '.') 
+		(sbdf_string[10] != '.')
 	) {
 			return -1;
 	}
@@ -129,7 +129,7 @@ int OPAE_SIMPLE_WRAPPER_parse_pcie_sbdf (
 	return 0;
 }
 
-fpga_result OPAE_SIMPLE_WRAPPER_init ( 
+fpga_result OPAE_SIMPLE_WRAPPER_init (
                             fpga_handle *                   accel_handle,
                             const char *                    accel_uuid,
                             volatile uint64_t **            mmio_ptr,
@@ -137,11 +137,11 @@ fpga_result OPAE_SIMPLE_WRAPPER_init (
                             uint32_t *                      mmio_num
 						) {
     fpga_result res = FPGA_OK;
-	
-	if ( accel_handle == NULL ) {									
+
+	if ( accel_handle == NULL ) {
 		return FPGA_INVALID_PARAM;
 	}
-	
+
 	// Compose the filter object
 	fpga_properties filter = NULL;
     res = fpgaGetProperties(NULL, &filter);
@@ -154,7 +154,7 @@ fpga_result OPAE_SIMPLE_WRAPPER_init (
 	if (uuid_parse(accel_uuid, guid) < 0) {
 		fprintf(stderr, "Error parsing guid '%s'\n", accel_uuid);
 		return FPGA_INVALID_PARAM;
-	}	
+	}
 	res = fpgaPropertiesSetGUID(filter, guid);
 	OSW_fpga_assert(res);
 
@@ -186,7 +186,7 @@ fpga_result OPAE_SIMPLE_WRAPPER_init (
 	OSW_fpga_assert(res);
     if ( num_matches < 1 ) {
         fprintf(stderr, "%s:%d: PCIe address %04x:%02x:%02x.%01x\n AFU %s not found!\n",
-			__FILE__, __LINE__, 
+			__FILE__, __LINE__,
 			pcie_sbdf.segment,
 			pcie_sbdf.bus,
 			pcie_sbdf.device,
@@ -224,7 +224,7 @@ fpga_result OPAE_SIMPLE_WRAPPER_init (
 	// Not supported by vfio plugin
 	// res = fpgaReset( *accel_handle );
 	// OSW_fpga_assert(res);
-	
+
     // Clean up
     res = fpgaDestroyProperties(&filter);
     OSW_fpga_assert(res);
@@ -261,8 +261,8 @@ volatile void * OPAE_SIMPLE_WRAPPER_allocate_io_buffer (
 }
 
 fpga_result OPAE_SIMPLE_WRAPPER_call_afu (
-                                fpga_handle 		accel_handle, 
-                                uint16_t			erasure_pattern,	 	
+                                fpga_handle 		accel_handle,
+                                uint16_t			erasure_pattern,
                                 uint16_t			survived_cells,
                                 uint32_t			cell_length,
                                 uint32_t 			sleep_time_us,
@@ -285,7 +285,7 @@ fpga_result OPAE_SIMPLE_WRAPPER_call_afu (
 		std::chrono::nanoseconds
 		> start, end;
 
-	if ( accel_handle == NULL ) {									
+	if ( accel_handle == NULL ) {
 		return FPGA_INVALID_PARAM;
 	}
 
@@ -379,8 +379,18 @@ fpga_result OPAE_SIMPLE_WRAPPER_call_afu (
 #endif // DEBUG_OSW
 #else // !INTERRUPT_EVENTS
 	// Active polling on AFU
+	// struct timespec remaining;
+	// struct timespec request;
+	// request.tv_sec  = 0;
+	// request.tv_nsec = OSW_SLEEP_TIME_NS;
 	do {
-		usleep( sleep_time_us );
+		// usleep( sleep_time_us );
+		// if ( nanosleep( &request, &remaining ) ) {
+		// 	printf("remaining %ld\n", remaining.tv_nsec);
+		// }
+		// else {
+		// 	printf("error\n");
+		// }
 		OPAE_SIMPLE_WRAPPER_mmio64_read ( accel_handle, mmio_num, mmio_ptr, KERNEL_STATUS, &status_val );
 	#ifdef DEBUG_OSW
 		OSW_print_kernel_status(status_val);
@@ -414,22 +424,22 @@ fpga_result OPAE_SIMPLE_WRAPPER_cleanup  (
                                 fpga_event_handle *	fpgaInterruptEvent,
                                 uint64_t 			input_buf_workspace_id,
                                 uint64_t 			output_buf_workspace_id
-                            ) {	
+                            ) {
 	fpga_result res = FPGA_OK;
 
-	if ( accel_handle == NULL ) {									
+	if ( accel_handle == NULL ) {
 		return FPGA_INVALID_PARAM;
 	}
 
 #ifdef INTERRUPT_EVENTS
-	// Cleanup event accel_handle			
+	// Cleanup event accel_handle
 	// Note: with the current OPAE version fpgaInterruptEvent not NULL
 	// does not really mean that it has been initialized.
 	// It is anyway safe to anyway to fpgaUnregisterEvent() and fpgaDestroyEventHandle(),
 	// since they just print to stderr and return.
 	// Although this looks dirty, just don't assert on returned fpga_result to allow the
 	// the rest of the clean up to happen.
-	if ( fpgaInterruptEvent != NULL ) {									
+	if ( fpgaInterruptEvent != NULL ) {
 		res = fpgaUnregisterEvent(accel_handle, FPGA_EVENT_INTERRUPT, *fpgaInterruptEvent);
 		// OSW_fpga_assert(res);
 		res = fpgaDestroyEventHandle(fpgaInterruptEvent);
@@ -443,11 +453,11 @@ fpga_result OPAE_SIMPLE_WRAPPER_cleanup  (
 	res = fpgaReleaseBuffer(accel_handle, input_buf_workspace_id);
 	OSW_fpga_assert(res);
 
-	// Unmap MMIO space 
+	// Unmap MMIO space
 	res = fpgaUnmapMMIO(accel_handle, mmio_num); // Actually does nothing in vfio plugin
 	OSW_fpga_assert(res);
 
-	// Release accelerator 
+	// Release accelerator
 	res = fpgaClose(accel_handle);
 	OSW_fpga_assert(res);
 
