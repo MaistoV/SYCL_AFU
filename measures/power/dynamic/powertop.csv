@@ -1,0 +1,617 @@
+____________________________________________________________________
+			P o w e r T O P
+
+____________________________________________________________________
+ *  *  *   System Information   *  *  *
+
+PowerTOP Version;2.14 ran at Wed Feb 19 16:47:44 2025
+
+Kernel Version;Linux version 6.1.41-dfl-dirty
+System Name;Micro-Star International Co., Ltd.Z590 PLUS (MS-7D11)1.0
+CPU Information;16 11th Gen Intel(R) Core(TM) i9-11900K @ 3.50GHz
+OS Information;Ubuntu 22.04.5 LTS
+
+Target: 1 units/s;System:  417.7 wakeup/s;CPU:  99.0% usage;GPU: 0 ops/s;GFX: 0 wakeups/s;VFS: 0 ops/s;
+
+____________________________________________________________________
+ *  *  *   Top 10 Power Consumers   *  *  *
+
+Usage;Events/s;Category;Description
+ 97,2%; 0,00;Process;[PID 39002] sycl_rs_erasure
+  0,0%;249,3;Timer;tick_sched_timer
+  0,0%; 26,7;Interrupt;[3] net_rx(softirq)
+  0,0%; 19,1;Process;[PID 15] [rcu_preempt]
+  0,2%; 15,5;Process;[PID 12082] /home/vincenzo/.vscode-server/cli/servers/Stable-e54c774e0add60467559eb0d1e229c6452cf8447/server/node /home/vincenz
+  0,0%; 10,0;Process;[PID 1122] /usr/bin/gnome-shell 
+  0,0%;  8,8;kWork;flush_to_ldisc
+  0,0%;  8,6;Process;[PID 1112] /usr/bin/containerd 
+  0,0%;  8,6;Process;[PID 1025] /usr/bin/containerd 
+  0,1%;  6,8;Process;[PID 12045] /home/vincenzo/.vscode-server/cli/servers/Stable-e54c774e0add60467559eb0d1e229c6452cf8447/server/node /home/vincenz
+
+____________________________________________________________________
+ *  *  *   Processor Idle State Report   *  *  *
+
+Package;0
+C2 (pc2);  0,0%
+C3 (pc3);  0,0%
+C6 (pc6);  0,0%
+C7 (pc7);  0,0%
+C8 (pc8);  0,0%
+C9 (pc9);  0,0%
+C10 (pc10);  0,0%
+;
+;
+;
+
+;Core 0
+C3 (cc3);  0,0%
+C6 (cc6);  0,0%
+C7 (cc7); 97,6%
+;Core 1
+C3 (cc3);  0,0%
+C6 (cc6);  0,0%
+C7 (cc7); 98,6%
+;Core 2
+C3 (cc3);  0,0%
+C6 (cc6);  0,0%
+C7 (cc7); 99,2%
+;Core 3
+C3 (cc3);  0,0%
+C6 (cc6);  0,0%
+C7 (cc7); 99,2%
+;Core 4
+C3 (cc3);  0,0%
+C6 (cc6);  0,0%
+C7 (cc7); 98,6%
+;Core 5
+C3 (cc3);  0,0%
+C6 (cc6);  0,0%
+C7 (cc7);  2,1%
+;Core 6
+C3 (cc3);  0,0%
+C6 (cc6);  0,0%
+C7 (cc7); 99,2%
+;Core 7
+C3 (cc3);  0,0%
+C6 (cc6);  0,0%
+C7 (cc7); 99,3%
+;GPU 1850286190
+Powered On;  0,0%
+RC6;100,0%
+RC6p;  0,0%
+RC6pp;  0,0%
+
+CPU;0;CPU;8
+C0 active;  0,4%;  0,2%;
+POLL;  0,0%;   0,0 ms;  0,0%;   0,1 ms
+C1_ACPI;  1,0%;   0,9 ms;  0,0%;   0,2 ms
+C2_ACPI; 98,7%;   4,4 ms; 99,9%;  26,3 ms
+;
+;
+;
+;
+;
+;
+CPU;1;CPU;9
+C0 active;  0,7%;  0,3%;
+POLL;  0,0%;   0,0 ms;  0,0%;   0,0 ms
+C1_ACPI;  0,2%;   0,3 ms;  0,2%;   0,4 ms
+C2_ACPI; 99,4%;  40,1 ms; 99,6%;  23,1 ms
+;
+;
+;
+;
+;
+;
+CPU;2;CPU;10
+C0 active;  0,1%;  0,1%;
+POLL;  0,0%;   0,0 ms;  0,0%;   0,0 ms
+C1_ACPI;  0,1%;   0,5 ms;  0,1%;   0,4 ms
+C2_ACPI; 99,8%;  35,7 ms; 99,9%;  42,7 ms
+;
+;
+;
+;
+;
+;
+CPU;3;CPU;11
+C0 active;  0,1%;  0,1%;
+POLL;  0,0%;   0,0 ms;  0,0%;   0,0 ms
+C1_ACPI;  0,1%;   0,6 ms;  0,2%;   0,3 ms
+C2_ACPI; 99,9%;  49,5 ms; 99,8%;  58,7 ms
+;
+;
+;
+;
+;
+;
+CPU;4;CPU;12
+C0 active;  0,4%;  0,0%;
+POLL;  0,0%;   0,0 ms;  0,0%;   0,0 ms
+C1_ACPI;  0,6%;   0,5 ms;  0,0%;   0,0 ms
+C2_ACPI; 99,1%;  13,7 ms;100,0%; 357,5 ms
+;
+;
+;
+;
+;
+;
+CPU;5;CPU;13
+C0 active;147,5%;  0,0%;
+POLL;  0,0%;   0,0 ms;  0,0%;   0,0 ms
+C1_ACPI;  0,2%;   0,2 ms;  0,0%;   0,3 ms
+C2_ACPI;  2,2%;   4,9 ms;100,0%; 151,6 ms
+;
+;
+;
+;
+;
+;
+CPU;6;CPU;14
+C0 active;  0,2%;  0,0%;
+POLL;  0,0%;   0,0 ms;  0,0%;   0,0 ms
+C1_ACPI;  0,1%;   0,3 ms;  0,0%;   0,0 ms
+C2_ACPI; 99,8%;  22,0 ms;100,0%; 312,8 ms
+;
+;
+;
+;
+;
+;
+CPU;7;CPU;15
+C0 active;  0,2%;  0,0%;
+POLL;  0,0%;   0,0 ms;  0,0%;   0,0 ms
+C1_ACPI;  0,1%;   0,3 ms;  0,0%;   0,0 ms
+C2_ACPI; 99,7%;  25,5 ms;100,0%; 500,6 ms
+;
+;
+;
+;
+;
+;
+;;;
+;;;;
+;;;;
+;;;;
+;;;;
+;;;;
+;;;;
+;;;;
+;;;;
+;;;;
+;;;;
+;;;;
+;;;;
+;;;;
+;;;;
+;;;;
+;;;;
+;;;;
+;;;;
+;;;;
+;;;;
+;;;;
+;;;;
+;;;;
+;;;;
+;;;;
+;;;;
+;;;;
+;;;;
+;;;;
+;;;;
+;;;;
+;;;;
+;;;;
+;;;;
+;;;;
+;;;;
+;;;;
+
+____________________________________________________________________
+ *  *  *   Processor Frequency Report   *  *  *
+
+Package;0
+Idle;
+;
+;
+;
+
+;Core 0
+Idle;
+;Core 1
+Idle;
+;Core 2
+Idle;
+;Core 3
+Idle;
+;Core 4
+Idle;
+;Core 5
+Idle;
+;Core 6
+Idle;
+;Core 7
+Idle;
+;
+;
+;
+
+CPU 0;CPU 8
+Average;5,1 GHz;5,0 GHz
+Idle;
+CPU 1;CPU 9
+Average;5,0 GHz;5,1 GHz
+Idle;
+CPU 2;CPU 10
+Average;5,0 GHz;5,0 GHz
+Idle;
+CPU 3;CPU 11
+Average;5,0 GHz;5,0 GHz
+Idle;
+CPU 4;CPU 12
+Average;5,1 GHz;4,0 GHz
+Idle;
+CPU 5;CPU 13
+Average;5,3 GHz;5,0 GHz
+Idle;
+CPU 6;CPU 14
+Average;5,0 GHz;4,7 GHz
+Idle;
+CPU 7;CPU 15
+Average;5,0 GHz;2,5 GHz
+Idle;
+;
+;;
+;;
+;;
+;;
+;;
+;;
+;;
+;;
+;;
+;;
+;;
+
+____________________________________________________________________
+ *  *  *   Overview of Software Power Consumers   *  *  *
+
+Usage;Wakeups/s;GPU ops/s;Disk IO/s;GFX Wakeups/s;Category;Description
+972,2 ms/s;;;;;Process;[PID 39002] sycl_rs_erasure
+497,6 us/s;249,3;;;;Timer;tick_sched_timer
+225,4 us/s; 26,7;;;;Interrupt;[3] net_rx(softirq)
+ 85,6 us/s; 19,1;;;;Process;[PID 15] [rcu_preempt]
+  1,7 ms/s; 15,5;;;;Process;[PID 12082] /home/vincenzo/.vscode-server/cli/servers/Stable-e54c774e0add60467559eb0d1e229c6452cf8447/server/node /home/vincenz
+217,9 us/s; 10,0;;;;Process;[PID 1122] /usr/bin/gnome-shell 
+ 24,3 us/s;  8,8;;;;kWork;flush_to_ldisc
+ 90,2 us/s;  8,6;;;;Process;[PID 1112] /usr/bin/containerd 
+ 34,2 us/s;  8,6;;;;Process;[PID 1025] /usr/bin/containerd 
+661,0 us/s;  6,8;;;;Process;[PID 12045] /home/vincenzo/.vscode-server/cli/servers/Stable-e54c774e0add60467559eb0d1e229c6452cf8447/server/node /home/vincenz
+ 25,4 us/s;  6,4;;;;kWork;psi_avgs_work
+  1,8 ms/s;  4,8;;;;Process;[PID 38982] powertop -C -w cd /home/vincenzo/AGILEX/c220/SYCL_AFU/afu_flow/afus/sycl_rs_erasure/sw; ./bin/sycl_rs_erasure -f 00
+281,5 us/s;  5,4;;;;kWork;handle_update
+295,5 us/s;  4,0;;;;Process;[PID 625] /lib/systemd/systemd-oomd 
+164,0 us/s;  3,8;;;;Process;[PID 671] avahi-daemon: running [vincenzo-msi.local] 
+ 12,7 us/s;  3,8;;;;kWork;free_work
+399,8 us/s;  3,2;;;;Process;[PID 12071] /home/vincenzo/.vscode-server/cli/servers/Stable-e54c774e0add60467559eb0d1e229c6452cf8447/server/node --dns-result-
+  6,2 us/s;  3,0;;;;Timer;watchdog_timer_fn
+ 11,3 us/s;  2,0;;;;Process;[PID 12106] /home/vincenzo/.vscode-server/cli/servers/Stable-e54c774e0add60467559eb0d1e229c6452cf8447/server/node /home/vincenz
+259,0 us/s;  1,8;;;;Process;[PID 16048] /home/vincenzo/.vscode-server/code-e54c774e0add60467559eb0d1e229c6452cf8447 command-shell --cli-data-dir /home/vinc
+ 12,3 us/s;  1,8;;;;kWork;qsfp_check_hotplug
+  3,8 ms/s; 0,20;;;;Process;[PID 39002] sh
+  6,4 us/s;  1,6;;;;Process;[PID 118] [kcompactd0]
+  4,6 us/s;  1,4;;;;kWork;kfree_rcu_work
+ 21,8 us/s;  1,0;;;;kWork;pci_pme_list_scan
+  4,3 us/s;  1,0;;;;kWork;vmstat_shepherd
+  2,6 us/s;  1,0;;;;Process;[PID 14] [ksoftirqd/0]
+  0,7 us/s;  1,0;;;;kWork;kfree_rcu_monitor
+179,6 us/s;  0,8;;;;Interrupt;[9] RCU(softirq)
+ 24,4 us/s;  0,8;;;;kWork;wb_workfn
+ 60,4 us/s;  0,6;;;;kWork;igc_watchdog_task
+  0,9 ms/s; 0,20;;;;Process;[PID 39015] sh
+327,9 us/s;  0,4;;;;Interrupt;[7] sched(softirq)
+273,6 us/s;  0,4;;;;Process;[PID 676] /usr/sbin/NetworkManager --no-daemon 
+ 62,2 us/s;  0,4;;;;Process;[PID 759] /usr/sbin/thermald --systemd --dbus-enable --adaptive 
+ 20,0 us/s;  0,4;;;;Process;[PID 338] [jbd2/nvme0n1p3-]
+  7,7 us/s;  0,4;;;;Process;[PID 709] /usr/libexec/accounts-daemon 
+  7,3 us/s;  0,4;;;;Process;[PID 39000] powertop
+  6,4 us/s;  0,4;;;;kWork;flush_memcg_stats_dwork
+  3,9 us/s;  0,4;;;;Process;[PID 1289] /usr/bin/dockerd -H fd:// --containerd=/run/containerd/containerd.sock 
+  1,4 us/s;  0,4;;;;Interrupt;[4] block(softirq)
+  1,1 us/s;  0,4;;;;kWork;blk_mq_requeue_work
+  0,3 us/s;  0,4;;;;kWork;neigh_managed_work
+  0,0 us/s;  0,4;;;;kWork;disk_events_workfn
+357,6 us/s; 0,20;;;;Process;[PID 1311] /usr/bin/dockerd -H fd:// --containerd=/run/containerd/containerd.sock 
+218,0 us/s; 0,20;;;;Process;[PID 16008] sshd: vincenzo@notty 
+128,1 us/s; 0,20;;;;Process;[PID 39003] cpuUsage.sh
+121,5 us/s; 0,20;;;;Process;[PID 16027] /home/vincenzo/.vscode-server/code-e54c774e0add60467559eb0d1e229c6452cf8447 command-shell --cli-data-dir /home/vinc
+115,7 us/s; 0,20;;;;Process;[PID 39025] cpuUsage.sh
+114,8 us/s; 0,20;;;;Process;[PID 39018] cpuUsage.sh
+102,8 us/s; 0,20;;;;Process;[PID 39012] node
+ 98,9 us/s; 0,20;;;;Process;[PID 39017] sh
+ 80,8 us/s; 0,20;;;;Process;[PID 39014] node
+ 79,8 us/s; 0,20;;;;Process;[PID 39004] cpuUsage.sh
+ 79,7 us/s; 0,20;;;;Process;[PID 39026] cpuUsage.sh
+ 79,6 us/s; 0,20;;;;Process;[PID 39016] node
+ 78,0 us/s; 0,20;;;;Process;[PID 39008] cpuUsage.sh
+ 77,8 us/s; 0,20;;;;Process;[PID 39028] cpuUsage.sh
+ 76,7 us/s; 0,20;;;;Process;[PID 39006] cpuUsage.sh
+ 76,5 us/s; 0,20;;;;Process;[PID 39021] cpuUsage.sh
+ 75,4 us/s; 0,20;;;;Process;[PID 39032] cpuUsage.sh
+ 75,4 us/s; 0,20;;;;Process;[PID 39020] cpuUsage.sh
+ 75,3 us/s; 0,20;;;;Process;[PID 39022] cpuUsage.sh
+ 75,2 us/s; 0,20;;;;Process;[PID 39030] cpuUsage.sh
+ 73,2 us/s; 0,20;;;;Process;[PID 39034] cpuUsage.sh
+ 73,1 us/s; 0,20;;;;Process;[PID 39019] cpuUsage.sh
+ 73,0 us/s; 0,20;;;;Process;[PID 39023] cpuUsage.sh
+ 70,4 us/s; 0,20;;;;Process;[PID 39010] cpuUsage.sh
+ 67,0 us/s; 0,20;;;;Process;[PID 39013] sh
+ 63,3 us/s; 0,20;;;;Process;[PID 39001] powertop
+ 50,9 us/s; 0,20;;;;Process;[PID 39024] cpuUsage.sh
+ 30,9 us/s; 0,20;;;;Process;[PID 39005] cpuUsage.sh
+ 30,0 us/s; 0,20;;;;Process;[PID 39027] cpuUsage.sh
+ 30,0 us/s; 0,20;;;;Process;[PID 682] /usr/sbin/irqbalance --foreground 
+ 27,8 us/s; 0,20;;;;Process;[PID 39009] cpuUsage.sh
+ 27,6 us/s; 0,20;;;;Process;[PID 39029] cpuUsage.sh
+ 27,3 us/s; 0,20;;;;Process;[PID 39007] cpuUsage.sh
+ 27,2 us/s; 0,20;;;;Process;[PID 39011] cpuUsage.sh
+ 27,1 us/s; 0,20;;;;Process;[PID 39035] cpuUsage.sh
+ 27,0 us/s; 0,20;;;;Process;[PID 39031] cpuUsage.sh
+ 26,3 us/s; 0,20;;;;Process;[PID 39033] cpuUsage.sh
+ 14,5 us/s; 0,20;;;;Process;[PID 38999] sleep
+ 11,7 us/s; 0,20;;;;Process;[PID 39012] sh
+ 11,4 us/s; 0,20;;;;Process;[PID 39024] sleep
+  3,4 us/s; 0,20;;;;Process;[PID 1303] /usr/bin/dockerd -H fd:// --containerd=/run/containerd/containerd.sock 
+  3,0 us/s; 0,20;;;;Process;[PID 1292] /usr/bin/dockerd -H fd:// --containerd=/run/containerd/containerd.sock 
+  2,9 us/s; 0,20;;;;Process;[PID 706] /sbin/wpa_supplicant -u -s -O /run/wpa_supplicant 
+  2,0 us/s; 0,20;;;;Interrupt;[129] nvme0q1
+  2,0 us/s; 0,20;;;;Process;[PID 23] [ksoftirqd/1]
+  1,6 us/s; 0,20;;;;Process;[PID 1296] /usr/bin/dockerd -H fd:// --containerd=/run/containerd/containerd.sock 
+  1,1 us/s; 0,20;;;;kWork;blk_mq_timeout_work
+  0,5 us/s; 0,20;;;;Timer;sched_rt_period_timer
+  0,3 us/s; 0,20;;;;kWork;output_poll_execute
+  0,2 us/s; 0,20;;;;kWork;neigh_periodic_work
+  0,1 us/s; 0,20;;;;kWork;wb_update_bandwidth_workfn
+385,7 us/s;;;;;Process;[PID 39017] cpuUsage.sh
+370,7 us/s;;;;;Process;[PID 1297] /usr/bin/dockerd -H fd:// --containerd=/run/containerd/containerd.sock 
+335,1 us/s;;;;;Process;[PID 1291] /usr/bin/dockerd -H fd:// --containerd=/run/containerd/containerd.sock 
+321,7 us/s;;;;;Process;[PID 1301] /usr/bin/dockerd -H fd:// --containerd=/run/containerd/containerd.sock 
+203,3 us/s;;;;;Process;[PID 38993] cpuUsage.sh
+
+____________________________________________________________________
+ *  *  *   Device Power Report   *  *  *
+
+Usage;Device Name
+ 99,0%;CPU core
+ 99,0%;CPU misc
+100,0%;PCI Device: Intel Corporation Tiger Lake-H USB 3.2 Gen 2x1 xHCI Host Controller
+100,0%;PCI Device: Intel Corporation RocketLake-S GT1 [UHD Graphics 750]
+100,0%;USB device: xHCI Host Controller
+100,0%;USB device: MYSTIC LIGHT  (MSI)
+100,0%;USB device: Dell USB Entry Keyboard (DELL)
+100,0%;PCI Device: Intel Corporation Device 43d2
+100,0%;PCI Device: Intel Corporation Device 4c11
+100,0%;PCI Device: Intel Corporation Device 4385
+100,0%;PCI Device: KIOXIA Corporation NVMe SSD
+100,0%;PCI Device: Intel Corporation Device 4c01
+100,0%;PCI Device: Intel Corporation Device bcce
+100,0%;PCI Device: Intel Corporation Tiger Lake-H SPI Controller
+100,0%;PCI Device: Intel Corporation Device 4c43
+100,0%;PCI Device: Intel Corporation Device 4c09
+100,0%;PCI Device: Intel Corporation Tiger Lake-H PCI Express Root Port #5
+100,0%;PCI Device: Intel Corporation Ethernet Controller I225-V
+100,0%;PCI Device: Intel Corporation Tiger Lake-H Shared SRAM
+ 42,0 pkts/s;Network interface: enp4s0 (igc)
+  0,0%;PCI Device: Intel Corporation Tiger Lake-H Management Engine Interface
+  0,0%;USB device: xHCI Host Controller
+  0,0%;USB device: ASM107x (Asmedia)
+  0,0%;USB device: ASM107x (Asmedia)
+  0,0%;Audio codec hwC0D2: Intel
+  0,0%;Audio codec hwC0D0: Realtek
+  0,0 pkts/s;nic:br-8047228cce85
+  0,0 pkts/s;nic:docker0
+  0,0%;runtime-iTCO_wdt
+  0,0%;PCI Device: Intel Corporation Device 43b8
+  0,0%;PCI Device: Intel Corporation Tiger Lake-H HD Audio Controller
+  0,0%;PCI Device: Intel Corporation Device bccf
+  0,0%;PCI Device: Intel Corporation Tiger Lake-H SMBus Controller
+  0,0%;runtime-spi0.0
+  0,0%;runtime-PNP0C14:00
+  0,0%;runtime-alarmtimer.0.auto
+  0,0%;runtime-reg-dummy
+  0,0%;runtime-PNP0C0B:03
+  0,0%;runtime-snd-soc-dummy
+  0,0%;runtime-kgdboc
+  0,0%;runtime-INT33A1:00
+  0,0%;runtime-rtc_cmos
+  0,0%;runtime-PNP0C0B:01
+  0,0%;runtime-n6000bmc-sec-update.3.auto
+  0,0%;runtime-dfl-fme-bridge.1.auto
+  0,0%;runtime-n6000bmc-log.4.auto
+  0,0%;runtime-microcode
+  0,0%;USB device: USB2.0 Hub
+  0,0%;runtime-intel_rapl_msr.0
+  0,0%;runtime-Fixed MDIO bus.0
+  0,0%;runtime-dfl-fme.0
+  0,0%;runtime-PNP0C14:03
+  0,0%;runtime-PNP0C0C:00
+  0,0%;runtime-ACPI000C:00
+  0,0%;runtime-eisa.0
+  0,0%;I2C Adapter (i2c-3): i915 gmbus dpc
+  0,0%;runtime-PNP0C14:01
+  0,0%;runtime-PNP0C0B:04
+  0,0%;runtime-PNP0C0B:02
+  0,0%;runtime-dfl-port.0
+  0,0%;runtime-coretemp.0
+  0,0%;runtime-PNP0C0E:00
+  0,0%;runtime-ACPI000E:00
+  0,0%;runtime-PNP0C0B:00
+  0,0%;runtime-rtc-efi.0
+  0,0%;runtime-PNP0C04:00
+  0,0%;runtime-dfl-fme-region.1
+  0,0%;runtime-INT34C6:00
+  0,0%;runtime-dfl-fme-mgr.0
+  0,0%;runtime-efivars.0
+  0,0%;runtime-serial8250
+  0,0%;runtime-PNP0C14:04
+  0,0%;runtime-PNP0103:00
+  0,0%;I2C Adapter (i2c-9): i915 gmbus tc6
+  0,0%;runtime-pcspkr
+  0,0%;I2C Adapter (i2c-10): AUX USBC2/DDI TC2/PHY D
+  0,0%;I2C Adapter (i2c-1): i915 gmbus dpa
+  0,0%;I2C Device (0-0036): dummy
+  0,0%;I2C Adapter (i2c-5): i915 gmbus tc2
+  0,0%;I2C Adapter (i2c-8): i915 gmbus tc5
+  0,0%;runtime-n6000bmc-hwmon.2.auto
+  0,0%;I2C Device (0-0037): dummy
+  0,0%;runtime-PNP0C14:02
+  0,0%;I2C Adapter (i2c-0): SMBus I801 adapter at efa0
+  0,0%;I2C Adapter (i2c-6): i915 gmbus tc3
+  0,0%;I2C Adapter (i2c-2): i915 gmbus dpb
+  0,0%;I2C Device (0-0051): ee1004
+  0,0%;I2C Adapter (i2c-4): i915 gmbus tc1
+  0,0%;I2C Device (0-0053): ee1004
+  0,0%;I2C Adapter (i2c-7): i915 gmbus tc4
+____________________________________________________________________
+ *  *  *   Process Device Activity   *  *  *
+
+Process;Device
+systemd;/dev/autofs
+;/dev/dri/card0
+;/dev/input/event0
+;/dev/input/event1
+;/dev/input/event2
+;/dev/input/event4
+;/dev/input/event5
+;/dev/kmsg
+;/dev/rfkill
+systemd-journal;/dev/kmsg
+;/dev/kmsg
+acpid;/dev/input/event0
+;/dev/input/event1
+;/dev/input/event10
+;/dev/input/event11
+;/dev/input/event12
+;/dev/input/event13
+;/dev/input/event14
+;/dev/input/event15
+;/dev/input/event16
+;/dev/input/event2
+;/dev/input/event4
+;/dev/input/event5
+;/dev/input/event6
+;/dev/input/event7
+;/dev/input/event8
+;/dev/input/event9
+systemd-logind;/dev/dri/card0
+;/dev/input/event0
+;/dev/input/event0
+;/dev/input/event1
+;/dev/input/event1
+;/dev/input/event2
+;/dev/input/event2
+;/dev/input/event4
+;/dev/input/event4
+;/dev/input/event5
+pulseaudio;/dev/snd/controlC0
+;/dev/snd/controlC0
+gnome-shell;/dev/dri/card0
+;/dev/dri/card0
+;/dev/dri/card0
+;/dev/dri/card0
+;/dev/dri/card0
+;/dev/input/event0
+;/dev/input/event1
+;/dev/input/event2
+;/dev/input/event4
+;/dev/input/event5
+Xwayland;/dev/dri/renderD128
+;/dev/dri/renderD128
+;/dev/dri/renderD128
+;/dev/dri/renderD128
+;/dev/dri/renderD128
+gsd-rfkill;/dev/rfkill
+;/dev/rfkill
+ibus-x11;/dev/dri/renderD128
+;/dev/dri/renderD128
+;/dev/dri/renderD128
+;/dev/dri/renderD128
+
+____________________________________________________________________
+ *  *  *   AHCI ALPM Residency Statistics - Not supported on this macine   *  *  *
+
+____________________________________________________________________
+ *  *  *   Software Settings in Need of Tuning   *  *  *
+
+Description;Script
+VM writeback timeout;echo '1500' > '/proc/sys/vm/dirty_writeback_centisecs';
+Enable SATA link power management for host3;echo 'med_power_with_dipm' > '/sys/class/scsi_host/host3/link_power_management_policy';
+Enable SATA link power management for host1;echo 'med_power_with_dipm' > '/sys/class/scsi_host/host1/link_power_management_policy';
+Enable SATA link power management for host2;echo 'med_power_with_dipm' > '/sys/class/scsi_host/host2/link_power_management_policy';
+Enable SATA link power management for host0;echo 'med_power_with_dipm' > '/sys/class/scsi_host/host0/link_power_management_policy';
+NMI watchdog should be turned off;echo '0' > '/proc/sys/kernel/nmi_watchdog';
+Autosuspend for USB device Dell USB Entry Keyboard [DELL];echo 'auto' > '/sys/bus/usb/devices/1-12/power/control';
+Autosuspend for USB device MYSTIC LIGHT  [MSI];echo 'auto' > '/sys/bus/usb/devices/1-2/power/control';
+Runtime PM for PCI Device Intel Corporation Device 4c43;echo 'auto' > '/sys/bus/pci/devices/0000:00:00.0/power/control';
+Runtime PM for PCI Device Intel Corporation Device 43d2;echo 'auto' > '/sys/bus/pci/devices/0000:00:17.0/power/control';
+Runtime PM for port ata1 of PCI device: Intel Corporation Device 43d2;echo 'auto' > '/sys/bus/pci/devices/0000:00:17.0/ata1/power/control';
+Runtime PM for port ata2 of PCI device: Intel Corporation Device 43d2;echo 'auto' > '/sys/bus/pci/devices/0000:00:17.0/ata2/power/control';
+Runtime PM for port ata3 of PCI device: Intel Corporation Device 43d2;echo 'auto' > '/sys/bus/pci/devices/0000:00:17.0/ata3/power/control';
+Runtime PM for PCI Device Intel Corporation Tiger Lake-H SPI Controller;echo 'auto' > '/sys/bus/pci/devices/0000:00:1f.5/power/control';
+Runtime PM for PCI Device Intel Corporation Device bcce;echo 'auto' > '/sys/bus/pci/devices/0000:01:00.0/power/control';
+Runtime PM for PCI Device Intel Corporation Ethernet Controller I225-V;echo 'auto' > '/sys/bus/pci/devices/0000:04:00.0/power/control';
+Runtime PM for PCI Device KIOXIA Corporation NVMe SSD;echo 'auto' > '/sys/bus/pci/devices/0000:02:00.0/power/control';
+Runtime PM for PCI Device Intel Corporation Device 4385;echo 'auto' > '/sys/bus/pci/devices/0000:00:1f.0/power/control';
+Runtime PM for PCI Device Intel Corporation Device 4c11;echo 'auto' > '/sys/bus/pci/devices/0000:00:08.0/power/control';
+Runtime PM for PCI Device Intel Corporation Tiger Lake-H Shared SRAM;echo 'auto' > '/sys/bus/pci/devices/0000:00:14.2/power/control';
+Runtime PM for port ata4 of PCI device: Intel Corporation Device 43d2;echo 'auto' > '/sys/bus/pci/devices/0000:00:17.0/ata4/power/control';
+____________________________________________________________________
+ *  *  *   Untunable Software Issues   *  *  *
+
+Description
+I2C Adapter i2c-10 has no runtime power management
+I2C Device 0-0037 has no runtime power management
+I2C Device 0-0053 has no runtime power management
+I2C Device 0-0051 has no runtime power management
+I2C Device 0-0036 has no runtime power management
+____________________________________________________________________
+ *  *  *   Optimal Tuned Software Settings   *  *  *
+
+Description
+Enable Audio codec power management
+Runtime PM for I2C Adapter i2c-2 (i915 gmbus dpb)
+Autosuspend for USB device xHCI Host Controller [usb1]
+Autosuspend for USB device USB2.0 Hub [1-13]
+Autosuspend for USB device xHCI Host Controller [usb2]
+Runtime PM for I2C Adapter i2c-1 (i915 gmbus dpa)
+Autosuspend for USB device ASM107x [Asmedia]
+Autosuspend for USB device ASM107x [Asmedia]
+Runtime PM for I2C Adapter i2c-6 (i915 gmbus tc3)
+Runtime PM for I2C Adapter i2c-7 (i915 gmbus tc4)
+Runtime PM for I2C Adapter i2c-3 (i915 gmbus dpc)
+Runtime PM for I2C Adapter i2c-9 (i915 gmbus tc6)
+Runtime PM for I2C Adapter i2c-0 (SMBus I801 adapter at efa0)
+Runtime PM for I2C Adapter i2c-8 (i915 gmbus tc5)
+Runtime PM for I2C Adapter i2c-4 (i915 gmbus tc1)
+Runtime PM for I2C Adapter i2c-5 (i915 gmbus tc2)
+Runtime PM for PCI Device Intel Corporation Device 43b8
+Runtime PM for PCI Device Intel Corporation Device 4c01
+Runtime PM for PCI Device Intel Corporation Tiger Lake-H Management Engine Interface
+Runtime PM for PCI Device Intel Corporation Tiger Lake-H HD Audio Controller
+Runtime PM for PCI Device Intel Corporation Tiger Lake-H SMBus Controller
+Runtime PM for PCI Device Intel Corporation Tiger Lake-H USB 3.2 Gen 2x1 xHCI Host Controller
+Runtime PM for PCI Device Intel Corporation RocketLake-S GT1 [UHD Graphics 750]
+Runtime PM for PCI Device Intel Corporation Device 4c09
+Runtime PM for PCI Device Intel Corporation Tiger Lake-H PCI Express Root Port #5
+Runtime PM for PCI Device Intel Corporation Device bccf
+
+____________________________________________________________________
+ *  *  *   Wake status of the devices   *  *  *
+
+Description;Script
+Wake status for USB device usb1;echo 'enabled' > '/sys/bus/usb/devices/usb1/power/wakeup';
+Wake status for USB device 1-13;echo 'enabled' > '/sys/bus/usb/devices/1-13/power/wakeup';
+Wake status for USB device usb2;echo 'enabled' > '/sys/bus/usb/devices/usb2/power/wakeup';
+Wake status for USB device 1-6;echo 'enabled' > '/sys/bus/usb/devices/1-6/power/wakeup';
+Wake status for USB device 2-5;echo 'enabled' > '/sys/bus/usb/devices/2-5/power/wakeup';
