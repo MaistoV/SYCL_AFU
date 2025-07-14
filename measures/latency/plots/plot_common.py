@@ -36,7 +36,7 @@ SYCL_GPU	= 3
 
 # Source data directories
 data_dirs = ["" for _ in range(len(hw_configs)) ]
-data_dirs[ISA_L   ]	= "/data_ISA_L/"
+data_dirs[ISA_L   ]	= "/data_ISA_L_0/"
 data_dirs[SYCL_ASP] = "/data_SYCL_ASP_ASP_ZERO_COPY/"
 data_dirs[SYCL_AFU] = "/data_SYCL_AFU/"
 data_dirs[SYCL_GPU] = "/data_SYCL_GPU/"
@@ -94,7 +94,7 @@ hw_marker_fill	[SYCL_GPU] = "none"
 hw_line	 		[SYCL_GPU] = "--"
 hw_linewidth	[SYCL_GPU] = 2
 hw_color		[SYCL_GPU] = "c"
-hw_name			[SYCL_GPU] = "SYCL_GPU"
+hw_name			[SYCL_GPU] = "SYCL GPU"
 
 # # Plain C format
 # hw_marker		[PLAIN_C] = "+"

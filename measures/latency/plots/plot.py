@@ -57,7 +57,6 @@ for hw in range(0,len(common.hw_configs)):
 
 			# Adjust SYCL_GPU data
 			if common.hw_configs[hw] == "SYCL_GPU":
-			# 	# Divide by the number of Xe-HPG cores
 			# 	mean_latency_s[rs][hw][l] /= 16
 				# Adjust by Russian Peasant (RP) to ISA-L opts:
 				#	int
@@ -74,6 +73,9 @@ for hw in range(0,len(common.hw_configs)):
 				SYCL_GPU_ADJ = LT/RP # 1.8 / 0.4 = 4.5
 				# RP int to int64
 				SYCL_GPU_ADJ *= 2
+				# Account for a fully parallel mapping on Xe-HPG cores
+				#	Use 16 cores as the comparable Flex 140 card
+				SYCL_GPU_ADJ *= 16
 				# Divide by adjustment factor
 				mean_latency_s[rs][hw][l] /= SYCL_GPU_ADJ
 
@@ -173,7 +175,7 @@ for rs in range(0,len(common.RS_SCHEMA_list)):
 	else:
 		ax_latency = plt.subplot(2,2,rs+1, sharey=ax_latency)
 	for hw in range(0,len(common.hw_configs)):
-		plt.plot(
+		plt.loglog(
 					common.cell_length_int,
 			 		mean_latency_s[rs][hw],
 					common.hw_line[hw] + common.hw_marker[hw],
@@ -190,7 +192,7 @@ for rs in range(0,len(common.RS_SCHEMA_list)):
 	plt.axvline(x = common.MB, linestyle='--', color="k") # Vertical line at 1MB
 	plt.tick_params(which="minor", labelbottom=False, bottom=False)
 	plt.xticks(common.cell_length_int, common.cell_length, rotation=45)
-	plt.grid(visible=True) #, which="both")
+	plt.grid(visible=True, which="both")
 	if rs == 0:
 		plt.ylabel("Latency (s)")
 		plt.legend()
