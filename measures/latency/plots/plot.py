@@ -9,12 +9,12 @@ from scipy.stats import trim_mean # for outliers
 
 # Source data directory
 root_data_dir = "../data/"
-if len(sys.argv) >= 1:
+if len(sys.argv) >= 2:
 	root_data_dir = sys.argv[1] + "/"
 
 # Output directory for plots
 plot_dir = "./output_plots"
-if len(sys.argv) >= 2:
+if len(sys.argv) >= 3:
 	plot_dir = sys.argv[2]
 
 # Create output directory
@@ -175,7 +175,7 @@ for rs in range(0,len(common.RS_SCHEMA_list)):
 	else:
 		ax_latency = plt.subplot(2,2,rs+1, sharey=ax_latency)
 	for hw in range(0,len(common.hw_configs)):
-		plt.loglog(
+		plt.plot(
 					common.cell_length_int,
 			 		mean_latency_s[rs][hw],
 					common.hw_line[hw] + common.hw_marker[hw],
@@ -203,7 +203,7 @@ for rs in range(0,len(common.RS_SCHEMA_list)):
 	else:
 		ax_throughput = plt.subplot(2,2,rs+3, sharey=ax_throughput)
 	for hw in range(0,len(common.hw_configs)):
-		plt.loglog(
+		plt.plot(
 					common.cell_length_int,
 			 		throughput_B_s[rs][hw],
 					common.hw_line[hw] + common.hw_marker[hw],
@@ -219,6 +219,10 @@ for rs in range(0,len(common.RS_SCHEMA_list)):
 	plt.axvline(x = common.MB, linestyle='--', color="k") # Vertical line at 1MB
 	plt.grid(visible=True, which="both")
 	plt.yticks(common.B_s_int, common.B_s)
+	# plt.ylim(
+	# 	top=5e8,
+	# 	bottom=1e7
+	# )
 	plt.xticks(common.cell_length_int, common.cell_length, rotation=45)
 	plt.xlabel("Cell length")
 	if rs == 0:

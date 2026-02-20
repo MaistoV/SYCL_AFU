@@ -9,13 +9,13 @@ KB = 1024
 MB = 1024 * KB
 GB = 1024 * MB
 
-cell_length = [ 
-                "64B"	, "128B"  ,	"256B"  ,	"512B"  , 
+cell_length = [
+                "64B"	, "128B"  ,	"256B"  ,	"512B"  ,
                 "1KB"   , "2KB"   , "4KB"   ,   "8KB"   ,   "16KB"
             ]
 cell_length_int = [
-				64	  ,	128   ,	256   ,   512	, 
-                1*KB  , 2*KB  , 4*KB  ,   8*KB  ,   16*KB 
+				64	  ,	128   ,	256   ,   512	,
+                1*KB  , 2*KB  , 4*KB  ,   8*KB  ,   16*KB
             ]
 RS_SCHEMA_list = ["RS_3_2", "RS_6_3"]
 RS_SCHEMA_color = ["g", "b"]
@@ -26,25 +26,25 @@ FMAX_MHz = 312.5
 
 # Source data directory
 root_data_dir = "../data"
-if len(sys.argv) >= 1:
+if len(sys.argv) >= 2:
 	root_data_dir = sys.argv[1]
 
 # Output directory for plots
 plot_dir = "./output_plots"
-if len(sys.argv) >= 2:
+if len(sys.argv) >= 3:
 	plot_dir = sys.argv[2]
 
 plt.figure("Clock cyles latency vs Cell length", figsize=[15,10])
 plt.title("Clock cyles latency vs Cell length")
 # ax = plt.subplot(1,2,1)
-model = [0. for _ in range(0, len(RS_SCHEMA_list)) ] 
-label_linregr = ["" for _ in range(0, len(RS_SCHEMA_list)) ] 
+model = [0. for _ in range(0, len(RS_SCHEMA_list)) ]
+label_linregr = ["" for _ in range(0, len(RS_SCHEMA_list)) ]
 throughput_B_s_peak = [0 for _ in range(0, len(RS_SCHEMA_list))]
 throughput_B_cycle = [[0 for _ in range(len(cell_length)) ] for _ in range(len(RS_SCHEMA_list))]
 throughput_B_s = [[0 for _ in range(len(cell_length)) ] for _ in range(len(RS_SCHEMA_list))]
 for rs in range(0, len(RS_SCHEMA_list)):
     # ax = plt.subplot(1,2,rs+1, sharey=ax)
-	
+
     datafile = root_data_dir + "/cycles_" + RS_SCHEMA_list[rs] + ".csv"
     print("Reading file " + datafile)
     # Load data
@@ -71,7 +71,7 @@ for rs in range(0, len(RS_SCHEMA_list)):
 	#   Throughput = frequency * cell_length / (intercept_ + (coef_ * cell_length))
 	# If coef_ is statistically significant, and cell_length >> intercept_, then:
 	#   Throughput = frequency * cell_length / (coef_ * cell_length))
-	#   Throughput = frequency * cell_length / cell_length / coef_ 
+	#   Throughput = frequency * cell_length / cell_length / coef_
     #     Throughput = freq / coef_
     throughput_B_s_peak[rs] = (1. / model[rs].coef_[0][0])*FMAX_MHz*1000000
     # Save throughput byte/cycle
@@ -85,7 +85,7 @@ for rs in range(0, len(RS_SCHEMA_list)):
     # plt.scatter(x, cycles_max)#, label="Max")
     # plt.scatter(x, cycles_avg)#, label="Avg")
     # plt.plot(x, cycles_avg, "-o", label="Avg " + RS_SCHEMA_list[rs])
-    
+
     plt.plot(cell_length_int, cycles_pred, label="RS[" + RS_SCHEMA_txt[rs] + "] " + label_linregr[rs], color=RS_SCHEMA_color[rs])
     # Set log-scales
     # plt.xscale("log", base=2)
